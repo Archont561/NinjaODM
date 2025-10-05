@@ -37,6 +37,7 @@ geojson-pydantic = ">=2.0.0,<3"
 uvicorn = ">=0.37.0,<0.38"
 django-cors-headers = ">=4.9.0,<5"
 loguru = ">=0.7.3,<0.8"
+psycopg = ">=3.2.9,<4"
 
 [tool.pixi.feature.django.pypi-dependencies]
 django-easy-logging = ">=0.70,<0.71"
