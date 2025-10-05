@@ -58,7 +58,6 @@ cover/
 local_settings.py
 *.sqlite3
 *.sqlite
-*.sqlite3
 *.sqlite3-journal
 
 # Flask
@@ -143,7 +142,7 @@ cython_debug/
 # Pixi / Conda
 # ============================================================================
 .pixi/
-pixi.lock
+!pixi.lock
 *.lock
 
 # Conda
@@ -252,8 +251,6 @@ docker-compose.local.yml
 # ============================================================================
 
 # Database
-*.sqlite3
-*.sqlite3-journal
 *.db
 
 # Static files
@@ -304,6 +301,7 @@ pylint-report.txt
 
 # Prospector
 .prospector.yaml.local
+!.prospector.yml
 
 # Bandit
 .bandit

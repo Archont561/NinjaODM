@@ -1,18 +1,26 @@
+# ==============================================================================
+# Project Metadata
+# ==============================================================================
 [project]
 name = "NinjaODM"
 version = "0.1.0"
 description = "NinjaODM GeoDjango Microservices Server"
-authors = [{name = "Eryk Srebrny", email = "esrebrny@onet.eu"}]
+authors = [{ name = "Eryk Srebrny", email = "esrebrny@onet.eu" }]
 requires-python = ">=3.13,<3.14"
 
+# ==============================================================================
 # Pixi Configuration
+# ==============================================================================
 [tool.pixi.project]
 channels = ["conda-forge"]
-platforms = ["linux-64", "win-64"]  # Removed win-64 due to Unix-specific commands
+platforms = ["linux-64", "win-64"]
 
 [tool.pixi.dependencies]
 python = ">=3.13.7,<3.14"
 
+# ------------------------------------------------------------------------------
+# Platform-Specific Dependencies
+# ------------------------------------------------------------------------------
 [tool.pixi.target.linux.dependencies]
 gunicorn = ">=23.0.0"
 
@@ -31,6 +39,9 @@ django-tus = ">=0.5.0,<0.6"
 django-ninja-extra = ">=0.30.1,<0.31"
 django-ninja-jwt = ">=5.3.9,<6"
 
+# ------------------------------------------------------------------------------
+# Geo Libraries
+# ------------------------------------------------------------------------------
 [tool.pixi.feature.geo-libs.dependencies]
 proj = ">=9.7.0,<10"
 gdal = ">=3.11.4,<4"
@@ -39,6 +50,9 @@ geos = ">=3.14.0,<4"
 [tool.pixi.feature.geo-libs-dev.dependencies]
 libspatialite = ">=5.1.0,<6"
 
+# ------------------------------------------------------------------------------
+# Testing
+# ------------------------------------------------------------------------------
 [tool.pixi.feature.test.dependencies]
 factory_boy = ">=3.3.3,<4"
 faker = ">=37.8.0,<38"
@@ -52,6 +66,9 @@ coverage = ">=7.0.0,<8"
 [tool.pixi.feature.test.pypi-dependencies]
 pytest-factoryboy = ">=2.8.1,<3"
 
+# ------------------------------------------------------------------------------
+# Static Code Analysis
+# ------------------------------------------------------------------------------
 [tool.pixi.feature.static-code-analysis.pypi-dependencies]
 prospector = ">=1.17.3,<2"
 django-stubs = ">=5.2.5,<6"
@@ -61,15 +78,23 @@ black = ">=25.1.0,<26"
 mypy = ">=1.0.0,<2"
 isort = ">=5.0.0,<6"
 
+# ------------------------------------------------------------------------------
+# Miscellaneous
+# ------------------------------------------------------------------------------
 [tool.pixi.feature.miscellaneous.dependencies]
 httpie = ">=3.2.4,<4"
-loguru = ">=0.7.3,<0.8"
 
+# ------------------------------------------------------------------------------
+# Environments
+# ------------------------------------------------------------------------------
 [tool.pixi.environments]
 prod = ["django", "geo-libs"]
 dev = ["django", "geo-libs", "geo-libs-dev", "static-code-analysis", "test", "miscellaneous"]
 test = ["django", "geo-libs", "static-code-analysis", "test"]
 
+# ==============================================================================
+# Pixi Tasks - Django
+# ==============================================================================
 [tool.pixi.tasks."django:manage"]
 description = "Run Django management command"
 cmd = ["python", "./app/manage.py"]
@@ -85,60 +110,70 @@ cmd = ["pixi", "run", "django:manage", "runserver"]
 [tool.pixi.tasks."dev:uvicorn"]
 description = "Run development server with uvicorn"
 args = [
-  { arg = "host", default = "localhost" },
-  { arg = "port", default = "8000" }
+    { arg = "host", default = "localhost" },
+    { arg = "port", default = "8000" },
 ]
 cmd = [
-  "uvicorn",
-  "app.config.asgi:application",
-  "--reload",
-  "--host", "{{ host }}",
-  "--port", "{{ port }}"
+    "uvicorn",
+    "app.config.asgi:application",
+    "--reload",
+    "--host",
+    "{{ host }}",
+    "--port",
+    "{{ port }}",
 ]
 
-# Production server
+# ------------------------------------------------------------------------------
+# Production Server
+# ------------------------------------------------------------------------------
 [tool.pixi.tasks.start]
 description = "Run production server with gunicorn and uvicorn workers"
 args = [
-  { arg = "host", default = "0.0.0.0" },
-  { arg = "port", default = "8000" },
-  { arg = "workers", default = "4" }
+    { arg = "host", default = "0.0.0.0" },
+    { arg = "port", default = "8000" },
+    { arg = "workers", default = "4" },
 ]
 cmd = [
-  "sh", "-c",
-  "if [ -z \"$DJANGO_SECRET_KEY\" ]; then echo 'Error: DJANGO_SECRET_KEY is not set'; exit 1; fi && gunicorn app.config.asgi:application -k uvicorn.workers.UvicornWorker --bind {{ host }}:{{ port }} --workers {{ workers }}"
+    "sh",
+    "-c",
+    "if [ -z \"$DJANGO_SECRET_KEY\" ]; then echo 'Error: DJANGO_SECRET_KEY is not set'; exit 1; fi && gunicorn app.config.asgi:application -k uvicorn.workers.UvicornWorker --bind {{ host }}:{{ port }} --workers {{ workers }}",
 ]
 
-# Docker
+# ==============================================================================
+# Pixi Tasks - Docker
+# ==============================================================================
 [tool.pixi.tasks."docker:build"]
 description = "Build Docker image for specified environment"
-args = [
-  { arg = "env", default = "prod" }
-]
+args = [{ arg = "env", default = "prod" }]
 cmd = [
-  "docker",
-  "build",
-  "--build-arg", "ENVIRONMENT={{ env }}",
-  "-t", "ninjaodm:{{ env }}",
-  "."
+    "docker",
+    "build",
+    "--build-arg",
+    "ENVIRONMENT={{ env }}",
+    "-t",
+    "ninjaodm:{{ env }}",
+    ".",
 ]
 
 [tool.pixi.tasks."docker:run"]
 description = "Run Docker container for specified environment"
 args = [
-  { arg = "env", default = "prod" },
-  { arg = "port", default = "8000" }
+    { arg = "env", default = "prod" },
+    { arg = "port", default = "8000" },
 ]
 cmd = [
-  "docker",
-  "run",
-  "-it",
-  "--rm",
-  "-p", "{{ port }}:{{ port }}",
-  "ninjaodm:{{ env }}"
+    "docker",
+    "run",
+    "-it",
+    "--rm",
+    "-p",
+    "{{ port }}:{{ port }}",
+    "ninjaodm:{{ env }}",
 ]
 
-# Script tasks
+# ==============================================================================
+# Pixi Tasks - Scripts
+# ==============================================================================
 [tool.pixi.tasks."scripts:test-entrypoint"]
 description = "Test entrypoint script locally"
 cmd = ["bash", "scripts/entrypoint.sh"]
@@ -149,14 +184,18 @@ cmd = ["bash", "scripts/healthcheck.sh"]
 
 [tool.pixi.tasks."scripts:validate"]
 description = "Validate all scripts with shellcheck"
-cmd = ["sh", "-c", "command -v shellcheck >/dev/null 2>&1 && shellcheck scripts/*.sh || echo 'shellcheck not installed'"]
+cmd = [
+    "sh",
+    "-c",
+    "command -v shellcheck >/dev/null 2>&1 && shellcheck scripts/*.sh || echo 'shellcheck not installed'",
+]
 
-# Docker Compose tasks
+# ==============================================================================
+# Pixi Tasks - Docker Compose
+# ==============================================================================
 [tool.pixi.tasks."compose:up"]
 description = "Start services with docker-compose"
-args = [
-  { arg = "env", default = "prod" }
-]
+args = [{ arg = "env", default = "prod" }]
 cmd = ["docker-compose", "up", "-d"]
 env = { ENVIRONMENT = "{{ env }}" }
 
@@ -180,129 +219,147 @@ cmd = ["docker-compose", "ps"]
 description = "Restart services"
 cmd = ["docker-compose", "restart"]
 
-# Testing
+# ==============================================================================
+# Pixi Tasks - Testing
+# ==============================================================================
 [tool.pixi.tasks.test]
+description = "Run all tests in order (unit → integration → e2e)"
 cmd = [
-  "sh", "-c",
-  "pytest tests/unit/ && pytest tests/integration/ && pytest tests/e2e/"
+    "sh",
+    "-c",
+    "pytest tests/unit/ && pytest tests/integration/ && pytest tests/e2e/",
 ]
 description = "Run all tests in order (unit → integration → e2e)"
 
 [tool.pixi.tasks."test:watch"]
+description = "Watch and run tests"
 cmd = ["ptw", "--", "-vv"]
 description = "Watch and run tests"
 
 [tool.pixi.tasks."test:unit"]
+description = "Run unit tests only"
 cmd = ["pytest", "tests/unit/", "-v"]
 description = "Run unit tests only"
 
 [tool.pixi.tasks."test:integration"]
+description = "Run integration tests only"
 cmd = ["pytest", "tests/integration/", "-v"]
 description = "Run integration tests only"
 
 [tool.pixi.tasks."test:e2e"]
+description = "Run e2e tests only"
 cmd = ["pytest", "tests/e2e/", "-v"]
 description = "Run e2e tests only"
 
 [tool.pixi.tasks."test:coverage"]
-cmd = [
-  "sh", "-c",
-  "coverage run -m pytest tests/unit/ tests/integration/ tests/e2e/ && coverage report && coverage html"
-]
 description = "Run tests with coverage"
+cmd = [
+    "sh",
+    "-c",
+    "coverage run -m pytest tests/unit/ tests/integration/ tests/e2e/ && coverage report && coverage html",
+]
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 [tool.pixi.tasks."test:coverage:unit"]
-cmd = [
-  "sh", "-c",
-  "coverage run -m pytest tests/unit/ && coverage report"
-]
 description = "Coverage for unit tests only"
+cmd = ["sh", "-c", "coverage run -m pytest tests/unit/ && coverage report"]
 
 [tool.pixi.tasks."test:coverage:report"]
-cmd = ["coverage", "report"]
 description = "Show coverage report"
+cmd = ["coverage", "report"]
 
 [tool.pixi.tasks."test:coverage:html"]
-cmd = ["coverage", "html"]
 description = "Generate HTML coverage report"
+cmd = ["coverage", "html"]
 
 [tool.pixi.tasks."test:clean"]
-cmd = [
-  "sh", "-c",
-  "rm -rf .pytest_cache htmlcov .coverage && find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true"
-]
 description = "Clean test artifacts"
+cmd = [
+    "sh",
+    "-c",
+    "rm -rf .pytest_cache htmlcov .coverage && find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true",
+]
 
 [tool.pixi.tasks."test:ci"]
-cmd = [
-  "sh", "-c",
-  "pytest tests/unit/ -v --tb=short && pytest tests/integration/ -v --tb=short && pytest tests/e2e/ -v --tb=short"
-]
 description = "Run all tests sequentially (CI mode)"
+cmd = [
+    "sh",
+    "-c",
+    "pytest tests/unit/ -v --tb=short && pytest tests/integration/ -v --tb=short && pytest tests/e2e/ -v --tb=short",
+]
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
-# Code quality
+# ==============================================================================
+# Pixi Tasks - Code Quality
+# ==============================================================================
 [tool.pixi.tasks."code-quality:lint"]
-cmd = ["prospector"]
 description = "Run linting with prospector"
 
 [tool.pixi.tasks."code-quality:bandit"]
-cmd = ["bandit", "-r", "app"]
 description = "Run security checks with bandit"
+cmd = ["bandit", "-r", "app"]
 
 [tool.pixi.tasks."code-quality:format"]
-cmd = ["black", "app", "tests"]
 description = "Format code with black"
+cmd = ["black", "app", "tests"]
 
 [tool.pixi.tasks."code-quality:format-check"]
-cmd = ["black", "--check", "app", "tests"]
 description = "Check code formatting with black"
+cmd = ["black", "--check", "app", "tests"]
 
 [tool.pixi.tasks."code-quality:isort"]
-cmd = ["isort", "app", "tests"]
 description = "Sort imports with isort"
+cmd = ["isort", "app", "tests"]
 
 [tool.pixi.tasks."code-quality:isort-check"]
-cmd = ["isort", "--check-only", "app", "tests"]
 description = "Check import sorting with isort"
+cmd = ["isort", "--check-only", "app", "tests"]
 
 [tool.pixi.tasks."code-quality:typecheck"]
-cmd = ["mypy", "app"]
 description = "Run type checking with mypy"
+cmd = ["mypy", "app"]
 
 [tool.pixi.tasks."code-quality:all"]
-cmd = [
-  "sh", "-c",
-  "black --check app tests && isort --check-only app tests && mypy app && prospector && bandit -r app"
-]
 description = "Run all code quality checks"
-
-# Utilities
-[tool.pixi.tasks."utils:generate-secret"]
 cmd = [
-  "python",
-  "-c",
-  "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+    "sh",
+    "-c",
+    "black --check app tests && isort --check-only app tests && mypy app && prospector && bandit -r app",
 ]
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+
+# ==============================================================================
+# Pixi Tasks - Utilities
+# ==============================================================================
+[tool.pixi.tasks."utils:generate-secret"]
 description = "Generate a new Django secret key"
+cmd = [
+    "python",
+    "-c",
+    "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())",
+]
 
 [tool.pixi.tasks."utils:req"]
 description = "Send HTTP request to development server"
 args = [
-  { arg = "method", default = "GET" },
-  { arg = "host", default = "localhost" },
-  { arg = "port", default = "8000" },
-  { arg = "path", default = "" }
+    { arg = "method", default = "GET" },
+    { arg = "host", default = "localhost" },
+    { arg = "port", default = "8000" },
+    { arg = "path", default = "" },
 ]
 cmd = ["http", "{{ method }}", "{{ host }}:{{ port }}/{{ path }}"]
 
 [tool.pixi.tasks.clean]
-cmd = [
-  "sh", "-c",
-  "rm -rf .pytest_cache htmlcov .coverage .mypy_cache .ruff_cache && find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true"
-]
 description = "Clean all artifacts and cache files"
+cmd = [
+    "sh",
+    "-c",
+    "rm -rf .pytest_cache htmlcov .coverage .mypy_cache .ruff_cache && find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true",
+]
 
-# Tool Configurations
+# ==============================================================================
+# Pytest Configuration
+# ==============================================================================
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = [
@@ -312,6 +369,7 @@ addopts = [
     "-v",
 ]
 DJANGO_SETTINGS_MODULE = "config.settings"
+addopts = ["-ra", "--strict-markers", "--reuse-db", "-v"]
 testpaths = ["tests"]
 pythonpath = ["app"]
 python_files = ["test_*.py", "*_test.py"]
@@ -333,6 +391,9 @@ directories = ["app", "tests"]
 args = ["tests/"]
 clear = true
 
+# ==============================================================================
+# Coverage Configuration
+# ==============================================================================
 [tool.coverage.run]
 source = ["app"]
 omit = [
@@ -374,23 +435,69 @@ directory = "htmlcov"
 [tool.coverage.xml]
 output = "coverage.xml"
 
+# ==============================================================================
+# Prospector Configuration
+# ==============================================================================
+[tool.prospector]
+strictness = "medium"
+max-line-length = 120
+test-warnings = false
+doc-warnings = false
+
+# ==============================================================================
+# Pylint Configuration
+# ==============================================================================
+[tool.pylint.main]
+load-plugins = ["pylint_django"]
+ignore = ["migrations", ".pixi", ".venv"]
+jobs = 1
+
 [tool.pylint.messages_control]
 disable = [
-    "C0111",
-    "C0103",
-    "R0903",
-    "R0801",
-    "W0212",
+    # Missing docstrings
+    "C0111", # missing-docstring
+    "C0114", # missing-module-docstring
+    "C0115", # missing-class-docstring
+    "C0116", # missing-function-docstring
+    # Naming
+    "C0103", # invalid-name
+    # Design
+    "R0903", # too-few-public-methods
+    "R0801", # duplicate-code
+    # Protected access
+    "W0212", # protected-access
+    # Imports
+    "import-outside-toplevel",
+    "import-error",
+    # Django/Pydantic compatibility
+    "arguments-differ",
+    "no-member",
+    # Code style
+    "no-else-return",
+    "unused-import",
 ]
 
-[tool.pylint.django]
-django-settings-module = "config.settings"
-load-plugins = "pylint_django"
+[tool.pylint.format]
+max-line-length = 120
 
+[tool.pylint.design]
+max-args = 7
+max-attributes = 12
+max-parents = 7
+
+[tool.pylint.similarities]
+min-similarity-lines = 10
+
+# ==============================================================================
+# Bandit Configuration
+# ==============================================================================
 [tool.bandit]
-exclude_dirs = ["tests", "*/migrations/*"]
+exclude_dirs = ["tests", "*/migrations/*", ".pixi", ".venv"]
 skips = ["B101", "B601"]
 
+# ==============================================================================
+# Black Configuration
+# ==============================================================================
 [tool.black]
 line-length = 88
 target-version = ['py313']
@@ -403,6 +510,7 @@ exclude = '''
   | \.mypy_cache
   | \.tox
   | \.venv
+  | \.pixi
   | _build
   | buck-out
   | build
@@ -411,13 +519,20 @@ exclude = '''
 )/
 '''
 
+# ==============================================================================
+# isort Configuration
+# ==============================================================================
 [tool.isort]
 profile = "black"
 line_length = 88
 known_django = ["django"]
 sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-skip_glob = ["*/migrations/*"]
+skip_glob = ["*/migrations/*", "*/.pixi/*", "*/.venv/*"]
+skip = [".pixi", ".venv", "migrations"]
 
+# ==============================================================================
+# MyPy Configuration
+# ==============================================================================
 [tool.mypy]
 python_version = "3.13"
 plugins = ["mypy_django_plugin.main"]
@@ -426,6 +541,7 @@ strict_optional = true
 warn_return_any = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+exclude = ["migrations", ".pixi", ".venv"]
 
 [tool.django-stubs]
 django_settings_module = "config.settings"
