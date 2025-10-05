@@ -51,10 +51,10 @@ class PydanticDjangoSettings(
     PROJECT_DIR: Path = PROJECT_DIR
 
     model_config = {
-        'env_file': PROJECT_DIR / '.env',
-        'env_file_encoding': 'utf-8',
-        'case_sensitive': True,
-        'extra': 'ignore',
+        "env_file": PROJECT_DIR / ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": True,
+        "extra": "ignore",
     }
 
     def model_post_init(self, __context, /) -> None:
@@ -74,6 +74,7 @@ class PydanticDjangoSettings(
             except IOError:
                 pass  # Ignore errors during directory creation
 
+
 @cache
 def get_settings() -> PydanticDjangoSettings:
-    return PydanticDjangoSettings() # noqa
+    return PydanticDjangoSettings()  # noqa

@@ -21,7 +21,7 @@ if not is_linting_context():
         load_loguru(
             globals(),
             loglevel=settings.LOGURU_CONSOLE_LEVEL.upper(),
-            configure_func=lambda instance, _: setup_loguru(instance, settings)
+            configure_func=lambda instance, _: setup_loguru(instance, settings),
         )
     except (IOError, ValueError, OSError) as e:
         import warnings
@@ -29,5 +29,5 @@ if not is_linting_context():
         warnings.warn(
             f"Loguru setup skipped (running in linting/testing context): {e.__class__.__name__}: {e}",
             RuntimeWarning,
-            stacklevel=2
+            stacklevel=2,
         )

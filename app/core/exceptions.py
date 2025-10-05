@@ -1,2 +1,2 @@
 class NinjaODMException(Exception):
-    """ App Basic Exception """
+    """App Basic Exception"""

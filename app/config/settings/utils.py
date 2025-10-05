@@ -53,9 +53,12 @@ def to_django(settings: BaseSettings) -> None:
 
 def is_linting_context():
     """Check if we're running in a linting/static analysis context"""
-    if any(tool in sys.argv[0] for tool in ['prospector', 'pylint', 'mypy', 'pyright', 'ruff']):
+    if any(
+        tool in sys.argv[0]
+        for tool in ["prospector", "pylint", "mypy", "pyright", "ruff"]
+    ):
         return True
-    if os.getenv('SKIP_LOGURU', '').lower() in ('true', '1', 'yes'):
+    if os.getenv("SKIP_LOGURU", "").lower() in ("true", "1", "yes"):
         return True
     return False
 

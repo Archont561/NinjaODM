@@ -46,10 +46,10 @@ class LoguruSettingsMixin(BaseSettings):
     )
 
     # Rotation
-    LOGURU_ROTATION_SIZE: str = Field(default='100 MB')
-    LOGURU_ROTATION_TIME: str = Field(default='00:00')  # Daily at midnight
-    LOGURU_RETENTION: str = Field(default='30 days')
-    LOGURU_COMPRESSION: str = Field(default='zip')
+    LOGURU_ROTATION_SIZE: str = Field(default="100 MB")
+    LOGURU_ROTATION_TIME: str = Field(default="00:00")  # Daily at midnight
+    LOGURU_RETENTION: str = Field(default="30 days")
+    LOGURU_COMPRESSION: str = Field(default="zip")
 
     # Performance
     LOGURU_ENQUEUE: bool = Field(default=True)
@@ -70,19 +70,19 @@ class LoguruSettingsMixin(BaseSettings):
     @computed_field
     @property
     def LOGURU_LOGS_DIR(self) -> Path:
-        return self.APP_DIR / 'logs'
+        return self.APP_DIR / "logs"
 
     @computed_field
     @property
     def LOGURU_APP_LOG_FILE(self) -> Path:
-        return self.LOGURU_LOGS_DIR / 'app.log'
+        return self.LOGURU_LOGS_DIR / "app.log"
 
     @computed_field
     @property
     def LOGURU_ERROR_LOG_FILE(self) -> Path:
-        return self.LOGURU_LOGS_DIR / 'error.log'
+        return self.LOGURU_LOGS_DIR / "error.log"
 
     @computed_field
     @property
     def LOGURU_JSON_LOG_FILE(self) -> Path:
-        return self.LOGURU_LOGS_DIR / 'app.json.log'
+        return self.LOGURU_LOGS_DIR / "app.json.log"

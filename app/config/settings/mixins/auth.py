@@ -18,10 +18,10 @@ class AuthSettingsMixin(BaseSettings):
     def PASSWORD_HASHERS(self) -> List[str]:
         """Password hashing algorithms."""
         return [
-            'django.contrib.auth.hashers.Argon2PasswordHasher',
-            'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-            'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
-            'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+            "django.contrib.auth.hashers.Argon2PasswordHasher",
+            "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+            "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+            "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
         ]
 
     @computed_field
@@ -30,19 +30,19 @@ class AuthSettingsMixin(BaseSettings):
         """Password validators configuration."""
         validators = [
             {
-                'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+                "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
             },
             {
-                'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-                'OPTIONS': {
-                    'min_length': self.AUTH_MIN_PASSWORD_LENGTH,
-                }
+                "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+                "OPTIONS": {
+                    "min_length": self.AUTH_MIN_PASSWORD_LENGTH,
+                },
             },
             {
-                'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+                "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
             },
             {
-                'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+                "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
             },
         ]
         return validators

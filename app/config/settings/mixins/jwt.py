@@ -6,6 +6,7 @@ from pydantic import Field, computed_field
 
 from pydantic_settings import BaseSettings
 
+
 class JWTAlgorithm(StrEnum):
     HS256 = auto()
     HS384 = auto()
@@ -40,16 +41,16 @@ class JWTSettingsMixin(BaseSettings):
     JWT_LEEWAY: int = Field(default=0)
 
     # Headers
-    JWT_AUTH_HEADER_TYPES: List[str] = Field(default_factory=lambda: ['Bearer'])
-    JWT_AUTH_HEADER_NAME: str = Field(default='HTTP_AUTHORIZATION')
+    JWT_AUTH_HEADER_TYPES: List[str] = Field(default_factory=lambda: ["Bearer"])
+    JWT_AUTH_HEADER_NAME: str = Field(default="HTTP_AUTHORIZATION")
 
     # User settings
-    JWT_USER_ID_FIELD: str = Field(default='id')
-    JWT_USER_ID_CLAIM: str = Field(default='user_id')
+    JWT_USER_ID_FIELD: str = Field(default="id")
+    JWT_USER_ID_CLAIM: str = Field(default="user_id")
 
     # Token settings
-    JWT_TOKEN_TYPE_CLAIM: str = Field(default='token_type')
-    JWT_JTI_CLAIM: str = Field(default='jti')
+    JWT_TOKEN_TYPE_CLAIM: str = Field(default="token_type")
+    JWT_JTI_CLAIM: str = Field(default="jti")
 
     @computed_field
     @property
@@ -57,51 +58,52 @@ class JWTSettingsMixin(BaseSettings):
         """django-ninja-jwt configuration."""
         config: Dict[str, Any] = {
             # Token lifetimes
-            'ACCESS_TOKEN_LIFETIME': timedelta(minutes=self.JWT_ACCESS_TOKEN_LIFETIME_MINUTES),
-            'REFRESH_TOKEN_LIFETIME': timedelta(days=self.JWT_REFRESH_TOKEN_LIFETIME_DAYS),
-            'SLIDING_TOKEN_LIFETIME': timedelta(minutes=self.JWT_SLIDING_TOKEN_LIFETIME_MINUTES),
-            'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=self.JWT_SLIDING_TOKEN_REFRESH_LIFETIME_DAYS),
-
+            "ACCESS_TOKEN_LIFETIME": timedelta(
+                minutes=self.JWT_ACCESS_TOKEN_LIFETIME_MINUTES
+            ),
+            "REFRESH_TOKEN_LIFETIME": timedelta(
+                days=self.JWT_REFRESH_TOKEN_LIFETIME_DAYS
+            ),
+            "SLIDING_TOKEN_LIFETIME": timedelta(
+                minutes=self.JWT_SLIDING_TOKEN_LIFETIME_MINUTES
+            ),
+            "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(
+                days=self.JWT_SLIDING_TOKEN_REFRESH_LIFETIME_DAYS
+            ),
             # Rotation
-            'ROTATE_REFRESH_TOKENS': self.JWT_ROTATE_REFRESH_TOKENS,
-            'BLACKLIST_AFTER_ROTATION': self.JWT_BLACKLIST_AFTER_ROTATION,
-            'UPDATE_LAST_LOGIN': self.JWT_UPDATE_LAST_LOGIN,
-
+            "ROTATE_REFRESH_TOKENS": self.JWT_ROTATE_REFRESH_TOKENS,
+            "BLACKLIST_AFTER_ROTATION": self.JWT_BLACKLIST_AFTER_ROTATION,
+            "UPDATE_LAST_LOGIN": self.JWT_UPDATE_LAST_LOGIN,
             # Algorithm
-            'ALGORITHM': self.JWT_ALGORITHM,
-            'SIGNING_KEY': self.JWT_SIGNING_KEY or self.SECRET_KEY.get_secret_value(),
-
+            "ALGORITHM": self.JWT_ALGORITHM,
+            "SIGNING_KEY": self.JWT_SIGNING_KEY or self.SECRET_KEY.get_secret_value(),
             # Leeway
-            'LEEWAY': self.JWT_LEEWAY,
-
+            "LEEWAY": self.JWT_LEEWAY,
             # Headers
-            'AUTH_HEADER_TYPES': tuple(self.JWT_AUTH_HEADER_TYPES),
-            'AUTH_HEADER_NAME': self.JWT_AUTH_HEADER_NAME,
-
+            "AUTH_HEADER_TYPES": tuple(self.JWT_AUTH_HEADER_TYPES),
+            "AUTH_HEADER_NAME": self.JWT_AUTH_HEADER_NAME,
             # User
-            'USER_ID_FIELD': self.JWT_USER_ID_FIELD,
-            'USER_ID_CLAIM': self.JWT_USER_ID_CLAIM,
-
+            "USER_ID_FIELD": self.JWT_USER_ID_FIELD,
+            "USER_ID_CLAIM": self.JWT_USER_ID_CLAIM,
             # Claims
-            'TOKEN_TYPE_CLAIM': self.JWT_TOKEN_TYPE_CLAIM,
-            'JTI_CLAIM': self.JWT_JTI_CLAIM,
-
+            "TOKEN_TYPE_CLAIM": self.JWT_TOKEN_TYPE_CLAIM,
+            "JTI_CLAIM": self.JWT_JTI_CLAIM,
             # Token classes
-            'AUTH_TOKEN_CLASSES': ('ninja_jwt.tokens.AccessToken',),
-            'TOKEN_USER_CLASS': 'ninja_jwt.models.TokenUser',
+            "AUTH_TOKEN_CLASSES": ("ninja_jwt.tokens.AccessToken",),
+            "TOKEN_USER_CLASS": "ninja_jwt.models.TokenUser",
         }
 
         # Optional settings
         if self.JWT_VERIFYING_KEY:
-            config['VERIFYING_KEY'] = self.JWT_VERIFYING_KEY
+            config["VERIFYING_KEY"] = self.JWT_VERIFYING_KEY
 
         if self.JWT_AUDIENCE:
-            config['AUDIENCE'] = self.JWT_AUDIENCE
+            config["AUDIENCE"] = self.JWT_AUDIENCE
 
         if self.JWT_ISSUER:
-            config['ISSUER'] = self.JWT_ISSUER
+            config["ISSUER"] = self.JWT_ISSUER
 
         if self.JWT_JWK_URL:
-            config['JWK_URL'] = self.JWT_JWK_URL
+            config["JWK_URL"] = self.JWT_JWK_URL
 
         return config
