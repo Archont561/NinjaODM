@@ -15,3 +15,9 @@ def api_client():
 @pytest.fixture(scope="session")
 def test_settings():
     return PydanticDjangoSettings(ENVIRONMENT="test")  # noqa
+
+
+@pytest.fixture
+def enable_db_access(db):
+    """Automatically enable database access test """
+    pass
