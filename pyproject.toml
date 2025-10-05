@@ -538,13 +538,14 @@ skip = [".pixi", ".venv", "migrations"]
 # ==============================================================================
 [tool.mypy]
 python_version = "3.13"
-plugins = ["mypy_django_plugin.main"]
+plugins = ["mypy_django_plugin.main", "pydantic.mypy"]
 ignore_missing_imports = true
 strict_optional = true
 warn_return_any = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 exclude = ["migrations", ".pixi", ".venv"]
+disable_error_code = ["prop-decorator"]
 
 [tool.django-stubs]
 django_settings_module = "app.config.entrypoint"
