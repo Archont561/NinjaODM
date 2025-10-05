@@ -1,25 +1,8 @@
-# .pre-commit-config.yaml
 default_language_version:
   python: python3.13
 
 repos:
-  # Quick formatting checks on commit
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
-    hooks:
-      - id: black
-        language_version: python3.13
-        args: [--config=pyproject.toml]
-        stages: [pre-commit]
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: [--settings-path=pyproject.toml]
-        stages: [pre-commit]
-
-  # Basic checks on both commit and push
+  # Lightweight utility hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -34,43 +17,58 @@ repos:
       - id: debug-statements
         stages: [pre-commit, pre-push]
 
-  # Comprehensive checks only on push
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
+  # Python tooling through Pixi dev environment
+  - repo: local
     hooks:
-      - id: mypy
-        args: [--config-file=pyproject.toml]
-        additional_dependencies:
-          - django-stubs>=5.2.5
-          - pydantic>=2.11.9
+      - id: black-pixi
+        name: black (pixi dev)
+        language: system
+        entry: pixi
+        args: ["run", "-e", "dev", "black", "--config=pyproject.toml"]
+        types: [python]
+        pass_filenames: true
+        stages: [pre-commit]
+
+      - id: isort-pixi
+        name: isort (pixi dev)
+        language: system
+        entry: pixi
+        args: ["run", "-e", "dev", "isort", "--settings-path=pyproject.toml"]
+        types: [python]
+        pass_filenames: true
+        stages: [pre-commit]
+
+      - id: mypy-pixi
+        name: mypy (pixi dev)
+        language: system
+        entry: pixi
+        args: ["run", "-e", "dev", "mypy", "--config-file=pyproject.toml"]
+        types: [python]
+        pass_filenames: true
         exclude: ^(migrations/|tests/)
         stages: [pre-push]
 
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.10
-    hooks:
-      - id: bandit
-        args: [-r, app]
-        exclude: ^tests/
-        stages: [pre-push]
-
-  # Django and test checks only on push
-  - repo: local
-    hooks:
-      - id: django-check
-        name: Django Check
-        entry: python app/manage.py check
+      - id: bandit-pixi
+        name: bandit (pixi dev)
         language: system
-        types: [python]
+        entry: pixi
+        args: ["run", "-e", "dev", "bandit", "-r", "app"]
         pass_filenames: false
-        require_serial: true
         stages: [pre-push]
 
-      - id: pytest-unit
-        name: Run Unit Tests
-        entry: pytest tests/unit/ -v --tb=short
+      - id: django-check-pixi
+        name: Django Check (pixi dev)
         language: system
-        types: [python]
+        entry: pixi
+        args: ["run", "-e", "dev", "python", "app/manage.py", "check", "--fail-level", "ERROR"]
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: pytest-unit-pixi
+        name: Run Unit Tests (pixi dev)
+        language: system
+        entry: pixi
+        args: ["run", "-e", "dev", "pytest", "tests/unit/", "-v", "--tb=short"]
         pass_filenames: false
         require_serial: true
         stages: [pre-push]
