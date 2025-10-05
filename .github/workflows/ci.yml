@@ -42,17 +42,17 @@ jobs:
       - name: Install Pixi environment
         run: pixi install -e test
 
-      - name: Lint with Prospector
-        run: pixi run -e test code-quality:lint
-
-      - name: Security check with Bandit
-        run: pixi run -e test code-quality:bandit
-
       - name: Format code with Black
         run: pixi run -e test code-quality:format
 
       - name: Type check with Mypy
         run: pixi run -e test code-quality:typecheck
+
+      - name: Lint with Prospector
+        run: pixi run -e test code-quality:lint
+
+      - name: Security check with Bandit
+        run: pixi run -e test code-quality:bandit
 
       - name: Run Migrations
         run: pixi run -e test django:manage migrate
