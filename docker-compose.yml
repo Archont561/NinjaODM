@@ -1,36 +1,43 @@
-version: '3.8'
-
 services:
-  app:
+  app-prod:
     build:
       context: .
-      dockerfile: Dockerfile
       args:
-        ENVIRONMENT: ${ENVIRONMENT:-prod}
-    image: ninjaodm:${ENVIRONMENT:-prod}
-    container_name: ninjaodm-${ENVIRONMENT:-prod}
+        ENVIRONMENT: prod
     ports:
-      - "${PORT:-8000}:8000"
+      - "8000:8000"
+    env_file:
+      - .env
     environment:
-      - ENVIRONMENT=${ENVIRONMENT:-prod}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
-      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/db.sqlite3}
-      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-4}
-      - GUNICORN_BIND=0.0.0.0:8000
-      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ENVIRONMENT=prod
+      - DATABASE_URL=${DATABASE_URL}
+      - GUNICORN_WORKERS=4
+    # CMD automatically uses prod environment
+
+  app-dev:
+    build:
+      context: .
+      args:
+        ENVIRONMENT: dev
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=dev
+      - DATABASE_URL=${DATABASE_URL}
     volumes:
       - ./app:/workspace/app
-      - ./data:/workspace/data
-      - ./media:/workspace/media
-      - ./static:/workspace/static
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "/workspace/scripts/healthcheck.sh"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # CMD automatically uses dev environment
 
-    command: ["/workspace/scripts/entrypoint.sh"]
+  app-test:
+    build:
+      context: .
+      args:
+        ENVIRONMENT: test
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=test
+      - DATABASE_URL=${DATABASE_URL}
+    command: test

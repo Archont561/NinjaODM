@@ -1,19 +1,8 @@
-#!/bin/bash
-set -e
-
-# Entrypoint script for NinjaODM Docker container
-# Activates pixi environment and starts the appropriate server
-
-# Change to workspace directory (where pyproject.toml is)
-cd /workspace
-
-# Activate the pixi environment using shell-hook
-echo "Activating pixi environment: ${ENVIRONMENT}"
-eval "$(pixi shell-hook -e ${ENVIRONMENT})"
-
 # Run migrations
 echo "Running database migrations..."
 python ./app/manage.py migrate --noinput
+
+ENVIRONMENT="$1"
 
 # Collect static files in production
 if [ "${ENVIRONMENT}" = "prod" ]; then
@@ -34,7 +23,7 @@ case "${ENVIRONMENT}" in
       --worker-class uvicorn.workers.UvicornWorker \
       --access-logfile - \
       --error-logfile - \
-      --log-level "${LOG_LEVEL:-info}" \
+      --log-level "${LOG_LEVEL:-INFO}" \
       --timeout "${GUNICORN_TIMEOUT:-120}"
     ;;
   dev)

@@ -111,121 +111,66 @@ cmd = ["python", "./app/manage.py"]
 description = "Show Django Admin CLI"
 cmd = ["django-admin"]
 
-[tool.pixi.tasks."dev:run"]
-description = "Run dev server with auto-reload"
-cmd = ["pixi", "run", "django:manage", "runserver"]
-
-[tool.pixi.tasks."dev:uvicorn"]
-description = "Run development server with uvicorn"
-args = [
-    { arg = "host", default = "localhost" },
-    { arg = "port", default = "8000" },
-]
-cmd = [
-    "uvicorn",
-    "app.config.asgi:application",
-    "--reload",
-    "--host",
-    "{{ host }}",
-    "--port",
-    "{{ port }}",
-]
-
-# ------------------------------------------------------------------------------
-# Production Server
-# ------------------------------------------------------------------------------
-[tool.pixi.tasks.start]
-description = "Run production server with gunicorn and uvicorn workers"
-args = [
-    { arg = "host", default = "0.0.0.0" },
-    { arg = "port", default = "8000" },
-    { arg = "workers", default = "4" },
-]
-cmd = [
-    "sh",
-    "-c",
-    "if [ -z \"$DJANGO_SECRET_KEY\" ]; then echo 'Error: DJANGO_SECRET_KEY is not set'; exit 1; fi && gunicorn app.config.asgi:application -k uvicorn.workers.UvicornWorker --bind {{ host }}:{{ port }} --workers {{ workers }}",
-]
-
 # ==============================================================================
-# Pixi Tasks - Docker
+# Pixi Tasks - Bash Scripts
 # ==============================================================================
-[tool.pixi.tasks."docker:build"]
-description = "Build Docker image for specified environment"
+[tool.pixi.tasks."scripts:runserver"]
+description = "Run server based on $ENVIRONMENT"
 args = [{ arg = "env", default = "prod" }]
-cmd = [
-    "docker",
-    "build",
-    "--build-arg",
-    "ENVIRONMENT={{ env }}",
-    "-t",
-    "ninjaodm:{{ env }}",
-    ".",
-]
+cmd = ["./scripts/start.sh", "{{ arg }}"]
 
-[tool.pixi.tasks."docker:run"]
-description = "Run Docker container for specified environment"
-args = [
-    { arg = "env", default = "prod" },
-    { arg = "port", default = "8000" },
-]
-cmd = [
-    "docker",
-    "run",
-    "-it",
-    "--rm",
-    "-p",
-    "{{ port }}:{{ port }}",
-    "ninjaodm:{{ env }}",
-]
-
-# ==============================================================================
-# Pixi Tasks - Scripts
-# ==============================================================================
-[tool.pixi.tasks."scripts:test-entrypoint"]
-description = "Test entrypoint script locally"
-cmd = ["bash", "scripts/entrypoint.sh"]
-
-[tool.pixi.tasks."scripts:test-healthcheck"]
-description = "Test healthcheck script locally"
-cmd = ["bash", "scripts/healthcheck.sh"]
-
-[tool.pixi.tasks."scripts:validate"]
-description = "Validate all scripts with shellcheck"
-cmd = [
-    "sh",
-    "-c",
-    "command -v shellcheck >/dev/null 2>&1 && shellcheck scripts/*.sh || echo 'shellcheck not installed'",
-]
+[tool.pixi.tasks."scripts:healthcheck"]
+cmd = ["./scripts/healthcheck.sh"]
 
 # ==============================================================================
 # Pixi Tasks - Docker Compose
 # ==============================================================================
 [tool.pixi.tasks."compose:up"]
 description = "Start services with docker-compose"
-args = [{ arg = "env", default = "prod" }]
-cmd = ["docker-compose", "up", "-d"]
-env = { ENVIRONMENT = "{{ env }}" }
+args = [
+  { arg = "env", default = "prod" },
+  { arg = "port", default = "8000" },
+]
+cmd = [
+  "docker", "compose", "-p", "ninjaodm-{{ env }}", "up", "-d", "--build", "app-{{ env }}"
+]
+env = { ENVIRONMENT = "{{ env }}", PORT = "{{ port }}" }
 
-[tool.pixi.tasks."compose:up:dev"]
-description = "Start development services"
-cmd = ["docker-compose", "up", "app-dev"]
-
+# ==============================================================================
+# Stop services for each environment (same for prod, dev, test)
 [tool.pixi.tasks."compose:down"]
 description = "Stop services"
-cmd = ["docker-compose", "down"]
+args = [{ arg = "env", default = "prod" }]
+cmd = [
+  "docker", "compose", "-p", "ninjaodm-{{ env }}", "down", "-v",
+]
 
+# ==============================================================================
+# Show service logs
 [tool.pixi.tasks."compose:logs"]
 description = "Show service logs"
-cmd = ["docker-compose", "logs", "-f"]
+cmd = [
+  "docker", "compose", "-p", "ninjaodm-{{ env }}", "logs", "-f",
+]
 
+# ==============================================================================
+# Show running services
 [tool.pixi.tasks."compose:ps"]
 description = "Show running services"
-cmd = ["docker-compose", "ps"]
+cmd = [
+  "docker", "compose", "-p", "ninjaodm-{{ env }}", "ps",
+]
 
+# ==============================================================================
+# Restart services (specifically for app-{{ env }} service)
 [tool.pixi.tasks."compose:restart"]
-description = "Restart services"
-cmd = ["docker-compose", "restart"]
+description = "Restart app-{{ env }} service"
+args = [{ arg = "env", default = "prod" }]
+cmd = [
+  "docker", " compose", "-p", "ninjaodm-{{ env }}", "restart",
+  "app-{{ env }}",  # This restarts the app-specific service for the environment
+]
+
 
 # ==============================================================================
 # Pixi Tasks - Testing

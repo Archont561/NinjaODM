@@ -1,40 +1,35 @@
 # Build stage: use Pixi image to install dependencies and build environment
 FROM ghcr.io/prefix-dev/pixi:0.55.0-jammy-cuda-12.9.1 AS build
 
-WORKDIR /workspace
-
-# ARG to specify pixi environment, default to prod
 ARG ENVIRONMENT=prod
 
-# Copy pixi configuration files first for better caching
-COPY pyproject.toml pixi.lock* ./
+WORKDIR /workspace
 
-# Install the specified pixi environment
-RUN pixi install -e ${ENVIRONMENT}
+# Copy dependency files first (better layer caching)
+COPY pixi.lock pyproject.toml ./
 
-# Copy application source
-COPY ./app ./app
+# Install dependencies into /workspace/.pixi
+RUN pixi install -e $ENVIRONMENT
 
-# Copy scripts
-COPY ./scripts ./scripts
+# Create the shell-hook bash script to activate the environment
+RUN pixi shell-hook -e $ENVIRONMENT > /shell-hook.sh && \
+    echo 'exec "$@"' >> /shell-hook.sh
 
-# ------------------------------------------------------------
+# Copy application code
+COPY app ./app
+COPY scripts ./scripts
 
-# Runtime stage: MINIMAL Ubuntu image
+
+# Runtime stage
 FROM ubuntu:24.04 AS runtime
 
-# Build arguments
 ARG ENVIRONMENT=prod
-
-# Environment variables
-ENV ENVIRONMENT=${ENVIRONMENT} \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    DEBIAN_FRONTEND=noninteractive
+ENV ENVIRONMENT=$ENVIRONMENT
 
 WORKDIR /workspace
+ENV PYTHONPATH=/workspace
 
-# Install ONLY essential runtime dependencies
+# Install minimal runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
@@ -42,44 +37,38 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Create non-root user and group with different IDs
-RUN groupadd --gid 1001 appuser \
-    && useradd --uid 1001 --gid appuser --create-home --shell /bin/bash appuser
+# Create non-root user and group
+RUN groupadd --gid 1001 appuser && \
+    useradd --uid 1001 --gid appuser --create-home --shell /bin/bash appuser
 
-# Copy pixi binary from build stage
-COPY --from=build /usr/local/bin/pixi /usr/local/bin/pixi
+# Copy environment and activation script from build stage
+# Note: prefix path must stay the same as in build container
+COPY --from=build /workspace/.pixi/envs/$ENVIRONMENT /workspace/.pixi/envs/$ENVIRONMENT
+COPY --from=build /shell-hook.sh /shell-hook.sh
 
-# Copy the COMPLETE Pixi environment (includes GDAL, GEOS, PROJ, Python, etc.)
-COPY --from=build /workspace/.pixi/envs/${ENVIRONMENT} /workspace/.pixi/envs/${ENVIRONMENT}
+# Copy application code
+COPY --from=build /workspace/app ./app
+COPY --from=build /workspace/scripts ./scripts
+COPY --from=build /workspace/pyproject.toml ./
 
-# Copy pixi project files (needed for pixi to work)
-COPY --from=build /workspace/pyproject.toml /workspace/pixi.lock* ./
-
-# Copy application source
-COPY --chown=appuser:appuser ./app ./app
-
-# Copy scripts
-COPY --from=build --chown=appuser:appuser /workspace/scripts ./scripts
-
-# Set executable permissions on scripts
-RUN chmod +x ./scripts/*.sh
-
-# Create necessary directories with correct permissions
-RUN mkdir -p /workspace/data /workspace/static /workspace/media \
-    && chown -R appuser:appuser /workspace
+# Set ownership to non-root user
+RUN chown -R appuser:appuser /workspace
 
 # Switch to non-root user
 USER appuser
-ENV HOME=/home/appuser
-ENV PYTHONPATH=/workspace:$PYTHONPATH
-ENV DJANGO_SETTINGS_MODULE=app.config.settings
 
-# Expose default port
+# Healthcheck configuration
+ENV HEALTH_ENDPOINT=http://localhost:8000/api/health
+ENV HEALTH_TIMEOUT=5
+
 EXPOSE 8000
 
-# Health check
+# Configure Docker healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD ["/workspace/scripts/healthcheck.sh"]
 
-# Entrypoint
-ENTRYPOINT ["/workspace/scripts/entrypoint.sh"]
+# Activate environment and run command
+ENTRYPOINT ["/bin/bash", "/shell-hook.sh"]
+
+# CMD in shell form for $ENVIRONMENT to be expanded
+CMD bash /workspace/scripts/start.sh "$ENVIRONMENT"
