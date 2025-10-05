@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4  # PostgreSQL 16 + PostGIS 3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      ENVIRONMENT: "test"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Pixi
+        uses: prefix-dev/setup-pixi@v0.9.1
+        with:
+          pixi-version: v0.49.0
+          cache: true
+
+      - name: Install Pixi environment
+        run: pixi install -e test
+
+      - name: Lint with Prospector
+        run: pixi run -e test code-quality:lint
+
+      - name: Security check with Bandit
+        run: pixi run -e test code-quality:bandit
+
+      - name: Format code with Black
+        run: pixi run -e test code-quality:format
+
+      - name: Type check with Mypy
+        run: pixi run -e test code-quality:typecheck
+
+      - name: Run Migrations
+        run: pixi run -e test django:manage migrate
+
+      - name: Run Unit, Integration, and E2E Tests
+        run: pixi run -e test test
