@@ -71,6 +71,8 @@ RUN mkdir -p /workspace/data /workspace/static /workspace/media \
 # Switch to non-root user
 USER appuser
 ENV HOME=/home/appuser
+ENV PYTHONPATH=/workspace:$PYTHONPATH
+ENV DJANGO_SETTINGS_MODULE=app.config.settings
 
 # Expose default port
 EXPOSE 8000
