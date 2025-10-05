@@ -3,8 +3,10 @@ from typing import List
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
+from .base import BaseSettingsMixin
 
-class CoreSettingsMixin(BaseSettings):
+
+class CoreSettingsMixin(BaseSettingsMixin):
 
     ALLOWED_HOSTS: List[str] = Field(default=["localhost", "127.0.0.1"])
 
