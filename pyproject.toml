@@ -230,12 +230,7 @@ cmd = ["docker-compose", "restart"]
 # ==============================================================================
 [tool.pixi.tasks.test]
 description = "Run all tests in order (unit → integration → e2e)"
-cmd = [
-    "sh",
-    "-c",
-    "pytest tests/unit/ && pytest tests/integration/ && pytest tests/e2e/",
-]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+depends-on = ["test:unit", "test:integration", "test:e2e"]
 
 [tool.pixi.tasks."test:watch"]
 description = "Watch and run tests"
