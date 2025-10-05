@@ -347,7 +347,7 @@ cmd = ["pre-commit", "install", "--hook-type", "pre-push"]
 
 [tool.pixi.tasks."pre-commit:install-all"]
 description = "Install both pre-commit and pre-push hooks"
-depend-on = ["pre-commit:install", "pre-commit:install-push"]
+depends-on = ["pre-commit:install", "pre-commit:install-push"]
 
 [tool.pixi.tasks."pre-commit:uninstall"]
 description = "Uninstall all pre-commit hooks"
@@ -590,4 +590,3 @@ disable_error_code = ["prop-decorator"]
 
 [tool.django-stubs]
 django_settings_module = "app.config.entrypoint"
-
