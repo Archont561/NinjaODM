@@ -1,0 +1,75 @@
+default_language_version:
+  python: python3.13
+
+repos:
+  # Quick formatting checks on commit
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.13
+        args: [--config=pyproject.toml]
+        stages: [commit]  # Quick on commit
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--settings-path=pyproject.toml]
+        stages: [commit]  # Quick on commit
+
+  # Basic checks on commit
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        stages: [commit, push]
+      - id: end-of-file-fixer
+        stages: [commit, push]
+      - id: check-yaml
+        stages: [commit, push]
+      - id: check-merge-conflict
+        stages: [commit, push]
+      - id: debug-statements
+        stages: [commit, push]
+
+  # Comprehensive checks only on push
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        args: [--config-file=pyproject.toml]
+        additional_dependencies:
+          - django-stubs>=5.2.5
+          - pydantic>=2.11.9
+        exclude: ^(migrations/|tests/)
+        stages: [push]  # Only on push
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10
+    hooks:
+      - id: bandit
+        args: [-r, app]
+        exclude: ^tests/
+        stages: [push]  # Only on push
+
+  # Django and test checks only on push
+  - repo: local
+    hooks:
+      - id: django-check
+        name: Django Check
+        entry: python app/manage.py check
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
+        stages: [push]
+
+      - id: pytest-unit
+        name: Run Unit Tests
+        entry: pytest tests/unit/ -v --tb=short
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
+        stages: [push]

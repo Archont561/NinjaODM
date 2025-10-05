@@ -90,6 +90,7 @@ isort = ">=5.0.0,<6"
 # ------------------------------------------------------------------------------
 [tool.pixi.feature.miscellaneous.dependencies]
 httpie = ">=3.2.4,<4"
+pre-commit = ">=4.3.0,<5"
 
 # ------------------------------------------------------------------------------
 # Environments
@@ -332,6 +333,49 @@ cmd = [
     "black --check app tests && isort --check-only app tests && mypy app && prospector && bandit -r app",
 ]
 env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+
+# ==============================================================================
+# Pixi Tasks - Pre-commit (with pre-push support)
+# ==============================================================================
+[tool.pixi.tasks."pre-commit:install"]
+description = "Install pre-commit hooks (on commit)"
+cmd = ["pre-commit", "install"]
+
+[tool.pixi.tasks."pre-commit:install-push"]
+description = "Install pre-push hooks"
+cmd = ["pre-commit", "install", "--hook-type", "pre-push"]
+
+[tool.pixi.tasks."pre-commit:install-all"]
+description = "Install both pre-commit and pre-push hooks"
+depend-on = ["pre-commit:install", "pre-commit:install-push"]
+
+[tool.pixi.tasks."pre-commit:uninstall"]
+description = "Uninstall all pre-commit hooks"
+cmd = ["sh", "-c", "pre-commit uninstall && pre-commit uninstall --hook-type pre-push"]
+
+[tool.pixi.tasks."pre-commit:run"]
+description = "Run pre-commit on all files"
+cmd = ["pre-commit", "run", "--all-files"]
+
+[tool.pixi.tasks."pre-commit:run-staged"]
+description = "Run pre-commit on staged files only"
+cmd = ["pre-commit", "run"]
+
+[tool.pixi.tasks."pre-commit:run-push"]
+description = "Run pre-push hooks (simulated)"
+cmd = ["pre-commit", "run", "--hook-stage", "push", "--all-files"]
+
+[tool.pixi.tasks."pre-commit:update"]
+description = "Update pre-commit hooks to latest versions"
+cmd = ["pre-commit", "autoupdate"]
+
+[tool.pixi.tasks."pre-commit:clean"]
+description = "Clean pre-commit cache"
+cmd = ["pre-commit", "clean"]
+
+[tool.pixi.tasks."pre-commit:gc"]
+description = "Garbage collect pre-commit cache"
+cmd = ["pre-commit", "gc"]
 
 # ==============================================================================
 # Pixi Tasks - Utilities

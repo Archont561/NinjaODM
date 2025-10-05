@@ -470,3 +470,6 @@ thumbnails/
 
 # Keep empty directories
 !.gitkeep
+
+
+!.pre-commit-config.yaml
