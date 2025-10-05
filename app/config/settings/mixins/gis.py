@@ -23,24 +23,24 @@ class GISSettingsMixin(BaseSettingsMixin):
 
     @computed_field
     @property
-    def GDAL_LIBRARY_PATH(self) -> Path:
-        return self._get_library_path(self.PIXI_ENV_PATH, "gdal")
+    def GDAL_LIBRARY_PATH(self) -> str:
+        return str(self._get_library_path(self.PIXI_ENV_PATH, "gdal"))
 
     @computed_field
     @property
-    def GEOS_LIBRARY_PATH(self) -> Path:
-        return self._get_library_path(self.PIXI_ENV_PATH, "geos_c")
+    def GEOS_LIBRARY_PATH(self) -> str:
+        return str(self._get_library_path(self.PIXI_ENV_PATH, "geos_c"))
 
     @computed_field
     @property
-    def PROJ_LIBRARY_PATH(self) -> Path:
-        return self._get_library_path(self.PIXI_ENV_PATH, "proj")
+    def PROJ_LIBRARY_PATH(self) -> str:
+        return str(self._get_library_path(self.PIXI_ENV_PATH, "proj"))
 
     @computed_field
     @property
-    def SPATIALITE_LIBRARY_PATH(self) -> Path:
+    def SPATIALITE_LIBRARY_PATH(self) -> str:
         """SpatiaLite has different naming convention."""
         if sys.platform == "win32":
-            return self.PIXI_ENV_PATH / "Library" / "lib" / "mod_spatialite.lib"
+            return str(self.PIXI_ENV_PATH / "Library" / "lib" / "mod_spatialite.lib")
         else:
-            return self._get_library_path(self.PIXI_ENV_PATH, "mod_spatialite")
+            return str(self._get_library_path(self.PIXI_ENV_PATH, "mod_spatialite"))
