@@ -28,7 +28,6 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
       DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       ENVIRONMENT: "test"
-      ALLOWED_HOSTS: "localhost,127.0.0.1"
 
     steps:
       - name: Checkout source

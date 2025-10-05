@@ -17,7 +17,7 @@ class CoreSettingsMixin(BaseSettings):
     # Required settings
     ENVIRONMENT: AppEnvironment = Field(default=AppEnvironment.DEVELOPMENT)
     SECRET_KEY: SecretStr = Field(..., min_length=30, alias="DJANGO_SECRET_KEY")
-    ALLOWED_HOSTS: List[str] = Field(default_factory=list)
+    ALLOWED_HOSTS: List[str] = Field(default=["localhost", "127.0.0.1"])
 
     # Django configuration
     ROOT_URLCONF: str = 'config.urls'
