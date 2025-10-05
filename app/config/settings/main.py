@@ -57,7 +57,7 @@ class PydanticDjangoSettings(
         'extra': 'ignore',
     }
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, __context, /) -> None:
         """Post-initialization ho   ok."""
         self._ensure_directories()
 

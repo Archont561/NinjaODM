@@ -1,11 +1,16 @@
 from pathlib import Path
-
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings
-
 from enum import StrEnum, auto
 
+
 class LogLevels(StrEnum):
+
+    @staticmethod
+    def _generate_next_value_(name, start, count, last_values):
+        """Generate uppercase string values for enum members"""
+        return name.upper()
+
     TRACE = auto()
     DEBUG = auto()
     INFO = auto()
@@ -16,7 +21,6 @@ class LogLevels(StrEnum):
 
 
 class LoguruSettingsMixin(BaseSettings):
-
     # Log levels
     LOGURU_CONSOLE_LEVEL: LogLevels = Field(default=LogLevels.INFO)
     LOGURU_FILE_LEVEL: LogLevels = Field(default=LogLevels.DEBUG)

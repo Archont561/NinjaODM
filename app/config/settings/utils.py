@@ -1,8 +1,11 @@
 import inspect
-from typing import Any, Dict
+import os
+import sys
+from typing import Any
 
 from pydantic import SecretBytes, SecretStr
 from pydantic_settings import BaseSettings
+from .mixins import LoguruSettingsMixin
 
 
 def to_django(settings: BaseSettings) -> None:
@@ -31,15 +34,78 @@ def to_django(settings: BaseSettings) -> None:
         if isinstance(val, BaseSettings):
             # Convert nested settings to dict and process
             return _get_actual_value(val.model_dump())
-        elif isinstance(val, dict):
+
+        if isinstance(val, dict):
             return {k: _get_actual_value(v) for k, v in val.items()}
-        elif isinstance(val, list):
+
+        if isinstance(val, list):
             return [_get_actual_value(item) for item in val]
-        elif isinstance(val, (SecretStr, SecretBytes)):
+
+        if isinstance(val, (SecretStr, SecretBytes)):
             return val.get_secret_value()
-        else:
-            return val
+
+        return val
 
     # Export all settings to caller's namespace
     for key, value in settings.model_dump().items():
         parent_frame.f_locals[key] = _get_actual_value(value)
+
+
+def is_linting_context():
+    """Check if we're running in a linting/static analysis context"""
+    if any(tool in sys.argv[0] for tool in ['prospector', 'pylint', 'mypy', 'pyright', 'ruff']):
+        return True
+    if os.getenv('SKIP_LOGURU', '').lower() in ('true', '1', 'yes'):
+        return True
+    return False
+
+
+def setup_loguru(logger, settings: LoguruSettingsMixin):
+    """Configure Loguru with custom handlers"""
+
+    # Remove default handler
+    logger.remove()
+
+    # Ensure log directory exists
+    settings.LOGURU_LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    print(settings.LOGURU_CONSOLE_LEVEL)
+    # Console handler
+    if settings.LOGURU_ENABLE_CONSOLE:
+        logger.add(
+            sys.stderr,
+            format=settings.LOGURU_CONSOLE_FORMAT,
+            level=settings.LOGURU_CONSOLE_LEVEL,
+            colorize=settings.LOGURU_COLORIZE,
+            enqueue=settings.LOGURU_ENQUEUE,
+            backtrace=settings.LOGURU_BACKTRACE,
+            diagnose=settings.LOGURU_DIAGNOSE,
+        )
+
+    # File handler
+    if settings.LOGURU_ENABLE_FILE:
+        logger.add(
+            str(settings.LOGURU_APP_LOG_FILE),
+            format=settings.LOGURU_FILE_FORMAT,
+            level=settings.LOGURU_FILE_LEVEL,
+            rotation=settings.LOGURU_ROTATION_SIZE,
+            retention=settings.LOGURU_RETENTION,
+            compression=settings.LOGURU_COMPRESSION,
+            enqueue=settings.LOGURU_ENQUEUE,
+            backtrace=settings.LOGURU_BACKTRACE,
+            diagnose=settings.LOGURU_DIAGNOSE,
+            serialize=settings.LOGURU_SERIALIZE,
+        )
+
+    # Error file handler
+    if settings.LOGURU_ENABLE_ERROR_FILE:
+        logger.add(
+            str(settings.LOGURU_ERROR_LOG_FILE),
+            format=settings.LOGURU_FILE_FORMAT,
+            level=settings.LOGURU_ERROR_FILE_LEVEL,
+            rotation=settings.LOGURU_ROTATION_SIZE,
+            retention=settings.LOGURU_RETENTION,
+            compression=settings.LOGURU_COMPRESSION,
+            enqueue=settings.LOGURU_ENQUEUE,
+            backtrace=settings.LOGURU_BACKTRACE,
+            diagnose=settings.LOGURU_DIAGNOSE,
+        )

@@ -24,6 +24,9 @@ python = ">=3.13.7,<3.14"
 [tool.pixi.target.linux.dependencies]
 gunicorn = ">=23.0.0"
 
+# ------------------------------------------------------------------------------
+# Django Feature
+# ------------------------------------------------------------------------------
 [tool.pixi.feature.django.dependencies]
 django = ">=5.2.7,<6"
 django-ninja = ">=1.4.3,<2"
@@ -33,8 +36,10 @@ pydantic-settings = ">=2.11.0,<3"
 geojson-pydantic = ">=2.0.0,<3"
 uvicorn = ">=0.37.0,<0.38"
 django-cors-headers = ">=4.9.0,<5"
+loguru = ">=0.7.3,<0.8"
 
 [tool.pixi.feature.django.pypi-dependencies]
+django-easy-logging = ">=0.70,<0.71"
 django-tus = ">=0.5.0,<0.6"
 django-ninja-extra = ">=0.30.1,<0.31"
 django-ninja-jwt = ">=5.3.9,<6"
@@ -229,27 +234,27 @@ cmd = [
     "-c",
     "pytest tests/unit/ && pytest tests/integration/ && pytest tests/e2e/",
 ]
-description = "Run all tests in order (unit → integration → e2e)"
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 [tool.pixi.tasks."test:watch"]
 description = "Watch and run tests"
 cmd = ["ptw", "--", "-vv"]
-description = "Watch and run tests"
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 [tool.pixi.tasks."test:unit"]
 description = "Run unit tests only"
 cmd = ["pytest", "tests/unit/", "-v"]
-description = "Run unit tests only"
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 [tool.pixi.tasks."test:integration"]
 description = "Run integration tests only"
 cmd = ["pytest", "tests/integration/", "-v"]
-description = "Run integration tests only"
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 [tool.pixi.tasks."test:e2e"]
 description = "Run e2e tests only"
 cmd = ["pytest", "tests/e2e/", "-v"]
-description = "Run e2e tests only"
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 [tool.pixi.tasks."test:coverage"]
 description = "Run tests with coverage"
@@ -263,6 +268,7 @@ env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 [tool.pixi.tasks."test:coverage:unit"]
 description = "Coverage for unit tests only"
 cmd = ["sh", "-c", "coverage run -m pytest tests/unit/ && coverage report"]
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 [tool.pixi.tasks."test:coverage:report"]
 description = "Show coverage report"
@@ -294,6 +300,8 @@ env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 # ==============================================================================
 [tool.pixi.tasks."code-quality:lint"]
 description = "Run linting with prospector"
+cmd = ["prospector", "-X"]
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", PYTHONIOENCODING = "utf-8" }
 
 [tool.pixi.tasks."code-quality:bandit"]
 description = "Run security checks with bandit"
@@ -362,14 +370,8 @@ cmd = [
 # ==============================================================================
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = [
-    "-ra",
-    "--strict-markers",
-    "--reuse-db",
-    "-v",
-]
-DJANGO_SETTINGS_MODULE = "config.settings"
 addopts = ["-ra", "--strict-markers", "--reuse-db", "-v"]
+DJANGO_SETTINGS_MODULE = "app.config.entrypoint"
 testpaths = ["tests"]
 pythonpath = ["app"]
 python_files = ["test_*.py", "*_test.py"]
@@ -449,6 +451,7 @@ doc-warnings = false
 # ==============================================================================
 [tool.pylint.main]
 load-plugins = ["pylint_django"]
+django-settings-module = "app.config.entrypoint"
 ignore = ["migrations", ".pixi", ".venv"]
 jobs = 1
 
@@ -544,4 +547,5 @@ warn_unused_ignores = true
 exclude = ["migrations", ".pixi", ".venv"]
 
 [tool.django-stubs]
-django_settings_module = "config.settings"
+django_settings_module = "app.config.entrypoint"
+
