@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: ${ENVIRONMENT:-prod}
+    image: ninjaodm:${ENVIRONMENT:-prod}
+    container_name: ninjaodm-${ENVIRONMENT:-prod}
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-prod}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/db.sqlite3}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-4}
+      - GUNICORN_BIND=0.0.0.0:8000
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - ./app:/workspace/app
+      - ./data:/workspace/data
+      - ./media:/workspace/media
+      - ./static:/workspace/static
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/workspace/scripts/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    command: ["/workspace/scripts/entrypoint.sh"]
