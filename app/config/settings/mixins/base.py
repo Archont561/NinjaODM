@@ -2,7 +2,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from pydantic import Field, SecretStr, computed_field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 APP_DIR = Path(__file__).resolve().parent.parent.parent.parent
 PROJECT_DIR = APP_DIR.parent
@@ -19,12 +19,13 @@ class BaseSettingsMixin(BaseSettings):
     APP_DIR: Path = APP_DIR
     PROJECT_DIR: Path = PROJECT_DIR
 
-    model_config = {
-        "env_file": PROJECT_DIR / ".env",
-        "env_file_encoding": "utf-8",
-        "case_sensitive": True,
-        "extra": "ignore",
-    }
+    model_config = SettingsConfigDict(
+        env_file=PROJECT_DIR / ".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
+        enable_decoding=False,
+    )
 
     ENVIRONMENT: AppEnvironment = Field(default=AppEnvironment.DEVELOPMENT)
     SECRET_KEY: SecretStr = Field(..., min_length=30, alias="DJANGO_SECRET_KEY")
