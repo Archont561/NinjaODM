@@ -1,5 +1,6 @@
 from functools import cache
 from pathlib import Path
+from typing import List, Union
 
 from .mixins import (
     AppsSettingsMixin,
@@ -49,7 +50,7 @@ class PydanticDjangoSettings(
 
     def _ensure_directories(self) -> None:
         """Ensure required directories exist."""
-        directories = [
+        directories: List[Union[str, Path]] = [
             self.STATIC_ROOT,
             self.MEDIA_ROOT,
             self.DATA_DIR,
