@@ -5,6 +5,7 @@ from typing import Any
 
 from pydantic import SecretBytes, SecretStr
 from pydantic_settings import BaseSettings
+
 from .mixins import LoguruSettingsMixin
 
 
@@ -16,9 +17,10 @@ def to_django(settings: BaseSettings) -> None:
     as module-level variables that Django can use.
     """
 
-    # Get caller's frame
+    # Get caller's frame and its globals
     stack = inspect.stack()
     parent_frame = stack[1][0]
+    parent_globals = parent_frame.f_globals  # ✅ Use f_globals, not f_locals
 
     def _get_actual_value(val: Any) -> Any:
         """
@@ -46,9 +48,12 @@ def to_django(settings: BaseSettings) -> None:
 
         return val
 
-    # Export all settings to caller's namespace
+    # Export all settings to caller's global namespace
     for key, value in settings.model_dump().items():
-        parent_frame.f_locals[key] = _get_actual_value(value)
+        parent_globals[key] = _get_actual_value(value)  # ✅ Use globals, not locals
+
+    # Clean up frame reference to avoid memory leaks
+    del parent_frame, stack
 
 
 def is_linting_context():
