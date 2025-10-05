@@ -1,8 +1,8 @@
-from pydantic import Field, computed_field, SecretStr
-from pydantic_settings import BaseSettings
-from pathlib import Path
 from enum import StrEnum
+from pathlib import Path
 
+from pydantic import Field, SecretStr, computed_field
+from pydantic_settings import BaseSettings
 
 APP_DIR = Path(__file__).resolve().parent.parent.parent.parent
 PROJECT_DIR = APP_DIR.parent
@@ -17,7 +17,7 @@ class AppEnvironment(StrEnum):
 
 class BaseSettingsMixin(BaseSettings):
     APP_DIR: Path = APP_DIR
-    PROJECT_DIR: Path = APP_DIR.parent
+    PROJECT_DIR: Path = PROJECT_DIR
 
     model_config = {
         "env_file": PROJECT_DIR / ".env",
@@ -28,6 +28,11 @@ class BaseSettingsMixin(BaseSettings):
 
     ENVIRONMENT: AppEnvironment = Field(default=AppEnvironment.DEVELOPMENT)
     SECRET_KEY: SecretStr = Field(..., min_length=30, alias="DJANGO_SECRET_KEY")
+
+    @computed_field
+    @property
+    def DATA_DIR(self) -> Path:
+        return self.APP_DIR / "data"
 
     @computed_field
     @property

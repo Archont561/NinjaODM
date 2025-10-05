@@ -1,10 +1,11 @@
-from pathlib import Path
 from functools import cache
+from pathlib import Path
 
 from .mixins import (
     AppsSettingsMixin,
     AuthSettingsMixin,
     CacheSettingsMixin,
+    CoreSettingsMixin,
     DatabaseSettingsMixin,
     EmailSettingsMixin,
     GISSettingsMixin,
@@ -15,7 +16,6 @@ from .mixins import (
     SecuritySettingsMixin,
     StaticFilesSettingsMixin,
     TemplatesSettingsMixin,
-    CoreSettingsMixin,
 )
 
 
@@ -52,6 +52,7 @@ class PydanticDjangoSettings(
         directories = [
             self.STATIC_ROOT,
             self.MEDIA_ROOT,
+            self.DATA_DIR,
         ]
 
         for directory in directories:
