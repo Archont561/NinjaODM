@@ -5,8 +5,8 @@ from app.config.settings.main import PydanticDjangoSettings
 from app.api import api
 
 
-@pytest.fixture
-def api_client(scope="session"):
+@pytest.fixture(scope="session")
+def api_client():
     """Create a test client for the API"""
     api.auto_discover_controllers()
     return TestClient(api)
