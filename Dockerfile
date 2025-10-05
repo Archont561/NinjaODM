@@ -1,5 +1,5 @@
 # Build stage: use Pixi image to install dependencies and build environment
-FROM ghcr.io/prefix-dev/pixi:0.40.0 AS build
+FROM ghcr.io/prefix-dev/pixi:0.55.0-jammy-cuda-12.9.1 AS build
 
 WORKDIR /workspace
 
@@ -42,9 +42,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Create non-root user and group
-RUN groupadd --gid 1000 appuser \
-    && useradd --uid 1000 --gid appuser --create-home --shell /bin/bash appuser
+# Create non-root user and group with different IDs
+RUN groupadd --gid 1001 appuser \
+    && useradd --uid 1001 --gid appuser --create-home --shell /bin/bash appuser
 
 # Copy pixi binary from build stage
 COPY --from=build /usr/local/bin/pixi /usr/local/bin/pixi
