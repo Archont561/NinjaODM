@@ -54,8 +54,5 @@ jobs:
       - name: Security check with Bandit
         run: pixi run -e test code-quality:bandit
 
-      - name: Run Migrations
-        run: pixi run -e test django:manage migrate
-
       - name: Run Unit, Integration, and E2E Tests
         run: pixi run -e test test
