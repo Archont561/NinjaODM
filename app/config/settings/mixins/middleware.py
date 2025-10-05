@@ -1,10 +1,10 @@
 from typing import List
 
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class MiddlewareSettingsMixin(BaseSettings):
+class MiddlewareSettingsMixin(BaseSettingsMixin):
 
     # Custom middleware to add
     CUSTOM_MIDDLEWARE: List[str] = Field(default_factory=list)

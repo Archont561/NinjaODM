@@ -1,6 +1,7 @@
 import sys
 
-from .settings.main import PROJECT_DIR, get_settings
+from .settings.mixins.base import PROJECT_DIR
+from .settings.main import get_settings
 from .settings.utils import to_django, is_linting_context, setup_loguru
 
 # Add project root to path

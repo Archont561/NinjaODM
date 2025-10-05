@@ -1,11 +1,11 @@
 from typing import Any, Dict
 
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 import dj_database_url
 
 
-class DatabaseSettingsMixin(BaseSettings):
+class DatabaseSettingsMixin(BaseSettingsMixin):
 
     DATABASE_URL: str = Field(...)
 

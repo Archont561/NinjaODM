@@ -1,10 +1,10 @@
 from typing import List
 
 from pydantic import computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class AppsSettingsMixin(BaseSettings):
+class AppsSettingsMixin(BaseSettingsMixin):
 
     @computed_field
     @property

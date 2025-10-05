@@ -1,10 +1,10 @@
 from typing import List
 
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class SecuritySettingsMixin(BaseSettings):
+class SecuritySettingsMixin(BaseSettingsMixin):
 
     # CSRF Protection
     CSRF_COOKIE_SECURE: bool = Field(default=False)

@@ -1,10 +1,10 @@
 from typing import Any, Dict
 
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class CacheSettingsMixin(BaseSettings):
+class CacheSettingsMixin(BaseSettingsMixin):
 
     CACHE_BACKEND: str = Field(
         default="django.core.cache.backends.locmem.LocMemCache",

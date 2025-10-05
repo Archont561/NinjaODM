@@ -1,10 +1,10 @@
 from typing import Optional
 
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class EmailSettingsMixin(BaseSettings):
+class EmailSettingsMixin(BaseSettingsMixin):
 
     # Email backend
     EMAIL_BACKEND: str = Field(default="django.core.mail.backends.console.EmailBackend")

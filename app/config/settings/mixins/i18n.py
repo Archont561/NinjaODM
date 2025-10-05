@@ -1,10 +1,10 @@
 from typing import List
 
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class I18nSettingsMixin(BaseSettings):
+class I18nSettingsMixin(BaseSettingsMixin):
 
     LANGUAGE_CODE: str = Field(default="en-us", alias="I18N_LANGUAGE_CODE")
     TIME_ZONE: str = Field(default="UTC", alias="I18N_TIME_ZONE")

@@ -71,7 +71,7 @@ def setup_loguru(logger, settings: LoguruSettingsMixin):
 
     # Ensure log directory exists
     settings.LOGURU_LOGS_DIR.mkdir(parents=True, exist_ok=True)
-    print(settings.LOGURU_CONSOLE_LEVEL)
+
     # Console handler
     if settings.LOGURU_ENABLE_CONSOLE:
         logger.add(

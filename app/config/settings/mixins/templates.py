@@ -1,10 +1,10 @@
 from typing import Any, Dict, List
 
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class TemplatesSettingsMixin(BaseSettings):
+class TemplatesSettingsMixin(BaseSettingsMixin):
     """Templates configuration mixin."""
 
     TEMPLATES_BACKEND: str = Field(

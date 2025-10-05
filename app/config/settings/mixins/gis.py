@@ -1,10 +1,10 @@
 from pathlib import Path
 
 from pydantic import computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class GISSettingsMixin(BaseSettings):
+class GISSettingsMixin(BaseSettingsMixin):
 
     @computed_field
     @property

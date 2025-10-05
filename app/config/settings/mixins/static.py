@@ -1,16 +1,10 @@
-# app/config/settings/components/static.py
-"""Static files settings mixin."""
-
-from __future__ import annotations
-
 from typing import List
 
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class StaticFilesSettingsMixin(BaseSettings):
-    """Static files configuration mixin."""
+class StaticFilesSettingsMixin(BaseSettingsMixin):
 
     STATIC_URL: str = Field(default="/static/")
     MEDIA_URL: str = Field(default="/media/")

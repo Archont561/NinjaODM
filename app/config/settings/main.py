@@ -19,10 +19,6 @@ from .mixins import (
 )
 
 
-APP_DIR = Path(__file__).resolve().parent.parent.parent
-PROJECT_DIR = APP_DIR.parent
-
-
 class PydanticDjangoSettings(
     CoreSettingsMixin,
     AppsSettingsMixin,
@@ -46,16 +42,6 @@ class PydanticDjangoSettings(
     aspect of Django configuration. All settings are automatically
     exported to Django's expected format.
     """
-
-    APP_DIR: Path = APP_DIR
-    PROJECT_DIR: Path = PROJECT_DIR
-
-    model_config = {
-        "env_file": PROJECT_DIR / ".env",
-        "env_file_encoding": "utf-8",
-        "case_sensitive": True,
-        "extra": "ignore",
-    }
 
     def model_post_init(self, __context, /) -> None:
         """Post-initialization ho   ok."""

@@ -1,6 +1,6 @@
 from pathlib import Path
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 from enum import StrEnum, auto
 
 
@@ -20,7 +20,7 @@ class LogLevels(StrEnum):
     CRITICAL = auto()
 
 
-class LoguruSettingsMixin(BaseSettings):
+class LoguruSettingsMixin(BaseSettingsMixin):
     # Log levels
     LOGURU_CONSOLE_LEVEL: LogLevels = Field(default=LogLevels.INFO)
     LOGURU_FILE_LEVEL: LogLevels = Field(default=LogLevels.DEBUG)

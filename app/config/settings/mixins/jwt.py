@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any, Dict, List, Optional
 from pydantic import Field, computed_field
 
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
 class JWTAlgorithm(StrEnum):
@@ -16,7 +16,7 @@ class JWTAlgorithm(StrEnum):
     RS512 = auto()
 
 
-class JWTSettingsMixin(BaseSettings):
+class JWTSettingsMixin(BaseSettingsMixin):
 
     # Token lifetimes
     JWT_ACCESS_TOKEN_LIFETIME_MINUTES: int = Field(default=5, ge=1)

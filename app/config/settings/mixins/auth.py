@@ -1,10 +1,10 @@
 from typing import Any, Dict, List
 
 from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings
+from .base import BaseSettingsMixin
 
 
-class AuthSettingsMixin(BaseSettings):
+class AuthSettingsMixin(BaseSettingsMixin):
 
     # Password validation
     AUTH_MIN_PASSWORD_LENGTH: int = Field(default=8)
@@ -28,7 +28,7 @@ class AuthSettingsMixin(BaseSettings):
     @property
     def AUTH_PASSWORD_VALIDATORS(self) -> List[Dict[str, Any]]:
         """Password validators configuration."""
-        validators = [
+        validators: List[Dict[str, Any]] = [
             {
                 "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
             },
