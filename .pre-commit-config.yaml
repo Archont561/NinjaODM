@@ -2,7 +2,9 @@ default_language_version:
   python: python3.13
 
 repos:
+  # ============================================
   # Lightweight utility hooks
+  # ============================================
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -16,10 +18,15 @@ repos:
         stages: [pre-commit, pre-push]
       - id: debug-statements
         stages: [pre-commit, pre-push]
-
-  # Python tooling through Pixi dev environment
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+        stages: [pre-commit]
+  # ============================================
+  # All Python tooling through Pixi environments
+  # ============================================
   - repo: local
     hooks:
+      # === Formatting (pre-commit) ===
       - id: black-pixi
         name: black (pixi dev)
         language: system
@@ -38,6 +45,15 @@ repos:
         pass_filenames: true
         stages: [pre-commit]
 
+      # === Commit Message Validation (commit-msg) ===
+      - id: commitizen-pixi
+        name: commitizen (pixi dev)
+        language: system
+        entry: pixi
+        args: ["run", "-e", "dev", "cz", "check", "--commit-msg-file"]
+        stages: [commit-msg]
+
+      # === Type Checking (pre-push) ===
       - id: mypy-pixi
         name: mypy (pixi dev)
         language: system
@@ -48,6 +64,7 @@ repos:
         exclude: ^(migrations/|tests/)
         stages: [pre-push]
 
+      # === Security (pre-push) ===
       - id: bandit-pixi
         name: bandit (pixi dev)
         language: system
@@ -56,6 +73,7 @@ repos:
         pass_filenames: false
         stages: [pre-push]
 
+      # === Django Checks (pre-push) ===
       - id: django-check-pixi
         name: Django Check (pixi dev)
         language: system
@@ -64,6 +82,7 @@ repos:
         pass_filenames: false
         stages: [pre-push]
 
+      # === Testing (pre-push) ===
       - id: pytest-unit-pixi
         name: Run Unit Tests (pixi dev)
         language: system
@@ -71,4 +90,20 @@ repos:
         args: ["run", "-e", "dev", "pytest", "tests/unit/", "-v", "--tb=short"]
         pass_filenames: false
         require_serial: true
+        stages: [pre-push]
+
+      # === Commit History Validation (pre-push, optional) ===
+      - id: commitizen-check-range-pixi
+        name: commitizen check range (pixi miscellaneous)
+        language: system
+        entry: bash
+        args:
+          - -c
+          - |
+            if git rev-parse --verify origin/main >/dev/null 2>&1; then
+              pixi run -e miscellaneous cz check --rev-range origin/main..HEAD
+            else
+              echo "origin/main not found, skipping commit range check"
+            fi
+        pass_filenames: false
         stages: [pre-push]

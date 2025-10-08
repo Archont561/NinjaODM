@@ -272,6 +272,18 @@ cmd = [
 env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 # ==============================================================================
+# Pixi Tasks - Git Helpers
+# ==============================================================================
+[tool.pixi.tasks."git:log"]
+cmd = ["git", "log", "--oneline", "--graph", "--decorate", "--all"]
+
+[tool.pixi.tasks."git:status"]
+cmd = ["git", "status", "-sb"]
+
+[tool.pixi.tasks."git:diff"]
+cmd = ["git", "diff"]
+
+# ==============================================================================
 # Pixi Tasks - Pre-commit
 # ==============================================================================
 [tool.pixi.tasks."pc:install-hooks"]
@@ -519,3 +531,55 @@ disable_error_code = ["prop-decorator"]
 
 [tool.django-stubs]
 django_settings_module = "app.config.entrypoint"
+
+# ==============================================================================
+# Commitizen Configuration
+# ==============================================================================
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+tag_format = "v$version"
+update_changelog_on_bump = true
+major_version_zero = true
+version_files = [
+    "pyproject.toml:version"
+]
+
+# Commit settings
+bump_message = "bump: version $current_version → $new_version"
+annotated_tag = true
+
+# Changelog settings
+changelog_file = "CHANGELOG.md"
+changelog_incremental = true
+changelog_start_rev = "0.1.0"
+
+# Version bump rules
+[tool.commitizen.customize]
+bump_pattern = "^(feat|fix|refactor|perf|BREAKING CHANGE)"
+
+# Bump map - determines version increment
+[tool.commitizen.customize.bump_map]
+"BREAKING CHANGE" = "MAJOR"
+feat = "MINOR"
+fix = "PATCH"
+refactor = "PATCH"
+perf = "PATCH"
+
+# Commit message format
+message_template = "{{change_type}}{% if scope %}({{scope}}){% endif %}: {{message}}"
+example = "feat(parser): add support for new format"
+schema = "<type>(<scope>): <subject>"
+schema_pattern = '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(KATEX_INLINE_OPEN\w+KATEX_INLINE_CLOSE)?!?: .{1,50}'
+
+# ==============================================================================
+# Pixi Tasks - Git Commitizen
+# ==============================================================================
+[tool.pixi.tasks."cz"]
+cmd = ["cz"]
+
+[tool.pixi.tasks."cz:commit"]
+cmd = ["cz", "commit"]
+
+[tool.pixi.tasks."cz:check-all"]
+cmd = ["cz", "check", "--rev-range", "$(git rev-list --max-parents=0 HEAD)..HEAD"]
