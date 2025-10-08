@@ -91,6 +91,7 @@ isort = ">=5.0.0,<6"
 [tool.pixi.feature.miscellaneous.dependencies]
 httpie = ">=3.2.4,<4"
 pre-commit = ">=4.3.0,<5"
+commitizen = ">=4.9.1,<5"
 
 # ------------------------------------------------------------------------------
 # Environments
@@ -229,15 +230,6 @@ cmd = [
     "rm -rf .pytest_cache htmlcov .coverage && find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true",
 ]
 
-[tool.pixi.tasks."test:ci"]
-description = "Run all tests sequentially (CI mode)"
-cmd = [
-    "sh",
-    "-c",
-    "pytest tests/unit/ -v --tb=short && pytest tests/integration/ -v --tb=short && pytest tests/e2e/ -v --tb=short",
-]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
-
 # ==============================================================================
 # Pixi Tasks - Code Quality
 # ==============================================================================
@@ -280,45 +272,37 @@ cmd = [
 env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
 
 # ==============================================================================
-# Pixi Tasks - Pre-commit (with pre-push support)
+# Pixi Tasks - Pre-commit
 # ==============================================================================
-[tool.pixi.tasks."pre-commit:install"]
-description = "Install pre-commit hooks (on commit)"
-cmd = ["pre-commit", "install"]
-
-[tool.pixi.tasks."pre-commit:install-push"]
+[tool.pixi.tasks."pc:install-hooks"]
 description = "Install pre-push hooks"
-cmd = ["pre-commit", "install", "--hook-type", "pre-push"]
+cmd = ["pre-commit", "install", "--hook-type", "commit-msg", "--hook-type", "pre-commit", "--hook-type", "pre-push"]
 
-[tool.pixi.tasks."pre-commit:install-all"]
-description = "Install both pre-commit and pre-push hooks"
-depends-on = ["pre-commit:install", "pre-commit:install-push"]
-
-[tool.pixi.tasks."pre-commit:uninstall"]
+[tool.pixi.tasks."pc:uninstall-hooks"]
 description = "Uninstall all pre-commit hooks"
-cmd = ["sh", "-c", "pre-commit uninstall && pre-commit uninstall --hook-type pre-push"]
+cmd = ["pre-commit", "uninstall", "--hook-type", "commit-msg", "--hook-type", "pre-commit", "--hook-type", "pre-push"]
 
-[tool.pixi.tasks."pre-commit:run"]
+[tool.pixi.tasks."pc:run"]
 description = "Run pre-commit on all files"
 cmd = ["pre-commit", "run", "--all-files"]
 
-[tool.pixi.tasks."pre-commit:run-staged"]
+[tool.pixi.tasks."pc:run-staged"]
 description = "Run pre-commit on staged files only"
 cmd = ["pre-commit", "run"]
 
-[tool.pixi.tasks."pre-commit:run-push"]
+[tool.pixi.tasks."pc:run-push"]
 description = "Run pre-push hooks (simulated)"
 cmd = ["pre-commit", "run", "--hook-stage", "push", "--all-files"]
 
-[tool.pixi.tasks."pre-commit:update"]
+[tool.pixi.tasks."pc:update"]
 description = "Update pre-commit hooks to latest versions"
 cmd = ["pre-commit", "autoupdate"]
 
-[tool.pixi.tasks."pre-commit:clean"]
+[tool.pixi.tasks."pc:clean"]
 description = "Clean pre-commit cache"
 cmd = ["pre-commit", "clean"]
 
-[tool.pixi.tasks."pre-commit:gc"]
+[tool.pixi.tasks."pc:gc"]
 description = "Garbage collect pre-commit cache"
 cmd = ["pre-commit", "gc"]
 
