@@ -101,7 +101,7 @@ repos:
           - -c
           - |
             if git rev-parse --verify origin/main >/dev/null 2>&1; then
-              pixi run -e miscellaneous cz check --rev-range origin/main..HEAD
+              pixi run -e dev cz check --rev-range origin/main..HEAD
             else
               echo "origin/main not found, skipping commit range check"
             fi
