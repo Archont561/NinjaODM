@@ -1,6 +1,7 @@
 from typing import List
 
 from pydantic import computed_field
+
 from .base import BaseSettingsMixin
 
 
@@ -30,5 +31,6 @@ class AppsSettingsMixin(BaseSettingsMixin):
             + [
                 # Local apps
                 "app.core",
+                "app.api.custom_auth",
             ]
         )
