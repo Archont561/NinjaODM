@@ -57,7 +57,7 @@ def test_valid_hmac_signature_returns_the_service(rf, db):
     service = AuthorizedServiceFactory()
     ts = str(int(time.time()))
 
-    message = f"{service.api_key}:{ts}:POST:/test/:".encode()
+    message = f"{service.api_key}:{ts}:POST:/test/".encode()
 
     signature = hmac.new(
         service.api_secret.encode(),
@@ -82,7 +82,7 @@ def test_hmac_timestamp_outside_allowed_window_is_rejected(rf, db):
     # Timestamp older than 5 minutes (301 seconds)
     ts = str(int(time.time()) - 301)
 
-    message = f"{service.api_key}:{ts}:POST:/test/:".encode()
+    message = f"{service.api_key}:{ts}:POST:/test/".encode()
 
     signature = hmac.new(
         service.api_secret.encode(),

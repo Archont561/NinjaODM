@@ -9,6 +9,7 @@ from ninja.errors import HttpError
 from ninja_jwt.tokens import AccessToken
 from ninja_jwt.exceptions import TokenError
 from django.contrib.auth.models import AnonymousUser
+from django.http import HttpRequest
 
 from app.core.models.auth import AuthorizedService
 
@@ -72,13 +73,10 @@ class ServiceHMACAuth(HttpBearer):
         except AuthorizedService.DoesNotExist:
             return None
 
-    def _build_message(self, request, api_key: str, timestamp: int) -> bytes:
+    def _build_message(self, request: HttpRequest, api_key: str, timestamp: int) -> bytes:
         method = request.method.upper()
-        path = request.get_full_path().split("?")[0]
-        query_items = sorted(request.GET.items())
-        query_string = "&".join(f"{k}={v}" for k, v in query_items)
 
-        return f"{api_key}:{timestamp}:{method}:{path}:{query_string}".encode()
+        return f"{api_key}:{timestamp}:{method}:{request.path}".encode()
 
     def _is_signature_valid(
         self,
