@@ -12,9 +12,6 @@ class AuthorizedServiceFactory(factory.django.DjangoModelFactory):
         model = AuthorizedService
 
     name = factory.Sequence(lambda n: f"gateway-{n}")
-    api_key = factory.LazyFunction(lambda: faker.uuid4())
-    api_secret = factory.LazyFunction(lambda: faker.uuid4())
-
     allowed_scopes = fuzzy.FuzzyChoice(
         choices=[
             ["read:profile"],
