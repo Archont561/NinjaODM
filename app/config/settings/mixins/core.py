@@ -22,7 +22,7 @@ class CoreSettingsMixin(BaseSettingsMixin):
             f"ALLOWED_HOSTS must be comma separated string or list or strings, not {v}!"
         )
 
-    ROOT_URLCONF: str = "app.config.urls"
+    ROOT_URLCONF: str = "app.core.urls"
     WSGI_APPLICATION: str = "app.config.wsgi.application"
     ASGI_APPLICATION: str = "app.config.asgi.application"
     DEFAULT_AUTO_FIELD: str = "django.db.models.BigAutoField"
