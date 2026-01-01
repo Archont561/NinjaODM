@@ -30,5 +30,6 @@ class AppsSettingsMixin(BaseSettingsMixin):
             + [
                 # Local apps
                 "app.core",
+                "app.api.auth",
             ]
         )
