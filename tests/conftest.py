@@ -1,15 +1,14 @@
 import pytest
 from ninja_extra.testing import TestClient
-from app.config.settings.main import PydanticDjangoSettings
 
-from app.api import api
+from app.api import create_api
+from app.config.settings.main import PydanticDjangoSettings
 
 
 @pytest.fixture(scope="session")
 def api_client():
     """Create a test client for the API"""
-    api.auto_discover_controllers()
-    return TestClient(api)
+    return TestClient(create_api())
 
 
 @pytest.fixture(scope="session")
@@ -19,5 +18,5 @@ def test_settings():
 
 @pytest.fixture
 def enable_db_access(db):
-    """Automatically enable database access test """
+    """Automatically enable database access test"""
     pass
