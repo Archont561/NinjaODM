@@ -1,5 +1,5 @@
 import pytest
-from app.api.auth.models import AuthorizedService
+from app.core.models.auth import AuthorizedService
 
 
 @pytest.mark.unit
