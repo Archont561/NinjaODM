@@ -75,7 +75,7 @@ class JWTSettingsMixin(BaseSettingsMixin):
             "BLACKLIST_AFTER_ROTATION": self.JWT_BLACKLIST_AFTER_ROTATION,
             "UPDATE_LAST_LOGIN": self.JWT_UPDATE_LAST_LOGIN,
             # Algorithm
-            "ALGORITHM": self.JWT_ALGORITHM,
+            "ALGORITHM": self.JWT_ALGORITHM.upper(),
             "SIGNING_KEY": self.JWT_SIGNING_KEY or self.SECRET_KEY.get_secret_value(),
             # Leeway
             "LEEWAY": self.JWT_LEEWAY,
