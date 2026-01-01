@@ -20,10 +20,11 @@ def test_settings():
 # ========= Auth fixtures =========
 @pytest.fixture
 def valid_token():
-    return str(AccessToken({
-        "user_id": 999,
-        "scopes": ["read:profile", "admin"],
-        "exp": 9999999999,  # far future
-        "iat": 1600000000,
-    }))
+    token = AccessToken()
+    token["user_id"] = 999
+    token["scopes"] = ["read:profile", "admin"]
+    token["exp"] = 9999999999
+    token["iat"] = 1600000000
+    return token
+    
     

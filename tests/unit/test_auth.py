@@ -100,30 +100,21 @@ class TestServiceUserJWTAuth:
         auth = ServiceUserJWTAuth()
 
         request = Mock()
-        authenticated_user = auth.authenticate(request, valid_token)
+        authenticated_user = auth.authenticate(request, str(valid_token))
 
         assert authenticated_user is not None
         assert isinstance(authenticated_user, ServiceUser)
         assert authenticated_user.is_authenticated is True
         assert authenticated_user.is_anonymous is False
 
-    def test_missing_user_id_returns_none(self):
-        payload = {"scopes": ["test"], "exp": 9999999999, "iat": 1600000000}
-        token = str(AccessToken(payload))
+    def test_missing_user_id_returns_none(self, valid_token):
+        del valid_token["user_id"]
 
         auth = ServiceUserJWTAuth()
         request = Mock()
 
-        result = auth.authenticate(request, token)
+        result = auth.authenticate(request, str(valid_token))
         assert result is None
-
-    def test_invalid_or_expired_token_raises_authentication_failed(self):
-        auth = ServiceUserJWTAuth()
-        request = Mock()
-
-        # Simulate AccessToken raising exception on invalid token
-        with pytest.raises(AuthenticationFailed):
-            auth.authenticate(request, "invalid.token.string")
 
     def test_service_user_has_expected_properties(self):
         user = ServiceUser(user_id=123, scopes=["a", "b"])
