@@ -17,14 +17,9 @@ def test_settings():
     return PydanticDjangoSettings(ENVIRONMENT="test")  # noqa
 
 
-@pytest.fixture
-def enable_db_access(db):
-    """Automatically enable database access test"""
-    pass
-
 # ========= Auth fixtures =========
 @pytest.fixture
-def valid_token(valid_payload):
+def valid_token():
     return str(AccessToken({
         "user_id": 999,
         "scopes": ["read:profile", "admin"],
