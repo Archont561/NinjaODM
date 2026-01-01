@@ -39,8 +39,4 @@ class GISSettingsMixin(BaseSettingsMixin):
     @computed_field
     @property
     def SPATIALITE_LIBRARY_PATH(self) -> str:
-        """SpatiaLite has different naming convention."""
-        if sys.platform == "win32":
-            return str(self.PIXI_ENV_PATH / "Library" / "lib" / "mod_spatialite.lib")
-        else:
-            return str(self._get_library_path(self.PIXI_ENV_PATH, "mod_spatialite"))
+        return str(self._get_library_path(self.PIXI_ENV_PATH, "mod_spatialite"))
