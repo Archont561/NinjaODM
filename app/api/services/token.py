@@ -1,7 +1,7 @@
 from ninja_jwt.tokens import RefreshToken
 from ninja_jwt.settings import api_settings
 
-from .schemas import InternalTokenRequest
+from app.api.schemas.token import InternalTokenRequest
 
 
 class InternalTokenService:

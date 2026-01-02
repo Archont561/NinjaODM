@@ -5,13 +5,10 @@ from typing import Optional, Tuple
 
 from ninja_jwt.authentication import JWTAuth
 from ninja.security import HttpBearer
-from ninja.errors import HttpError
 from ninja_jwt.tokens import AccessToken
-from ninja_jwt.exceptions import TokenError
-from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest
 
-from app.core.models.auth import AuthorizedService
+from app.api.models.service import AuthorizedService
 
 
 class ServiceHMACAuth(HttpBearer):
@@ -91,44 +88,3 @@ class ServiceHMACAuth(HttpBearer):
         ).hexdigest()
 
         return hmac.compare_digest(expected, provided_signature)
-
-
-class ServiceUser(AnonymousUser):
-    """
-    A lightweight, stateless user object with no DB representation.
-    """
-    def __init__(self, user_id: int, scopes: list[str]):
-        self.pk = user_id
-        self.id = user_id
-        self.scopes = scopes
-        self.is_active = True
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    @property
-    def is_authenticated(self):
-        return True
-
-
-class ServiceUserJWTAuth(JWTAuth):
-    """
-    Custom authentication that creates a ServiceUser from token claims.
-    """
-
-    def authenticate(self, request, token: str):
-        try:
-            validated_token = AccessToken(token)
-        except TokenError:
-            return None
-
-        user_id = validated_token.get("user_id")
-        scopes = validated_token.get("scopes", [])
-        
-        if user_id is None:
-            return None
-            
-        service_user = ServiceUser(user_id=int(user_id), scopes=scopes)
-        request.user = service_user
-        return service_user

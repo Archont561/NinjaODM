@@ -2,7 +2,7 @@ import factory
 from factory import fuzzy
 from faker import Faker
 
-from app.core.models.auth import AuthorizedService
+from app.api.models.service import AuthorizedService
 
 faker = Faker()
 

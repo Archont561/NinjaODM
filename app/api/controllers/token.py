@@ -3,14 +3,15 @@ from ninja import Schema, Body
 from ninja.errors import HttpError
 from injector import inject
 
-from .schemas import (
+from app.api.schemas.token import (
     InternalTokenRequest,
     InternalTokenPairOut,
     InternalAccessTokenOut,
     InternalRefreshRequest,
 )
-from .services import InternalTokenService
-from .authenticators import ServiceHMACAuth
+from app.api.services.token import InternalTokenService
+from app.api.auth.service import ServiceHMACAuth
+
 
 @api_controller("internal/token", auth=ServiceHMACAuth(), tags=["internal_token"])
 class InternalTokenController:

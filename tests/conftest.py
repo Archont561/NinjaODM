@@ -1,7 +1,7 @@
 import pytest
 from ninja_extra.testing import TestClient
 
-from app.api import create_api
+from app.api.api import create_api
 from app.config.settings.main import PydanticDjangoSettings
 from ninja_jwt.tokens import AccessToken
 

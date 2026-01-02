@@ -2,7 +2,6 @@ import pytest
 import hmac
 import hashlib
 import time
-from django.urls import reverse
 from tests.factories import AuthorizedServiceFactory
 
 

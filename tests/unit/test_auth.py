@@ -1,17 +1,16 @@
 import hashlib
 import hmac
 import time
-
 import pytest
-
-from app.api.auth.authenticators import ServiceHMACAuth
-from app.core.models.auth import AuthorizedService
+from ninja_jwt.tokens import AccessToken
+from ninja_jwt.authentication import JWTAuth
+from app.api.auth.service import ServiceHMACAuth
+from app.api.auth.user import ServiceUserJWTAuth
+from app.api.constants.user import ServiceUser
+from app.api.models.service import AuthorizedService
 from tests.factories import AuthorizedServiceFactory
 from unittest.mock import Mock
-from ninja_jwt.authentication import JWTAuth
-from ninja_jwt.tokens import AccessToken
-from ninja_jwt.exceptions import AuthenticationFailed
-from app.api.auth.authenticators import ServiceUserJWTAuth, ServiceUser
+
 
 @pytest.mark.unit
 def test_can_create_authorized_service(db):
