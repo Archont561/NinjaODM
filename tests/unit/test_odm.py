@@ -24,7 +24,7 @@ class TestWorkspace:
 @pytest.mark.django_db
 class TestImage:
 
-    def test_image_creation(self, image_factory, temp_media):
+    def test_image_creation(self, image_factory):
         image = image_factory(name="example.png")
         assert image.name == "example.png"
         assert not image.is_thumbnail
@@ -32,7 +32,7 @@ class TestImage:
         assert image.image_file  # File exists in storage
         assert isinstance(image.created_at, datetime.datetime)
 
-    def test_make_thumbnail_creates_thumbnail(self, image_factory, temp_media):
+    def test_make_thumbnail_creates_thumbnail(self, image_factory):
         original = image_factory()
         thumb = original.make_thumbnail(size=(128, 128))
 
@@ -47,7 +47,7 @@ class TestImage:
             assert im.width <= 128
             assert im.height <= 128
 
-    def test_make_thumbnail_on_thumbnail_returns_self(self, image_factory, temp_media):
+    def test_make_thumbnail_on_thumbnail_returns_self(self, image_factory):
         thumb = image_factory(is_thumbnail=True)
         result = thumb.make_thumbnail()
         assert result.image_file == thumb.image_file

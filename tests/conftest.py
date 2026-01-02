@@ -9,11 +9,10 @@ from app.api.api import create_api
 from app.config.settings.main import get_settings
 
 
-from tests.factories import WorkspaceFactory, ImageFactory
+from tests.factories import WorkspaceFactory, ImageFactory, GroundControlPointFactory
 
 
 register(WorkspaceFactory)
-register(ImageFactory)
 
 
 @pytest.fixture(scope="session")
@@ -45,3 +44,11 @@ def temp_media(tmp_path, settings):
     """
     settings.MEDIA_ROOT = tmp_path
     yield tmp_path
+
+@pytest.fixture
+def image_factory(temp_media):
+    return ImageFactory
+
+@pytest.fixture
+def gcp_factory(temp_media):
+    return GroundControlPointFactory

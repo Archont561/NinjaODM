@@ -7,10 +7,12 @@ from factory import fuzzy
 from faker import Faker
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image as PILImage
+from django.contrib.gis.geos import Point
 
 from app.api.models.service import AuthorizedService
 from app.api.models.workspace import Workspace
 from app.api.models.image import Image
+from app.api.models.gcp import GroundControlPoint
 
 faker = Faker()
 
@@ -59,3 +61,18 @@ class ImageFactory(DjangoModelFactory):
         buf.seek(0)
         return SimpleUploadedFile(self.name, buf.getvalue(), content_type="image/png")
     
+
+class GroundControlPointFactory(DjangoModelFactory):
+    class Meta:
+        model = GroundControlPoint
+        
+    label = factory.LazyFunction(lambda: faker.pystr(min_chars=8, max_chars=12))
+    image = factory.SubFactory(ImageFactory)
+
+    @factory.lazy_attribute
+    def point(self):
+        # Generate random longitude [-180,180], latitude [-90,90], altitude [1,5000]
+        lng = float(faker.longitude())
+        lat = float(faker.latitude())
+        alt = float(faker.random_int(min=1, max=5000))
+        return Point(lng, lat, alt)
