@@ -5,3 +5,7 @@ class ApiConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "app.api"
     verbose_name = "API"
+
+    def ready(self):
+        import app.api.signals
+    
