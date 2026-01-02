@@ -183,22 +183,22 @@ depends-on = ["test:unit", "test:integration", "test:e2e"]
 [tool.pixi.tasks."test:watch"]
 description = "Watch and run tests"
 cmd = ["ptw", "--", "-vv"]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", ENVIRONMENT = "test" }
 
 [tool.pixi.tasks."test:unit"]
 description = "Run unit tests only"
 cmd = ["pytest", "tests/unit/", "-v"]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", ENVIRONMENT = "test" }
 
 [tool.pixi.tasks."test:integration"]
 description = "Run integration tests only"
 cmd = ["pytest", "tests/integration/", "-v"]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", ENVIRONMENT = "test" }
 
 [tool.pixi.tasks."test:e2e"]
 description = "Run e2e tests only"
 cmd = ["pytest", "tests/e2e/", "-v"]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", ENVIRONMENT = "test" }
 
 [tool.pixi.tasks."test:coverage"]
 description = "Run tests with coverage"
@@ -207,12 +207,12 @@ cmd = [
     "-c",
     "coverage run -m pytest tests/unit/ tests/integration/ tests/e2e/ && coverage report && coverage html",
 ]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", ENVIRONMENT = "test" }
 
 [tool.pixi.tasks."test:coverage:unit"]
 description = "Coverage for unit tests only"
 cmd = ["sh", "-c", "coverage run -m pytest tests/unit/ && coverage report"]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", ENVIRONMENT = "test" }
 
 [tool.pixi.tasks."test:coverage:report"]
 description = "Show coverage report"
@@ -237,7 +237,7 @@ cmd = [
     "-c",
     "pytest tests/unit/ -v --tb=short && pytest tests/integration/ -v --tb=short && pytest tests/e2e/ -v --tb=short",
 ]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", ENVIRONMENT = "test" }
 
 # ==============================================================================
 # Pixi Tasks - Code Quality

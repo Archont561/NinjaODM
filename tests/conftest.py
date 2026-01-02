@@ -2,7 +2,6 @@ import pytest
 from ninja_extra.testing import TestClient
 
 from app.api.api import create_api
-from app.config.settings.main import PydanticDjangoSettings
 from ninja_jwt.tokens import AccessToken
 
 
@@ -10,11 +9,6 @@ from ninja_jwt.tokens import AccessToken
 def api_client():
     """Create a test client for the API"""
     return TestClient(create_api())
-
-
-@pytest.fixture(scope="session")
-def test_settings():
-    return PydanticDjangoSettings(ENVIRONMENT="test")  # noqa
 
 
 # ========= Auth fixtures =========

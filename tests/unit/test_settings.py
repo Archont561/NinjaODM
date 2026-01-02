@@ -18,11 +18,3 @@ def test_settings_instance():
     assert isinstance(settings, PydanticDjangoSettings)
     assert settings.APP_DIR.exists()
     assert settings.PROJECT_DIR.exists()
-
-
-def test_settings(test_settings):
-    """Test that test suite settings have changed ENVIRONMENT"""
-    assert test_settings.ENVIRONMENT != "dev"
-    assert test_settings.ENVIRONMENT == "test"
-    assert test_settings.DEV == False
-    assert test_settings.TEST == True
