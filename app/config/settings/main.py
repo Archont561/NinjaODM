@@ -17,6 +17,7 @@ from .mixins import (
     SecuritySettingsMixin,
     StaticFilesSettingsMixin,
     TemplatesSettingsMixin,
+    ODMSettingsMixin,
 )
 
 
@@ -35,6 +36,7 @@ class PydanticDjangoSettings(
     LoguruSettingsMixin,
     GISSettingsMixin,
     JWTSettingsMixin,
+    ODMSettingsMixin,
 ):
     """
     Complete Django settings using multiple inheritance.
@@ -54,6 +56,7 @@ class PydanticDjangoSettings(
             self.STATIC_ROOT,
             self.MEDIA_ROOT,
             self.DATA_DIR,
+            self.WORKSPACES_DIR,
         ]
 
         for directory in directories:

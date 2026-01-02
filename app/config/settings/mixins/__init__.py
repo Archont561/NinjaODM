@@ -12,3 +12,4 @@ from .security import SecuritySettingsMixin
 from .static import StaticFilesSettingsMixin
 from .templates import TemplatesSettingsMixin
 from .core import CoreSettingsMixin
+from .odm import ODMSettingsMixin
