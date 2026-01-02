@@ -18,6 +18,7 @@ from .mixins import (
     StaticFilesSettingsMixin,
     TemplatesSettingsMixin,
     ODMSettingsMixin,
+    TusSettingsMixin,
 )
 
 
@@ -37,6 +38,7 @@ class PydanticDjangoSettings(
     GISSettingsMixin,
     JWTSettingsMixin,
     ODMSettingsMixin,
+    TusSettingsMixin,
 ):
     """
     Complete Django settings using multiple inheritance.

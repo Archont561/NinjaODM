@@ -13,3 +13,4 @@ from .static import StaticFilesSettingsMixin
 from .templates import TemplatesSettingsMixin
 from .core import CoreSettingsMixin
 from .odm import ODMSettingsMixin
+from .tus import TusSettingsMixin
