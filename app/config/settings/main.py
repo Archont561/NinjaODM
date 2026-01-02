@@ -58,7 +58,10 @@ class PydanticDjangoSettings(
             self.STATIC_ROOT,
             self.MEDIA_ROOT,
             self.DATA_DIR,
-            self.WORKSPACES_DIR,
+            self.IMAGES_DIR,
+            self.THUMBNAILS_DIR,
+            self.TASKS_DIR,
+            self.RESULTS_DIR,
         ]
 
         for directory in directories:
