@@ -2,7 +2,18 @@ import pytest
 from ninja_extra.testing import TestClient
 
 from app.api.api import create_api
+from app.config.settings.main import get_settings
 from ninja_jwt.tokens import AccessToken
+
+
+@pytest.fixture(scope="session")
+def test_settings():
+    return get_settings()
+
+
+@pytest.fixture(scope="session")
+def test_settings():
+    return get_settings()
 
 
 @pytest.fixture(scope="session")
