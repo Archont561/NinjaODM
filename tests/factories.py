@@ -3,6 +3,7 @@ from factory import fuzzy
 from faker import Faker
 
 from app.api.models.service import AuthorizedService
+from app.api.models.workspace import Workspace
 
 faker = Faker()
 
@@ -24,3 +25,10 @@ class AuthorizedServiceFactory(factory.django.DjangoModelFactory):
             [],
         ]
     )
+
+
+class WorkspaceFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Workspace
+
+    name = factory.Sequence(lambda n: f"Workspace {n}")
