@@ -24,21 +24,6 @@ class ODMSettingsMixin(BaseSettingsMixin):
 
     @computed_field
     @property
-    def IMAGES_DIR(self) -> Path:
-        return self.DATA_DIR / self.IMAGES_DIR_NAME
-        
-    @computed_field
-    @property
-    def THUMBNAILS_DIR(self) -> Path:
-        return self.DATA_DIR / self.THUMBNAILS_DIR_NAME
-
-    @computed_field
-    @property
     def TASKS_DIR(self) -> Path:
         return self.DATA_DIR / self.TASKS_DIR_NAME
-
-    @computed_field
-    @property
-    def RESULTS_DIR(self) -> Path:
-        return self.DATA_DIR / self.RESULTS_DIR_NAME
     
