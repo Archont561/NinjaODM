@@ -13,6 +13,8 @@ from app.api.models.service import AuthorizedService
 from app.api.models.workspace import Workspace
 from app.api.models.image import Image
 from app.api.models.gcp import GroundControlPoint
+from app.api.models.task import ODMTask
+from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
 
 faker = Faker()
 
@@ -76,3 +78,13 @@ class GroundControlPointFactory(DjangoModelFactory):
         lat = float(faker.latitude())
         alt = float(faker.random_int(min=1, max=5000))
         return Point(lng, lat, alt)
+
+
+class ODMTaskFactory(DjangoModelFactory):
+    class Meta:
+        model = ODMTask
+
+    workspace = factory.SubFactory(WorkspaceFactory)
+    status = factory.LazyFunction(lambda: random.choice([s.value for s in ODMTaskStatus]))
+    step = factory.LazyFunction(lambda: random.choice([s.value for s in ODMProcessingStage]))
+    options = factory.LazyFunction(dict)

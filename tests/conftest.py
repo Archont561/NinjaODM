@@ -9,10 +9,16 @@ from app.api.api import create_api
 from app.config.settings.main import get_settings
 
 
-from tests.factories import WorkspaceFactory, ImageFactory, GroundControlPointFactory
+from tests.factories import (
+    WorkspaceFactory, 
+    ImageFactory, 
+    GroundControlPointFactory,
+    ODMTaskFactory
+)
 
 
 register(WorkspaceFactory)
+register(ODMTaskFactory)
 
 
 @pytest.fixture(scope="session")
