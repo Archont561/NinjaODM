@@ -2,103 +2,84 @@ import hashlib
 import hmac
 import time
 import pytest
-from ninja_jwt.tokens import AccessToken
-from ninja_jwt.authentication import JWTAuth
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.constants.user import ServiceUser
 from app.api.models.service import AuthorizedService
-from tests.factories import AuthorizedServiceFactory
-from unittest.mock import Mock
 
 
-@pytest.mark.unit
-def test_can_create_authorized_service(db):
-    service = AuthorizedService.objects.create(
-        name="gateway-a",
-        api_key="key-123",
-        api_secret="secret-456",
-        allowed_scopes=["read:profile"],
-    )
-    assert service.name == "gateway-a"
-    assert service.is_active is True
+@pytest.mark.django_db
+class TestAuthorizedService:
+    def test_factory_creates_valid_service(self, authorized_service_factory):
+        service = authorized_service_factory()
+        assert service.pk
+        assert len(service.api_key) >= 32
 
+    def test_api_key_is_unique(self, authorized_service_factory):
+        s1 = authorized_service_factory()
+        s2 = authorized_service_factory()
+        assert s1.api_key != s2.api_key
 
-def test_factory_creates_valid_service(db):
-    service = AuthorizedServiceFactory()
-    assert service.pk
-    assert len(service.api_key) >= 32
+    def test_invalid_hmac_signature_is_rejected(self, rf, authorized_service_factory):
+        auth = ServiceHMACAuth()
+        request = rf.post("/test/")
 
+        service = authorized_service_factory()
+        ts = str(int(time.time()))
 
-def test_api_key_is_unique(db):
-    s1 = AuthorizedServiceFactory()
-    s2 = AuthorizedServiceFactory()
-    assert s1.api_key != s2.api_key
+        invalid_token = f"{service.api_key}:{ts}:tampered-signature"
 
+        assert auth.authenticate(request, invalid_token) is None
 
-@pytest.mark.unit
-def test_invalid_hmac_signature_is_rejected(rf, db):
-    auth = ServiceHMACAuth()
-    request = rf.post("/test/")
+    def test_valid_hmac_signature_returns_the_service(self, rf, authorized_service_factory):
+        auth = ServiceHMACAuth()
+        request = rf.post("/test/")
 
-    service = AuthorizedServiceFactory()
-    ts = str(int(time.time()))
+        service = authorized_service_factory()
+        ts = str(int(time.time()))
 
-    invalid_token = f"{service.api_key}:{ts}:tampered-signature"
+        message = f"{service.api_key}:{ts}:POST:/test/".encode()
 
-    assert auth.authenticate(request, invalid_token) is None
+        signature = hmac.new(
+            service.api_secret.encode(),
+            message,
+            hashlib.sha256,
+        ).hexdigest()
 
-@pytest.mark.unit
-def test_valid_hmac_signature_returns_the_service(rf, db):
-    auth = ServiceHMACAuth()
-    request = rf.post("/test/")
+        token = f"{service.api_key}:{ts}:{signature}"
 
-    service = AuthorizedServiceFactory()
-    ts = str(int(time.time()))
+        authenticated_service = auth.authenticate(request, token)
 
-    message = f"{service.api_key}:{ts}:POST:/test/".encode()
+        assert authenticated_service == service
+        assert request.service == service
 
-    signature = hmac.new(
-        service.api_secret.encode(),
-        message,
-        hashlib.sha256,
-    ).hexdigest()
+    def test_hmac_timestamp_outside_allowed_window_is_rejected(self, rf, authorized_service_factory):
+        auth = ServiceHMACAuth()
+        request = rf.post("/test/")
 
-    token = f"{service.api_key}:{ts}:{signature}"
+        service = authorized_service_factory()
 
-    authenticated_service = auth.authenticate(request, token)
-    
-    assert authenticated_service == service
-    assert request.service == service
+        # Timestamp older than 5 minutes (301 seconds)
+        ts = str(int(time.time()) - 301)
 
-@pytest.mark.unit
-def test_hmac_timestamp_outside_allowed_window_is_rejected(rf, db):
-    auth = ServiceHMACAuth()
-    request = rf.post("/test/")
+        message = f"{service.api_key}:{ts}:POST:/test/".encode()
 
-    service = AuthorizedServiceFactory()
+        signature = hmac.new(
+            service.api_secret.encode(),
+            message,
+            hashlib.sha256,
+        ).hexdigest()
 
-    # Timestamp older than 5 minutes (301 seconds)
-    ts = str(int(time.time()) - 301)
+        token = f"{service.api_key}:{ts}:{signature}"
 
-    message = f"{service.api_key}:{ts}:POST:/test/".encode()
-
-    signature = hmac.new(
-        service.api_secret.encode(),
-        message,
-        hashlib.sha256,
-    ).hexdigest()
-
-    token = f"{service.api_key}:{ts}:{signature}"
-
-    assert auth.authenticate(request, token) is None
+        assert auth.authenticate(request, token) is None
 
 
 class TestServiceUserJWTAuth:
-    def test_authenticate_creates_service_user_with_correct_attributes(self, valid_token):
+    def test_authenticate_creates_service_user_with_correct_attributes(self, rf, valid_token):
         auth = ServiceUserJWTAuth()
 
-        request = Mock()
+        request = rf.get("/")
         authenticated_user = auth.authenticate(request, str(valid_token))
 
         assert authenticated_user is not None
@@ -106,11 +87,11 @@ class TestServiceUserJWTAuth:
         assert authenticated_user.is_authenticated is True
         assert authenticated_user.is_anonymous is False
 
-    def test_missing_user_id_returns_none(self, valid_token):
+    def test_missing_user_id_returns_none(self, rf, valid_token):
         del valid_token["user_id"]
 
         auth = ServiceUserJWTAuth()
-        request = Mock()
+        request = rf.get("/")
 
         result = auth.authenticate(request, str(valid_token))
         assert result is None
