@@ -8,7 +8,7 @@ from app.api.models.workspace import Workspace
 
 
 def result_file_upload_path(instance, filename):
-    return str(Path(getattr(settings, "RESULTS_DIR_NAME")) / str(instance.workspace.uuid) / filename)
+    return str(Path(settings.RESULTS_DIR_NAME) / str(instance.workspace.uuid) / filename)
 
 
 class ODMTaskResult(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):

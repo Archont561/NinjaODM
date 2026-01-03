@@ -1,15 +1,15 @@
+from django.conf import settings
 from django.db import models
 from pathlib import Path
 from PIL import Image as PILImage
 import io
 from django.core.files.base import ContentFile
 from app.api.models.workspace import Workspace
-from app.config.settings.main import get_settings
 from app.api.models.mixins import UUIDPrimaryKeyModelMixin, TimeStampedModelMixin
 
 
 def dynamic_upload_path(instance, filename):
-    base_dir = get_settings().THUMBNAILS_DIR_NAME if instance.is_thumbnail else get_settings().IMAGES_DIR_NAME
+    base_dir = settings.THUMBNAILS_DIR_NAME if instance.is_thumbnail else settings.IMAGES_DIR_NAME
     return str(Path(base_dir) / str(instance.workspace.uuid) / filename)
 
 
