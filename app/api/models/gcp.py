@@ -36,7 +36,7 @@ class GroundControlPoint(UUIDPrimaryKeyModelMixin, geo_models.Model):
         return (
             f"{self.label} "
             f"(lng={self.lng:.6f}, lat={self.lat:.6f}, alt={self.alt:.2f}, "
-            f"imgx={self.imgx:.1f}, imy={self.imy:.1f})"
+            f"imgx={self.imgx:.1f}, imgy={self.imy:.1f})"
         )
 
     @property
@@ -55,14 +55,14 @@ class GroundControlPoint(UUIDPrimaryKeyModelMixin, geo_models.Model):
         """
         Return one line in OpenDroneMap GCP format:
 
-        {lng} {lat} {alt} {imgx} {imy} {image name} {label}
+        {lng} {lat} {alt} {imgx} {imgy} {image name} {label}
         """
         return (
             f"{self.lng:.8f} "
             f"{self.lat:.8f} "
             f"{self.alt:.3f} "
             f"{self.imgx:.3f} "
-            f"{self.imy:.3f} "
+            f"{self.imgy:.3f} "
             f"{self.image.name} "
             f"{self.label}"
         )
