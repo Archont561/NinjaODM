@@ -72,3 +72,14 @@ class ODMProcessingStage(ChoicesMixin, IntEnum):
             return stage.__class__(stage.value + 1)
         except ValueError:
             return None
+
+@unique
+class ODMTaskResultType(ChoicesMixin, IntEnum):
+    DEM = auto()
+    DSM = auto()
+    DTM = auto()
+    POINT_CLOUD = auto()
+    MESH = auto()
+    ORTHOMOSAIC = auto()
+    REPORT = auto()
+    
