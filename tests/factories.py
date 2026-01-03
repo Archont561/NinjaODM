@@ -14,7 +14,8 @@ from app.api.models.workspace import Workspace
 from app.api.models.image import Image
 from app.api.models.gcp import GroundControlPoint
 from app.api.models.task import ODMTask
-from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
+from app.api.models.result import ODMTaskResult
+from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, ODMTaskResultType
 
 faker = Faker()
 
@@ -88,3 +89,11 @@ class ODMTaskFactory(DjangoModelFactory):
     status = factory.LazyFunction(lambda: random.choice([s.value for s in ODMTaskStatus]))
     step = factory.LazyFunction(lambda: random.choice([s.value for s in ODMProcessingStage]))
     options = factory.LazyFunction(dict)
+    
+
+class ODMTaskResultFactory(DjangoModelFactory):
+    class Meta:
+        model = ODMTaskResult
+
+    workspace = factory.SubFactory(WorkspaceFactory)
+    result_type = factory.LazyFunction(lambda: random.choice([s.value for s in ODMTaskResultType]))

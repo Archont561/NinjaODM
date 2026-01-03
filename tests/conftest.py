@@ -13,12 +13,14 @@ from tests.factories import (
     WorkspaceFactory, 
     ImageFactory, 
     GroundControlPointFactory,
-    ODMTaskFactory
+    ODMTaskFactory,
+    ODMTaskResultFactory,
 )
 
 
 register(WorkspaceFactory)
 register(ODMTaskFactory)
+register(ODMTaskResultFactory)
 
 
 @pytest.fixture(scope="session")
