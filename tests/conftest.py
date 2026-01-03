@@ -1,3 +1,4 @@
+import io
 import pytest
 import time
 import hmac
@@ -52,7 +53,7 @@ def valid_token():
     return token
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def temp_media(tmp_path, settings):
     """
     Override MEDIA_ROOT for tests to a temporary folder.
