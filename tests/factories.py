@@ -41,6 +41,7 @@ class WorkspaceFactory(DjangoModelFactory):
         model = Workspace
 
     name = factory.Sequence(lambda n: f"Workspace {n}")
+    user_id = faker.random_int(min=1, max=5000)
 
 
 class ImageFactory(DjangoModelFactory):
