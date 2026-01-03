@@ -1,4 +1,3 @@
-from functools import cache
 from pathlib import Path
 from typing import List, Union
 
@@ -68,6 +67,5 @@ class PydanticDjangoSettings(
                 pass  # Ignore errors during directory creation
 
 
-@cache
 def get_settings() -> PydanticDjangoSettings:
     return PydanticDjangoSettings()  # noqa
