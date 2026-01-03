@@ -11,7 +11,6 @@ from ninja_jwt.tokens import AccessToken
 from pathlib import Path
 
 from app.api.api import create_api
-from app.config.settings.main import get_settings
 
 
 from tests.factories import (
@@ -30,11 +29,6 @@ register(GroundControlPointFactory)
 register(ODMTaskFactory)
 register(ODMTaskResultFactory)
 register(AuthorizedServiceFactory)
-
-
-@pytest.fixture(scope="session")
-def test_settings():
-    return get_settings()
 
 
 @pytest.fixture(scope="session")
