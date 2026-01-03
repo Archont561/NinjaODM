@@ -1,4 +1,7 @@
 import pytest
+import time
+import hmac
+import hashlib
 from ninja_extra.testing import TestClient
 from pytest_factoryboy import register
 
@@ -15,6 +18,7 @@ from tests.factories import (
     GroundControlPointFactory,
     ODMTaskFactory,
     ODMTaskResultFactory,
+    AuthorizedServiceFactory,
 )
 
 
@@ -23,6 +27,7 @@ register(ImageFactory)
 register(GroundControlPointFactory)
 register(ODMTaskFactory)
 register(ODMTaskResultFactory)
+register(AuthorizedServiceFactory)
 
 
 @pytest.fixture(scope="session")
@@ -54,3 +59,60 @@ def temp_media(tmp_path, settings):
     """
     settings.MEDIA_ROOT = tmp_path
     yield tmp_path
+
+
+def build_service_auth_header(
+    *,
+    api_key: str,
+    api_secret: str,
+    method: str,
+    path: str,
+    timestamp: int | None = None,
+):
+    timestamp = timestamp or int(time.time())
+    message = f"{api_key}:{timestamp}:{method.upper()}:{path}".encode()
+
+    signature = hmac.new(
+        api_secret.encode(),
+        message,
+        hashlib.sha256,
+    ).hexdigest()
+
+    return f"Bearer {api_key}:{timestamp}:{signature}"
+
+
+@pytest.fixture
+def service_api_client(authorized_service_factory, api_client):
+    service = authorized_service_factory()
+
+    class AuthorizedClient:
+        def request(self, method, path, **kwargs):
+            headers = kwargs.pop("headers", {})
+
+            headers["Authorization"] = build_service_auth_header(
+                api_key=service.api_key,
+                api_secret=service.api_secret,
+                method=method,
+                path=path,
+            )
+
+            return api_client.request(
+                method,
+                path,
+                headers=headers,
+                **kwargs,
+            )
+
+        def get(self, path, **kwargs):
+            return self.request("GET", path, **kwargs)
+
+        def post(self, path, **kwargs):
+            return self.request("POST", path, **kwargs)
+
+        def put(self, path, **kwargs):
+            return self.request("PUT", path, **kwargs)
+
+        def delete(self, path, **kwargs):
+            return self.request("DELETE", path, **kwargs)
+
+    return AuthorizedClient()
