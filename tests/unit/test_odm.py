@@ -6,7 +6,6 @@ from django.contrib.gis.geos import Point
 from django.db import IntegrityError
 from django.core.files import File
 
-from app.api.models.gcp import GroundControlPoint
 from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, ODMTaskResultType
 
 
@@ -98,7 +97,7 @@ class TestGroundControlPoint:
         from django.db import IntegrityError
         # Creating another GCP with the same image & label should fail
         with pytest.raises(IntegrityError):
-            GroundControlPoint.objects.create(
+            gcp_factory(
                 image=gcp1.image,
                 label=gcp1.label,
                 point=Point(0, 0, 1)
