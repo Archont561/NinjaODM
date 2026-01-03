@@ -128,6 +128,9 @@ def service_api_client(authorized_service_factory, api_client):
         def post(self, path, **kwargs):
             return self.request("POST", path, **kwargs)
 
+        def patch(self, path, **kwargs):
+            return self.request("PATCH", path, **kwargs)
+
         def put(self, path, **kwargs):
             return self.request("PUT", path, **kwargs)
 
@@ -155,6 +158,9 @@ def service_user_api_client(api_client, valid_token):
 
         def post(self, path, **kwargs):
             return self.request("POST", path, **kwargs)
+
+        def put(self, path, **kwargs):
+            return self.request("PUT", path, **kwargs)
 
         def patch(self, path, **kwargs):
             return self.request("PATCH", path, **kwargs)
