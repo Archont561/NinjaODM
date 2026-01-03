@@ -4,7 +4,8 @@ import hmac
 import hashlib
 from ninja_extra.testing import TestClient
 from pytest_factoryboy import register
-
+from PIL import Image as PILImage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from ninja_jwt.tokens import AccessToken
 from pathlib import Path
 
@@ -59,6 +60,23 @@ def temp_media(tmp_path, settings):
     """
     settings.MEDIA_ROOT = tmp_path
     yield tmp_path
+
+
+@pytest.fixture
+def temp_image_file(temp_media):
+    """
+    Creates a real temporary image file usable by Pillow.
+    """
+    image = PILImage.new("RGB", (300, 300), color="red")
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG")
+    buffer.seek(0)
+
+    return SimpleUploadedFile(
+        name="test.jpg",
+        content=buffer.read(),
+        content_type="image/jpeg",
+    )
 
 
 def build_service_auth_header(

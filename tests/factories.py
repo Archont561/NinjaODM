@@ -1,12 +1,9 @@
-import io
 import random
 import uuid
 import factory
 from factory.django import DjangoModelFactory
 from factory import fuzzy
 from faker import Faker
-from django.core.files.uploadedfile import SimpleUploadedFile
-from PIL import Image as PILImage
 from django.contrib.gis.geos import Point
 
 from app.api.models.service import AuthorizedService
@@ -53,16 +50,6 @@ class ImageFactory(DjangoModelFactory):
     workspace = factory.SubFactory(WorkspaceFactory)
     name = factory.LazyAttribute(lambda _: f"{uuid.uuid4().hex}.png")
     is_thumbnail = False
-
-    @factory.lazy_attribute
-    def image_file(self):
-        """Create an in-memory image file."""
-        buf = io.BytesIO()
-        color = (random.randint(0,255), random.randint(0,255), random.randint(0,255))
-        with PILImage.new("RGB", (512, 512), color=color) as im:
-            im.save(buf, format="PNG")
-        buf.seek(0)
-        return SimpleUploadedFile(self.name, buf.getvalue(), content_type="image/png")
     
 
 class GroundControlPointFactory(DjangoModelFactory):
