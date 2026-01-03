@@ -23,6 +23,7 @@ def generate_workspace_name():
 
 
 class Workspace(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):
+    user_id = models.BigIntegerField()
     name = models.CharField(
         max_length=50,
         default=generate_workspace_name,
