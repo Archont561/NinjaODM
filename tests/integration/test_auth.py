@@ -2,11 +2,10 @@ import pytest
 import hmac
 import hashlib
 import time
-from tests.factories import AuthorizedServiceFactory
 
 
 @pytest.mark.django_db
-class TestInternalTokenObtainAuthorization:
+class TestTokenObtainAuthorization:
     
     def _make_hmac_auth_header(self, service, method, path):
         ts = str(int(time.time()))
@@ -16,22 +15,18 @@ class TestInternalTokenObtainAuthorization:
         ).hexdigest()
         return f"Bearer {service.api_key}:{ts}:{signature}"
 
-    def test_authorized_service_can_obtain_token_pair(self, api_client):
-        service = AuthorizedServiceFactory(is_active=True)
-
+    def test_authorized_service_can_obtain_token_pair(self, api_client, authorized_service_factory):
+        service = authorized_service_factory(is_active=True)
         url = "/internal/token/pair"
-        payload = {
-            "user_id": 5001,
-            "scopes": ["read:profile", "write:data"]
-        }
-        auth_header = self._make_hmac_auth_header(service, "POST", url)
-
         response = api_client.post(
             url,
-            json=payload,
+            json={
+                "user_id": 5001,
+                "scopes": ["read:profile", "write:data"]
+            },
             content_type="application/json",
             headers={
-                "Authorization": auth_header
+                "Authorization": self._make_hmac_auth_header(service, "POST", url)
             }
         )
 
@@ -42,48 +37,37 @@ class TestInternalTokenObtainAuthorization:
         assert data["refresh"]
         assert data["access"]
 
-    def test_inactive_service_cannot_obtain_tokens(self, api_client):
-        service = AuthorizedServiceFactory(is_active=False)
-
+    def test_inactive_service_cannot_obtain_tokens(self, api_client, authorized_service_factory):
+        service = authorized_service_factory(is_active=False)
         url = "/internal/token/pair"
-        payload = {"user_id": 1, "scopes": []}
-
-        auth_header = self._make_hmac_auth_header(service, "POST", url)
-
         response = api_client.post(
             url,
-            json=payload,
+            json={"user_id": 1, "scopes": []},
             content_type="application/json",
             headers={
-                "Authorization": auth_header
+                "Authorization": self._make_hmac_auth_header(service, "POST", url)
             }
         )
 
         assert response.status_code in (401, 403)
 
     def test_no_auth_header_returns_401_or_403(self, api_client):
-        url = "/internal/token/pair"
-        payload = {"user_id": 1, "scopes": []}
-
-        response = api_client.post(url, json=payload, content_type="application/json")
+        response = api_client.post(
+            "/internal/token/pair", 
+            json={"user_id": 1, "scopes": []}, 
+            content_type="application/json"
+        )
 
         assert response.status_code in (401, 403)
 
-    def test_invalid_hmac_signature_returns_401_or_403(self, api_client):
-        service = AuthorizedServiceFactory()
-
-        url = "/internal/token/pair"
-        payload = {"user_id": 1, "scopes": []}
-
-        # Tampered signature
-        bad_header = f"Bearer {service.api_key}:1234567890:bad-signature"
-
+    def test_invalid_hmac_signature_returns_401_or_403(self, api_client, authorized_service_factory):
+        service = authorized_service_factory()
         response = api_client.post(
-            url,
-            json=payload,
+            "/internal/token/pair",
+            json={"user_id": 1, "scopes": []},
             content_type="application/json",
             header={
-                "Authorization": bad_header
+                "Authorization": f"Bearer {service.api_key}:1234567890:bad-signature"
             }
         )
 
