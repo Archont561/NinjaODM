@@ -135,3 +135,31 @@ def service_api_client(authorized_service_factory, api_client):
             return self.request("DELETE", path, **kwargs)
 
     return AuthorizedClient()
+
+
+@pytest.fixture
+def service_user_api_client(api_client, valid_token):
+    class JWTClient:
+        def __init__(self, api_client, token):
+            self.api_client = api_client
+            self.token = token
+
+        def request(self, method, path, **kwargs):
+            headers = kwargs.pop("headers", {})
+            # ServiceUserJWTAuth expects 'Bearer <token>'
+            headers["Authorization"] = f"Bearer {self.token}"
+            return self.api_client.request(method, path, headers=headers, **kwargs)
+
+        def get(self, path, **kwargs):
+            return self.request("GET", path, **kwargs)
+
+        def post(self, path, **kwargs):
+            return self.request("POST", path, **kwargs)
+
+        def patch(self, path, **kwargs):
+            return self.request("PATCH", path, **kwargs)
+
+        def delete(self, path, **kwargs):
+            return self.request("DELETE", path, **kwargs)
+
+    return JWTClient(api_client, valid_token)
