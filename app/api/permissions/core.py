@@ -1,3 +1,5 @@
+from ninja_extra import permissions
+
 from app.api.constants.user import ServiceUser
 from app.api.models.service import AuthorizedService
 
