@@ -19,6 +19,7 @@ from tests.factories import (
 
 
 register(WorkspaceFactory)
+register(GroundControlPointFactory)
 register(ODMTaskFactory)
 register(ODMTaskResultFactory)
 
@@ -56,7 +57,3 @@ def temp_media(tmp_path, settings):
 @pytest.fixture
 def image_factory(temp_media):
     return ImageFactory
-
-@pytest.fixture
-def gcp_factory(temp_media):
-    return GroundControlPointFactory
