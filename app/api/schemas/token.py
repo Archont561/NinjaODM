@@ -2,19 +2,19 @@ from ninja import Schema
 from typing import List
 
 
-class InternalTokenRequest(Schema):
+class TokenRequestInternal(Schema):
     user_id: int
     scopes: List[str] = []
 
 
-class InternalTokenPairOut(Schema):
+class TokenPairResponseInternal(Schema):
     refresh: str
     access: str
 
 
-class InternalAccessTokenOut(Schema):
+class AccessTokenResponseInternal(Schema):
     access: str
 
 
-class InternalRefreshRequest(Schema):
+class RefreshRequestInternal(Schema):
     refresh: str

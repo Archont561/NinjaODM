@@ -4,36 +4,32 @@ from ninja.errors import HttpError
 from injector import inject
 
 from app.api.schemas.token import (
-    InternalTokenRequest,
-    InternalTokenPairOut,
-    InternalAccessTokenOut,
-    InternalRefreshRequest,
+    TokenRequestInternal,
+    TokenPairResponseInternal,
+    AccessTokenResponseInternal,
+    RefreshRequestInternal,
 )
-from app.api.services.token import InternalTokenService
+from app.api.services.token import TokenService
 from app.api.auth.service import ServiceHMACAuth
 
 
-@api_controller("internal/token", auth=ServiceHMACAuth(), tags=["internal_token"])
-class InternalTokenController:
+@api_controller("internal/token", auth=ServiceHMACAuth(), tags=["token", "internal"])
+class TokenControllerInternal:
     @inject
-    def __init__(self, internal_token_service: InternalTokenService):
-        self.internal_token_service = internal_token_service
+    def __init__(self, token_service: TokenService):
+        self.token_service = token_service
 
     @http_post(
         "/pair",
-        response=InternalTokenPairOut,
-        url_name="token_obtain_pair",
-        operation_id="token_obtain_pair",
+        response=TokenPairResponseInternal,
     )
-    def obtain_token(self, payload: InternalTokenRequest = Body(...)):
-        return self.internal_token_service.obtain_token(payload)
+    def obtain_token(self, payload: TokenRequestInternal = Body(...)):
+        return self.token_service.obtain_token(payload.dict())
 
     @http_post(
         "/refresh",
-        response=InternalAccessTokenOut,
-        url_name="token_refresh",
-        operation_id="token_refresh",
+        response=AccessTokenResponseInternal,
     )
-    def refresh_token(self, payload: InternalRefreshRequest = Body(...)):
-        return self.internal_token_service.refresh_token(payload.refresh)
+    def refresh_token(self, payload: RefreshRequestInternal = Body(...)):
+        return self.token_service.refresh_token(payload.refresh)
     
