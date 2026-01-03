@@ -32,8 +32,8 @@ class TestImage:
         assert image.workspace is not None
         assert isinstance(image.created_at, datetime.datetime)
 
-    def test_make_thumbnail_creates_thumbnail(self, image_factory, temp_media):
-        original = image_factory()
+    def test_make_thumbnail_creates_thumbnail(self, image_factory, temp_image_file):
+        original = image_factory(image_file=temp_image_file)
         thumb = original.make_thumbnail(size=(128, 128))
 
         # Check thumbnail object
@@ -47,8 +47,8 @@ class TestImage:
             assert im.width <= 128
             assert im.height <= 128
 
-    def test_make_thumbnail_on_thumbnail_returns_self(self, image_factory, temp_media):
-        thumb = image_factory(is_thumbnail=True)
+    def test_make_thumbnail_on_thumbnail_returns_self(self, image_factory, temp_image_file):
+        thumb = image_factory(is_thumbnail=True, image_file=temp_image_file)
         result = thumb.make_thumbnail()
         assert result.image_file == thumb.image_file
         assert result == thumb
