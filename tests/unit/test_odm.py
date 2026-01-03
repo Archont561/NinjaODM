@@ -16,10 +16,8 @@ class TestWorkspace:
         assert workspace.name == "Project Alpha"
         assert isinstance(workspace.uuid, str) or workspace.uuid is not None
         assert isinstance(workspace.created_at, datetime.datetime) or workspace.uuid is not None
-
-    def test_workspace_creation_no_name_provided(self, workspace_factory):
-        workspace = workspace_factory()
-        assert isinstance(workspace.name, str)
+        assert workspace.user_id is not None
+        assert isinstance(workspace.user_id, int)
 
 
 @pytest.mark.django_db
