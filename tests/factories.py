@@ -72,6 +72,9 @@ class GroundControlPointFactory(DjangoModelFactory):
     label = factory.LazyFunction(lambda: faker.pystr(min_chars=8, max_chars=12))
     image = factory.SubFactory(ImageFactory)
 
+    imgx = factory.LazyFunction(lambda: faker.pyfloat(min_value=0, max_value=8000))
+    imgy = factory.LazyFunction(lambda: faker.pyfloat(min_value=0, max_value=8000))
+
     @factory.lazy_attribute
     def point(self):
         # Generate random longitude [-180,180], latitude [-90,90], altitude [1,5000]
