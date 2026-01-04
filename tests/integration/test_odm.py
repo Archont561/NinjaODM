@@ -112,53 +112,42 @@ class TestWorkspaceAPIServiceUser:
 class TestWorkspaceAPIUnauthorizedClient:
     """Tests that non-authorized clients cannot access public or internal workspaces."""
 
-    def test_public_workspace_access_denied(self, api_client, workspace_factory):
-        """Public API (/workspaces) should deny access without JWT token."""
+    @pytest.mark.parametrize(
+        "method, url, payload",
+        [
+            ("get", "/workspaces/", None),
+            ("post", "/workspaces/", {"name": "Fail"}),
+            ("get", "/workspaces/{uuid}", None),
+            ("patch", "/workspaces/{uuid}", {"name": "Fail"}),
+            ("delete", "/workspaces/{uuid}", None),
+        ],
+    )
+    def test_public_workspace_access_denied(
+        self, api_client, workspace_factory, method, url, payload
+    ):
         ws = workspace_factory(user_id=999)
+        url = url.format(uuid=ws.uuid)
 
-        # List
-        resp = api_client.get("/workspaces/")
+        resp = getattr(api_client, method)(url, json=payload)
         assert resp.status_code in (401, 403)
 
-        # Create
-        resp = api_client.post("/workspaces/", json={"name": "Fail"})
-        assert resp.status_code in (401, 403)
-
-        # Get
-        resp = api_client.get(f"/workspaces/{ws.uuid}")
-        assert resp.status_code in (401, 403)
-
-        # Update
-        resp = api_client.patch(f"/workspaces/{ws.uuid}", json={"name": "Fail"})
-        assert resp.status_code in (401, 403)
-
-        # Delete
-        resp = api_client.delete(f"/workspaces/{ws.uuid}")
-        assert resp.status_code in (401, 403)
-
-    def test_internal_workspace_access_denied(self, api_client, workspace_factory):
-        """Internal API (/internal/workspaces) should deny access without HMAC auth."""
+    @pytest.mark.parametrize(
+        "method, url, payload",
+        [
+            ("get", "/internal/workspaces/", None),
+            ("post", "/internal/workspaces/", {"user_id": 999, "name": "Fail"}),
+            ("get", "/internal/workspaces/{uuid}", None),
+            ("patch", "/internal/workspaces/{uuid}", {"name": "Fail"}),
+            ("delete", "/internal/workspaces/{uuid}", None),
+        ],
+    )
+    def test_internal_workspace_access_denied(
+        self, api_client, workspace_factory, method, url, payload
+    ):
         ws = workspace_factory(user_id=999)
+        url = url.format(uuid=ws.uuid)
 
-        # List
-        resp = api_client.get("/internal/workspaces/")
-        assert resp.status_code in (401, 403)
-
-        # Create
-        payload = {"user_id": 999, "name": "Fail"}
-        resp = api_client.post("/internal/workspaces/", json=payload)
-        assert resp.status_code in (401, 403)
-
-        # Get
-        resp = api_client.get(f"/internal/workspaces/{ws.uuid}")
-        assert resp.status_code in (401, 403)
-
-        # Update
-        resp = api_client.patch(f"/internal/workspaces/{ws.uuid}", json={"name": "Fail"})
-        assert resp.status_code in (401, 403)
-
-        # Delete
-        resp = api_client.delete(f"/internal/workspaces/{ws.uuid}")
+        resp = getattr(api_client, method)(url, json=payload)
         assert resp.status_code in (401, 403)
 
 
