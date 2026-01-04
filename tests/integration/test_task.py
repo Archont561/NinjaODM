@@ -1,6 +1,6 @@
 import pytest
 
-from app.api.models.result import ODMTaskResult
+from app.api.models.task import ODMTask
 from app.api.constants.odm import ODMTaskStatus
 
 
