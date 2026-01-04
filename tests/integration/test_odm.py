@@ -19,7 +19,7 @@ class TestWorkspaceAPIService:
     def test_create_workspace(self, service_api_client):
         payload = {"name": "Service WS", "user_id": 1234}
         response = service_api_client.post("internal/workspaces/", json=payload)
-        assert response.status_code == 200
+        assert response.status_code == 201
 
     def test_get_workspace(self, service_api_client, workspace_factory):
         ws = workspace_factory(user_id=1234, name="Other WS")
@@ -30,12 +30,13 @@ class TestWorkspaceAPIService:
         ws = workspace_factory(user_id=1234, name="Other WS")
         resp = service_api_client.patch(
             f"internal/workspaces/{ws.uuid}", 
-            json={"name": "Updated"}
+            json={"name": "Updated", "user_id": 333}
         )
         assert resp.status_code == 200
         
         ws.refresh_from_db()
         assert ws.name == "Updated"
+        assert ws.user_id == 333
 
     def test_delete_workspace(self, service_api_client, workspace_factory):
         ws = workspace_factory(user_id=1234, name="Other WS")
@@ -70,7 +71,7 @@ class TestWorkspaceAPIServiceUser:
     def test_create_workspace(self, service_user_api_client):
         payload = {"name": "JWT WS"}
         resp = service_user_api_client.post("/workspaces/", json=payload)
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         ws = Workspace.objects.get(uuid=resp.json()["uuid"])
         assert ws.name == "JWT WS"
         assert ws.user_id == 999
