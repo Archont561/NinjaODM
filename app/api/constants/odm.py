@@ -32,24 +32,22 @@ class ChoicesMixin:
 @unique
 class ODMTaskStatus(ChoicesMixin, IntEnum):
     # Initial States
-    QUEUED = auto()  # Task is waiting in queue
+    QUEUED = auto()
 
     # Active States
-    RUNNING = auto()  # Task is currently processing
-    STOPPING = auto() # Task is being stopped
-    PAUSED = auto()  # Task is temporarily paused (can resume)
+    RUNNING = auto()
+    PAUSING = auto()
+    PAUSED = auto()
+    RESUMING = auto()
     CANCELLING = auto()
 
     # Terminal States - Success
-    COMPLETED = auto()  # Task finished successfully
+    COMPLETED = auto()
 
     # Terminal States - Failure
-    FAILED = auto()  # Task failed due to error
-    CANCELLED = auto()  # Task was cancelled by user
-    TIMEOUT = auto()  # Task exceeded time limit
-
-    # Special States
-    RESUMING = auto()  # Task is resuming from pause/checkpoint
+    FAILED = auto()
+    CANCELLED = auto()
+    TIMEOUT = auto()
 
 
 class ODMProcessingStage(ChoicesMixin, IntEnum):
