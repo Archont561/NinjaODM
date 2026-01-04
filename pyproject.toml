@@ -536,3 +536,6 @@ disable_error_code = ["prop-decorator"]
 
 [tool.django-stubs]
 django_settings_module = "app.config.entrypoint"
+
+[dependency-groups]
+django = ["ninja-schema>=0.14.3,<0.15"]
