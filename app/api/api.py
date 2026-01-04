@@ -8,6 +8,7 @@ from app.api.controllers.workspace import (
 from app.api.controllers.task import TaskControllerInternal, TaskControllerPublic
 from app.api.controllers.result import ResultControllerInternal, ResultControllerPublic
 from app.api.controllers.image import ImageControllerInternal, ImageControllerPublic
+from app.api.controllers.gcp import GCPControllerInternal, GCPControllerPublic
 
 
 def create_api() -> NinjaExtraAPI:
@@ -22,5 +23,7 @@ def create_api() -> NinjaExtraAPI:
         ResultControllerPublic,
         ImageControllerInternal,
         ImageControllerPublic,
+        GCPControllerInternal,
+        GCPControllerPublic,
     )
     return api
