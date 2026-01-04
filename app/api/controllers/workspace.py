@@ -38,20 +38,15 @@ class WorkspaceControllerPublic(ModelControllerBase):
         create_schema=CreateWorkspacePublic,
         retrieve_schema=WorkspaceResponsePublic,
         update_schema=UpdateWorkspacePublic,
-        allowed_routes=["find_one", "patch", "delete"],
+        allowed_routes=["find_one", "patch", "delete", "create", "list"],
+        create_route_info={
+            "custom_handler": lambda self, data, **kw: self.service.create(data, user_id=self.context.request.user.id, **kw),
+        },
+        pagination=None,
+        list_route_info={
+            "queryset_getter": lambda self, **kw: self.model_config.model.objects.filter(user_id=self.context.request.user.id),
+        },
     )
-
-    @http_get("/", response=List[model_config.retrieve_schema])
-    def list_my_workspaces(self, request):
-        return Workspace.objects.filter(user_id=request.user.id)
-
-    @http_post("/", response={201: model_config.retrieve_schema})
-    def create_workspace(self, request, payload: model_config.create_schema):
-        """Create workspace and auto-assign to current user"""
-        return 201, self.service.create(
-            payload,
-            user_id=request.user.id
-        )
 
 
 @api_controller(
