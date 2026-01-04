@@ -5,6 +5,7 @@ from app.api.controllers.workspace import (
     WorkspaceControllerInternal,
     WorkspaceControllerPublic,
 )
+from app.api.controllers.task import TaskControllerInternal, TaskControllerPublic
 
 
 def create_api() -> NinjaExtraAPI:
@@ -13,5 +14,7 @@ def create_api() -> NinjaExtraAPI:
         TokenControllerInternal,
         WorkspaceControllerInternal,
         WorkspaceControllerPublic,
+        TaskControllerInternal,
+        TaskControllerPublic,
     )
     return api
