@@ -1,3 +1,4 @@
+from uuid import UUID
 from django.db import models
 from django.conf import settings
 from pathlib import Path
@@ -28,6 +29,10 @@ class ODMTask(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):
 
     def __str__(self) -> str:
         return f"ODMTask {self.uuid} ({self.get_status_display()} @ {self.get_step_display()})"
+
+    @property
+    def workspace_uuid(self) -> UUID:
+        return self.workspace.uuid
 
     @property
     def odm_status(self) -> ODMTaskStatus:
