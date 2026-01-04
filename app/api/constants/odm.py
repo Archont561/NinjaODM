@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import IntEnum, auto, unique
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Type, FrozenSet
 
 from pydantic import BaseModel, Field
 
@@ -48,6 +48,24 @@ class ODMTaskStatus(ChoicesMixin, IntEnum):
     FAILED = auto()
     CANCELLED = auto()
     TIMEOUT = auto()
+    
+    @classmethod
+    def terminal_states(cls) -> FrozenSet[ODMTaskStatus]:
+        return frozenset(
+            {
+                cls.COMPLETED,
+                cls.FAILED,
+                cls.CANCELLED,
+                cls.TIMEOUT,
+            }
+        )
+
+    @classmethod
+    def non_terminal_states(cls) -> FrozenSet[ODMTaskStatus]:
+        return frozenset(set(cls) - cls.terminal_states())
+
+    def is_terminal(self) -> bool:
+        return self in self.terminal_states()
 
 
 class ODMProcessingStage(ChoicesMixin, IntEnum):
