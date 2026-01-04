@@ -190,7 +190,7 @@ class TestTaskAPIService:
 
         body = resp.json()
         task = ODMTask.objects.get(uuid=body["uuid"])
-        assert task.workspace_uuid == ws.uuid
+        assert task.workspace.uuid == ws.uuid
         assert task.task_dir.exists()
 
     def test_get_task(self, service_api_client, odm_task_factory):
@@ -282,7 +282,7 @@ class TestTaskAPIServiceUser:
 
         body = resp.json()
         task = ODMTask.objects.get(uuid=body["uuid"])
-        assert task.workspace_uuid == user_workspace.uuid
+        assert task.workspace.uuid == user_workspace.uuid
         assert task.workspace.user_id == 999
         assert task.status == ODMTaskStatus.QUEUED
         assert task.task_dir.exists()

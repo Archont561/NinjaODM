@@ -28,3 +28,7 @@ class TaskResponse(ModelSchema):
             "created_at",
         ]
     
+    
+    @staticmethod
+    def resolve_workspace_uuid(obj: ODMTask):
+        return obj.workspace.uuid

@@ -31,10 +31,6 @@ class ODMTask(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):
         return f"ODMTask {self.uuid} ({self.get_status_display()} @ {self.get_step_display()})"
 
     @property
-    def workspace_uuid(self) -> UUID:
-        return self.workspace.uuid
-
-    @property
     def odm_status(self) -> ODMTaskStatus:
         return ODMTaskStatus(self.status)
 
