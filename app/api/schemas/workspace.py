@@ -1,6 +1,7 @@
 from typing import Optional
-
-from ninja import ModelSchema, Schema
+from ninja import ModelSchema, Schema, FilterSchema
+from pydantic import Field
+from datetime import datetime
 
 from app.api.models.workspace import Workspace
 
@@ -33,3 +34,9 @@ class WorkspaceResponsePublic(ModelSchema):
     class Meta:
         model = Workspace
         fields = ["uuid", "name", "created_at"]
+
+
+class WorkspaceFilterSchema(FilterSchema):
+    name: Optional[str] = Field(None, q="name__icontains")
+    created_after: Optional[datetime] = Field(None, q="created_at__gte")
+    created_before: Optional[datetime] = Field(None, q="created_at__lte")
