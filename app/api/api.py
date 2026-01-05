@@ -10,10 +10,12 @@ from app.api.controllers.task import TaskControllerInternal, TaskControllerPubli
 from app.api.controllers.result import ResultControllerInternal, ResultControllerPublic
 from app.api.controllers.image import ImageControllerInternal, ImageControllerPublic
 from app.api.controllers.gcp import GCPControllerInternal, GCPControllerPublic
+from app.api.sse import sse_router
 
 
 def create_api() -> NinjaExtraAPI:
     api = NinjaExtraAPI()
+    api.add_router("", sse_router)
     api.register_controllers(
         CoreController,
         TokenControllerInternal,
