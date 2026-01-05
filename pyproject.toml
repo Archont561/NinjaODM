@@ -70,6 +70,9 @@ pytest-django = ">=4.11.1,<5"
 pytest-watch = ">=4.1.0,<5"
 tuspy = ">=1.1.0,<2"
 coverage = ">=7.0.0,<8"
+pytest-asyncio = ">=1.3.0,<2"
+httpx = ">=0.28.1,<0.29"
+daphne = ">=4.2.1,<5"
 
 [tool.pixi.feature.test.pypi-dependencies]
 pytest-factoryboy = ">=2.8.1,<3"
