@@ -1,4 +1,7 @@
 import pytest
+from datetime import timedelta
+from django.utils import timezone
+from urllib.parse import urlencode
 
 from app.api.models.workspace import Workspace
 
@@ -6,14 +9,49 @@ from app.api.models.workspace import Workspace
 @pytest.mark.django_db
 class TestWorkspaceAPIInternal:
 
-    def test_list_workspaces(self, service_api_client, workspace_factory):
-        workspace_factory.create_batch(3, user_id=999)
-        workspace_factory(user_id=1234)
-        response = service_api_client.get("internal/workspaces/")
+    @pytest.mark.parametrize(
+        "query_params, expected_count",
+        [
+            # 1. No filters - should see all
+            ("", 4),
+            
+            # 2. Filter by name (partial match)
+            ("name=ProjectA", 1),
+            ("name=Project", 2), # Matches ProjectA and ProjectB
+            ("name=NonExistent", 0),
+            
+            # 3. Filter by date (After)
+            ("created_after={after_date}", 3), 
+            
+            # 4. Filter by date range (Between)
+            ("created_after={after_date}&created_before={before_date}", 1),
+            
+            # 5. Combined filters
+            ("name=Project&created_after={after_date}", 2),
+        ],
+    )
+    def test_list_workspaces_filtering(
+        self, service_api_client, workspace_factory, query_params, expected_count
+    ):
+        now = timezone.now()
+        workspace_factory(name="Old Task", created_at=now - timedelta(days=10))
+        workspace_factory(name="ProjectA", created_at=now - timedelta(days=5))
+        workspace_factory(name="ProjectB", created_at=now - timedelta(days=1))
+        workspace_factory(name="Shared", user_id=999)
+        after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        formatted_query = query_params.format(
+            after_date=after_date, 
+            before_date=before_date
+        )
+        url = "/internal/workspaces/"
+        if formatted_query:
+            url += f"?{formatted_query}"
+        response = service_api_client.get(url)
+
         assert response.status_code == 200
         data = response.json()
-        # Should see all workspaces
-        assert len(data) >= 4
+        assert len(data) == expected_count, f"Failed for query: {formatted_query}"
 
     def test_create_workspace(self, service_api_client):
         payload = {"name": "Service WS", "user_id": 1234}
@@ -58,13 +96,95 @@ class TestWorkspaceAPIPublic:
     def other_workspace(self, workspace_factory):
         return workspace_factory(user_id=1234, name="Other WS")
 
-    def test_list_workspaces_sees_only_own(self, service_user_api_client, user_workspace, other_workspace):
-        response = service_user_api_client.get("/workspaces/")
+    @pytest.mark.parametrize(
+        "workspaces_to_create, query_params, expected_names",
+        [
+            # 1. No filters – return all user workspaces
+            (
+                [
+                    {"name": "ProjectA", "user_id": 999},
+                    {"name": "ProjectB", "user_id": 999},
+                    {"name": "OtherUser", "user_id": 1},  # should be ignored
+                ],
+                "",
+                ["ProjectA", "ProjectB"],
+            ),
+
+            # 2. Name filter – partial match
+            (
+                [
+                    {"name": "ProjectA", "user_id": 999},
+                    {"name": "ProjectB", "user_id": 999},
+                    {"name": "ProjectA", "user_id": 1},  # other user
+                ],
+                "name=ProjectA",
+                ["ProjectA"],  # only user's workspace
+            ),
+
+            # 3. created_after filter
+            (
+                [
+                    {"name": "Old", "user_id": 999, "days_ago": 10},
+                    {"name": "Recent", "user_id": 999, "days_ago": 2},
+                ],
+                "created_after={after_date}",
+                ["Recent"],
+            ),
+
+            # 4. created_before filter
+            (
+                [
+                    {"name": "Old", "user_id": 999, "days_ago": 10},
+                    {"name": "Recent", "user_id": 999, "days_ago": 2},
+                ],
+                "created_before={before_date}",
+                ["Old"],
+            ),
+
+            # 5. Combined filters: name + created_after
+            (
+                [
+                    {"name": "ProjectA", "user_id": 999, "days_ago": 5},
+                    {"name": "ProjectB", "user_id": 999, "days_ago": 1},
+                    {"name": "ProjectA", "user_id": 1, "days_ago": 1},  # other user
+                ],
+                "name=ProjectA&created_after={after_date}",
+                ["ProjectA"],
+            ),
+        ],
+    )
+    def test_list_workspaces_public_filters(
+        self, service_user_api_client, workspace_factory, workspaces_to_create, query_params, expected_names
+    ):
+        now = timezone.now()
+        created_workspaces = {}
+
+        # Create workspaces using factory
+        for ws in workspaces_to_create:
+            created_at = now - timedelta(days=ws.get("days_ago", 0))
+            workspace = workspace_factory(
+                name=ws["name"],
+                user_id=ws["user_id"],
+                created_at=created_at,
+            )
+            created_workspaces[ws["name"]] = workspace
+
+        # Prepare dynamic dates for query
+        after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
+        formatted_query = query_params.format(after_date=after_date, before_date=before_date)
+
+        url = "/workspaces/"
+        if formatted_query:
+            url += f"?{formatted_query}"
+
+        response = service_user_api_client.get(url)
         assert response.status_code == 200
         data = response.json()
-        # Should only see workspace owned by user_id=999
-        assert len(data) == 1
-        assert data[0]["uuid"] == str(user_workspace.uuid)
+
+        # Check returned workspace names match expected
+        returned_names = [ws["name"] for ws in data]
+        assert set(returned_names) == set(expected_names)
 
     def test_create_workspace(self, service_user_api_client):
         payload = {"name": "JWT WS"}
