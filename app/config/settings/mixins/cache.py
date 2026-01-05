@@ -1,6 +1,7 @@
+import json
 from typing import Any, Dict
 
-from pydantic import Field, computed_field
+from pydantic import Field, computed_field, field_validator
 from .base import BaseSettingsMixin
 
 
@@ -15,10 +16,21 @@ class CacheSettingsMixin(BaseSettingsMixin):
     CACHE_TIMEOUT: int = Field(default=300)
     CACHE_KEY_PREFIX: str = Field(default="ninjaodm")
 
+    CACHE_OPTIONS: Dict[str, str] = Field(...)
+
+    @field_validator("CACHE_OPTIONS", mode="before")
+    @classmethod
+    def parse_cache_options(cls, value):
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError as e:
+                raise ValueError("CACHE_OPTIONS must be valid JSON") from e
+        return value
+
     @computed_field
     @property
     def CACHES(self) -> Dict[str, Any]:
-        """Django CACHES configuration."""
         return {
             "default": {
                 "BACKEND": self.CACHE_BACKEND,
@@ -28,6 +40,7 @@ class CacheSettingsMixin(BaseSettingsMixin):
                 "OPTIONS": {
                     "MAX_ENTRIES": 300,
                     "CULL_FREQUENCY": 3,
+                    **self.CACHE_OPTIONS,
                 },
             }
         }
