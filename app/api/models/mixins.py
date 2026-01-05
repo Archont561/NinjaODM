@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.utils import timezone
 
 
 class UUIDPrimaryKeyModelMixin(models.Model):
@@ -14,7 +15,7 @@ class UUIDPrimaryKeyModelMixin(models.Model):
 
 
 class TimeStampedModelMixin(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         abstract = True
