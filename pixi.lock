@@ -63,6 +63,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/anyio-4.12.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/appdirs-1.4.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asgiref-3.9.2-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/async-timeout-5.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.3.0-pyh71513ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/autobahn-25.12.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/automat-25.4.16-pyhd8ed1ab_0.conda
@@ -91,6 +92,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docopt-0.6.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/factory_boy-3.3.3-pyhd8ed1ab_0.conda
@@ -219,6 +221,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.13-8_cp313.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyyaml-6.0.3-py313h3dea7bd_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8c095d6_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/redis-py-7.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.32.5-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-14.1.0-pyhe01879c_0.conda
@@ -316,6 +319,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/anyio-4.12.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/appdirs-1.4.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asgiref-3.9.2-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/async-timeout-5.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.3.0-pyh71513ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/autobahn-25.12.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/automat-25.4.16-pyhd8ed1ab_0.conda
@@ -342,6 +346,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docopt-0.6.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/factory_boy-3.3.3-pyhd8ed1ab_0.conda
@@ -454,6 +459,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.13-8_cp313.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pywin32-311-py313h40c08fc_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyyaml-6.0.3-py313hd650c13_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/redis-py-7.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.32.5-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-toolbelt-1.0.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/rich-14.1.0-pyhe01879c_0.conda
@@ -561,6 +567,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-2_gnu.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/annotated-types-0.7.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asgiref-3.9.2-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/async-timeout-5.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/blosc-1.21.6-he440d0b_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/c-ares-1.34.5-hb9d3cd8_0.conda
@@ -571,6 +578,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/freexl-2.0.0-h9dce30a_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gdal-3.11.4-py313h60f829d_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geojson-pydantic-2.0.0-pyh3cfb1c2_0.conda
@@ -658,6 +666,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dotenv-1.1.1-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.13-8_cp313.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8c095d6_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/redis-py-7.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/setuptools-80.9.0-pyhff2d567_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/snappy-1.2.2-h03e3b7b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/sqlite-3.50.4-hbc0de68_0.conda
@@ -704,6 +713,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/_openmp_mutex-4.5-2_gnu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/annotated-types-0.7.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asgiref-3.9.2-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/async-timeout-5.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/blosc-1.21.6-hfd34d9b_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/bzip2-1.0.8-h0ad9c76_8.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/ca-certificates-2025.8.3-h4c7d964_0.conda
@@ -713,6 +723,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/freexl-2.0.0-hf297d47_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/gdal-3.11.4-py313hf168f70_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/geojson-pydantic-2.0.0-pyh3cfb1c2_0.conda
@@ -782,6 +793,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/python-3.13.7-hdf00ec1_100_cp313.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dotenv-1.1.1-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.13-8_cp313.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/redis-py-7.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/snappy-1.2.2-h7fa0ca8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/sqlite-3.50.4-hdb435a2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/sqlparse-0.5.3-pyhd8ed1ab_0.conda
@@ -845,6 +857,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/anyio-4.12.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/appdirs-1.4.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asgiref-3.9.2-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/async-timeout-5.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.3.0-pyh71513ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/autobahn-25.12.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/automat-25.4.16-pyhd8ed1ab_0.conda
@@ -870,6 +883,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docopt-0.6.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/factory_boy-3.3.3-pyhd8ed1ab_0.conda
@@ -990,6 +1004,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.13-8_cp313.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyyaml-6.0.3-py313h3dea7bd_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8c095d6_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/redis-py-7.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.32.5-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/service-identity-24.2.0-pyha770c72_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/service_identity-24.2.0-hd8ed1ab_1.conda
@@ -1087,6 +1102,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/anyio-4.12.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/appdirs-1.4.4-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asgiref-3.9.2-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/async-timeout-5.0.1-pyhcf101f3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.3.0-pyh71513ae_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/autobahn-25.12.2-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/automat-25.4.16-pyhd8ed1ab_0.conda
@@ -1110,6 +1126,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/docopt-0.6.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/factory_boy-3.3.3-pyhd8ed1ab_0.conda
@@ -1214,6 +1231,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.13-8_cp313.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pywin32-311-py313h40c08fc_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyyaml-6.0.3-py313hd650c13_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/redis-py-7.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/requests-2.32.5-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/service-identity-24.2.0-pyha770c72_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/service_identity-24.2.0-hd8ed1ab_1.conda
@@ -1473,6 +1491,18 @@ packages:
   requires_dist:
   - typing-extensions>=4 ; python_full_version < '3.11'
   requires_python: '>=3.9.0'
+- conda: https://conda.anaconda.org/conda-forge/noarch/async-timeout-5.0.1-pyhcf101f3_2.conda
+  sha256: 6638b68ab2675d0bed1f73562a4e75a61863b903be1538282cddb56c8e8f75bd
+  md5: 0d0ef7e4a0996b2c4ac2175a12b3bf69
+  depends:
+  - python >=3.10
+  - python
+  license: Apache-2.0
+  license_family: APACHE
+  purls:
+  - pkg:pypi/async-timeout?source=hash-mapping
+  size: 13559
+  timestamp: 1767290444597
 - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.3.0-pyh71513ae_0.conda
   sha256: 99c53ffbcb5dc58084faf18587b215f9ac8ced36bbfb55fa807c00967e419019
   md5: a10d11958cadc13fdb43df75f8b1903f
@@ -2213,6 +2243,19 @@ packages:
   - django-ninja-extra>=0.22.9
   - cryptography>=3.3.1 ; extra == 'crypto'
   requires_python: '>=3.7'
+- conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
+  sha256: 18c24185acd2845a137cbed7d9d508657f70ec93b5d4251ebd791ac37f4b78ac
+  md5: f5948d538635e0809ba8c4bd7c9e0259
+  depends:
+  - django >=4.2
+  - python >=3.9
+  - redis-py >=4.0.2
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/django-redis?source=hash-mapping
+  size: 31962
+  timestamp: 1750200388817
 - pypi: https://files.pythonhosted.org/packages/2f/02/cdbf7652ef2c9a7a1fed7c279484b7f3806f15b1bb34aec9fef8e8cfacbf/django_stubs-5.2.5-py3-none-any.whl
   name: django-stubs
   version: 5.2.5
@@ -5469,6 +5512,18 @@ packages:
   purls: []
   size: 282480
   timestamp: 1740379431762
+- conda: https://conda.anaconda.org/conda-forge/noarch/redis-py-7.1.0-pyhd8ed1ab_0.conda
+  sha256: 99e263b13511f2914785632c0fa1d27eae706b82bb66af84969d55e57890ab9a
+  md5: d73bee8dd8f57a037a6c3b72ae15773a
+  depends:
+  - async-timeout >=4.0.3
+  - python >=3.10
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/redis?source=hash-mapping
+  size: 228208
+  timestamp: 1763575121128
 - pypi: https://files.pythonhosted.org/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl
   name: requests
   version: 2.32.5
