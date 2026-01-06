@@ -8,7 +8,12 @@ from ninja_extra import (
     api_controller,
     http_get,
     http_post,
+    http_generic,
 )
+from django.conf import settings
+from django_tus.views import TusUpload
+from django_tus.signals import tus_upload_finished_signal
+
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.workspace import Workspace
@@ -24,6 +29,15 @@ from app.api.schemas.workspace import (
 )
 from app.api.schemas.image import ImageResponse
 from app.api.services.workspace import WorkspaceModelService
+
+
+class WorkspaceTusUploadView(TusUpload):
+    def send_signal(self, tus_file):
+        tus_upload_finished_signal.send(
+            sender=self.workspace.__class__,
+            tus_file=tus_file,
+            workspace=self.workspace
+        )
 
 
 @api_controller(
@@ -62,7 +76,32 @@ class WorkspaceControllerPublic(ModelControllerBase):
         workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         images = self.service.save_images(workspace, image_files)
         return images
+    
+    def _run_tus_logic(self, request, uuid, resource_id=None):
+        workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
+
+        tus_view = WorkspaceTusUploadView()
+        tus_view.request = request
+        tus_view.workspace = workspace
         
+        method_map = {
+            "POST": tus_view.post,
+            "PATCH": lambda r: tus_view.patch(r, resource_id),
+            "HEAD": lambda r: tus_view.head(r, resource_id),
+            "OPTIONS": tus_view.options
+        }
+        
+        handler = method_map.get(request.method.upper())
+        return handler(request)
+        
+    @http_generic("/{uuid}/upload-images-tus/", methods=["post", "options"])
+    def tus_upload(self, request, uuid: UUID):
+        return self._run_tus_logic(request, uuid)
+
+    @http_generic("/{uuid}/upload-images-tus/{resource_id}", methods=["patch", "head", "options"])
+    def tus_upload_with_resource(self, request, uuid: UUID, resource_id: UUID):
+        return self._run_tus_logic(request, uuid, resource_id)
+
 
 @api_controller(
     "/internal/workspaces",
