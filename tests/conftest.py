@@ -33,9 +33,8 @@ register(ODMTaskResultFactory)
 register(AuthorizedServiceFactory)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def api_client():
-    """Create a test client for the API"""
     return TestClient(create_api())
 
 
