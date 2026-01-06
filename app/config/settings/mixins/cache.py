@@ -16,7 +16,7 @@ class CacheSettingsMixin(BaseSettingsMixin):
     CACHE_TIMEOUT: int = Field(default=300)
     CACHE_KEY_PREFIX: str = Field(default="ninjaodm")
 
-    CACHE_OPTIONS: Dict[str, str] = Field(...)
+    CACHE_OPTIONS: Dict[str, str] = Field(default_factory=dict)
 
     @field_validator("CACHE_OPTIONS", mode="before")
     @classmethod
