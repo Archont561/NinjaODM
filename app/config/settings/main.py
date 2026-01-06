@@ -58,6 +58,7 @@ class PydanticDjangoSettings(
             self.MEDIA_ROOT,
             self.DATA_DIR,
             self.TASKS_DIR,
+            self.TUS_UPLOAD_DIR,
         ]
 
         for directory in directories:
