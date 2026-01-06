@@ -1,10 +1,13 @@
+from uuid import UUID
 from typing import List
-from ninja import Query
+from ninja import Query, File
+from ninja.files import UploadedFile
 from ninja_extra import (
     ModelControllerBase,
     ModelConfig,
     api_controller,
     http_get,
+    http_post,
 )
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
@@ -19,6 +22,7 @@ from app.api.schemas.workspace import (
     WorkspaceResponsePublic,
     WorkspaceFilterSchema,
 )
+from app.api.schemas.image import ImageResponse
 from app.api.services.workspace import WorkspaceModelService
 
 
@@ -47,6 +51,18 @@ class WorkspaceControllerPublic(ModelControllerBase):
         queryset = self.model_config.model.objects.filter(user_id=user_id)
         return filters.filter(queryset)
 
+    @http_post("/{uuid}/upload-image", response=ImageResponse)
+    def upload_file(self, request, uuid: UUID, image_file: File[UploadedFile]):
+        workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
+        image = self.service.save_images(workspace, [image_file])[0]
+        return image
+
+    @http_post("/{uuid}/upload-images", response=List[ImageResponse])
+    def upload_files(self, request, uuid: UUID, image_files: File[List[UploadedFile]]):
+        workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
+        images = self.service.save_images(workspace, image_files)
+        return images
+        
 
 @api_controller(
     "/internal/workspaces",
