@@ -3,6 +3,9 @@ import pytest
 import time
 import hmac
 import hashlib
+import fakeredis
+from asgiref.sync import sync_to_async
+from unittest.mock import patch
 from ninja_extra.testing import TestClient
 from pytest_factoryboy import register
 from PIL import Image as PILImage
@@ -69,7 +72,7 @@ def temp_image_file(temp_media):
 
     return SimpleUploadedFile(
         name="test.jpg",
-        content=buffer.read(),
+        content=buffer.getvalue(),
         content_type="image/jpeg",
     )
 
@@ -163,3 +166,16 @@ def service_user_api_client(api_client, valid_token):
             return self.request("DELETE", path, **kwargs)
 
     return JWTClient(api_client, valid_token)
+
+
+@pytest.fixture(autouse=True)
+def mock_redis():
+    server = fakeredis.FakeServer()
+    async_redis = fakeredis.FakeAsyncRedis(server=server)
+    sync_redis = fakeredis.FakeRedis(server=server)
+
+    with patch("app.api.sse.aioredis.from_url", return_value=async_redis), \
+         patch("django_redis.client.DefaultClient.get_client", return_value=sync_redis), \
+         patch("django_redis.get_redis_connection", return_value=sync_redis):
+        yield server
+    
