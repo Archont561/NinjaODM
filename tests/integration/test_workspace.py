@@ -85,6 +85,7 @@ class TestWorkspaceAPIInternal:
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestWorkspaceAPIPublic:
 
     @pytest.fixture

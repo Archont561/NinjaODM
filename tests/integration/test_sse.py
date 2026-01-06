@@ -1,6 +1,7 @@
 import pytest
 import pytest_asyncio
 import asyncio
+from asgiref.sync import sync_to_async
 from django.test import AsyncClient
 from ninja_extra.testing import TestClient as NinjaExtraTestClient
 
@@ -8,7 +9,7 @@ from app.api.controllers.workspace import WorkspaceControllerPublic
 
 
 @pytest_asyncio.fixture(scope="function")
-async def api_sse_public_client(valid_token):
+async def api_sse_public_client(valid_token, mock_redis):
     client = AsyncClient()
     
     class SSEConnection:

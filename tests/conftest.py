@@ -4,7 +4,6 @@ import time
 import hmac
 import hashlib
 import fakeredis
-from asgiref.sync import sync_to_async
 from unittest.mock import patch
 from ninja_extra.testing import TestClient
 from pytest_factoryboy import register
@@ -168,7 +167,7 @@ def service_user_api_client(api_client, valid_token):
     return JWTClient(api_client, valid_token)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_redis():
     server = fakeredis.FakeServer()
     async_redis = fakeredis.FakeAsyncRedis(server=server)
