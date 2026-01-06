@@ -223,6 +223,33 @@ class TestWorkspaceAPIPublic:
         resp = service_user_api_client.delete(f"/workspaces/{other_workspace.uuid}")
         assert resp.status_code in (403, 404)
 
+    def test_upload_image_own_workspace(
+        self,
+        service_user_api_client,
+        user_workspace,
+        temp_image_file,
+    ):
+        resp = service_user_api_client.post(
+            f"/workspaces/{user_workspace.uuid}/upload-image",
+            **{"FILES": {"image_file": temp_image_file}},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["uuid"] is not None
+        assert data["workspace_uuid"] == str(user_workspace.uuid)
+
+    def test_upload_image_other_workspace_denied(
+        self,
+        service_user_api_client,
+        other_workspace,
+        temp_image_file,
+    ):
+        resp = service_user_api_client.post(
+            f"/workspaces/{other_workspace.uuid}/upload-image",
+            **{"FILES": {"image_file": temp_image_file}},
+        )
+        assert resp.status_code in (403, 404)
+
 
 @pytest.mark.django_db
 class TestWorkspaceAPIUnauthorized:
