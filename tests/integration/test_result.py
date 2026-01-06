@@ -95,6 +95,33 @@ class TestTaskResultAPIPublic:
         assert response.status_code == 204
         assert not ODMTaskResult.objects.filter(pk=result.pk).exists()
 
+    def test_download_file(
+        self,
+        service_user_api_client,
+        workspace_factory,
+        odm_task_result_factory,
+        temp_image_file,
+    ):
+        user_workspace = workspace_factory(user_id=999)
+        result = odm_task_result_factory(workspace=user_workspace, file=temp_image_file)
+        response = service_user_api_client.get(f"/results/download/{result.uuid}")
+        assert response.status_code == 200
+        assert response.streaming is True   
+        assert response["Content-Disposition"] == f'attachment; filename="{temp_image_file.name}"'
+        assert response["Content-Type"] == "image/jpeg"
+        assert int(response["Content-Length"]) > 0
+
+    def test_download_file_forbidden(
+        self,
+        service_user_api_client,
+        workspace_factory,
+        odm_task_result_factory,
+    ):
+        other_workspace = workspace_factory(user_id=888)
+        result = odm_task_result_factory(workspace=other_workspace)
+        response = service_user_api_client.get(f"/results/download/{result.uuid}")
+        assert response.status_code == 403
+
     
 @pytest.mark.django_db
 class TestTaskResultAPIUnauthorized:
