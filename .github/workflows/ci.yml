@@ -14,6 +14,9 @@ jobs:
       ENVIRONMENT: "test"
       ODM_CONTAINER_URL: "test_odm_url"
       ODM_CONTAINER_VOLUME: "test_odm_volume"
+      CACHE_BACKEND: "django_redis.cache.RedisCache"
+      CACHE_LOCATION: "redis://redis:6379/0"
+      CACHE_OPTIONS: '{"CLIENT_CLASS": "django_redis.client.DefaultClient"}'
 
     steps:
       - name: Checkout source
