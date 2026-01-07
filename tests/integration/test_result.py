@@ -35,6 +35,7 @@ def results_list(workspace_factory, odm_task_result_factory):
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestTaskResultAPIInternal:
     @classmethod
     def setup_method(cls):
@@ -87,6 +88,7 @@ class TestTaskResultAPIInternal:
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestTaskResultAPIPublic:
     @classmethod
     def setup_method(cls):

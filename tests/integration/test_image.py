@@ -35,6 +35,7 @@ def images_list(workspace_factory, image_factory):
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestImageAPIInternal:
     @classmethod
     def setup_method(cls):
@@ -83,6 +84,7 @@ class TestImageAPIInternal:
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestImageAPIPublic:
     @classmethod
     def setup_method(cls):

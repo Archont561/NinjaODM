@@ -38,7 +38,9 @@ def gcps_list(workspace_factory, image_factory, ground_control_point_factory):
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestGCPAPIInternal:
+
     @classmethod
     def setup_method(cls):
         cls.client = AuthenticatedTestClient(
@@ -193,7 +195,9 @@ class TestGCPAPIInternal:
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestGCPAPIPublic:
+    
     @classmethod
     def setup_method(cls):
         cls.client = AuthenticatedTestClient(
