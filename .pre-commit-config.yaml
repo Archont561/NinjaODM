@@ -2,73 +2,45 @@ default_language_version:
   python: python3.13
 
 repos:
-  # Lightweight utility hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        stages: [pre-commit, pre-push]
       - id: end-of-file-fixer
-        stages: [pre-commit, pre-push]
       - id: check-yaml
-        stages: [pre-commit, pre-push]
       - id: check-merge-conflict
-        stages: [pre-commit, pre-push]
       - id: debug-statements
-        stages: [pre-commit, pre-push]
 
-  # Python tooling through Pixi dev environment
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: [ --fix, --exit-non-zero-on-fix ]
+      - id: ruff-format
+
   - repo: local
     hooks:
-      - id: black-pixi
-        name: black (pixi dev)
-        language: system
-        entry: pixi
-        args: ["run", "-e", "dev", "black", "--config=pyproject.toml"]
-        types: [python]
-        pass_filenames: true
-        stages: [pre-commit]
-
-      - id: isort-pixi
-        name: isort (pixi dev)
-        language: system
-        entry: pixi
-        args: ["run", "-e", "dev", "isort", "--settings-path=pyproject.toml"]
-        types: [python]
-        pass_filenames: true
-        stages: [pre-commit]
-
       - id: mypy-pixi
         name: mypy (pixi dev)
         language: system
-        entry: pixi
-        args: ["run", "-e", "dev", "mypy", "--config-file=pyproject.toml"]
+        entry: pixi run -e dev mypy --config-file=pyproject.toml app tests
         types: [python]
-        pass_filenames: true
-        exclude: ^(migrations/|tests/)
         stages: [pre-push]
+        pass_filenames: false  # faster + cache works better
 
-      - id: bandit-pixi
-        name: bandit (pixi dev)
-        language: system
-        entry: pixi
-        args: ["run", "-e", "dev", "bandit", "-r", "app"]
-        pass_filenames: false
-        stages: [pre-push]
-
+  - repo: local
+    hooks:
       - id: django-check-pixi
         name: Django Check (pixi dev)
         language: system
-        entry: pixi
-        args: ["run", "-e", "dev", "python", "app/manage.py", "check", "--fail-level", "ERROR"]
+        entry: pixi run -e dev django:manage check --fail-level=ERROR
         pass_filenames: false
         stages: [pre-push]
 
       - id: pytest-unit-pixi
         name: Run Unit Tests (pixi dev)
         language: system
-        entry: pixi
-        args: ["run", "-e", "dev", "pytest", "tests/unit/", "-v", "--tb=short"]
+        entry: pixi run -e dev pytest tests/unit/ -v --tb=short
         pass_filenames: false
-        require_serial: true
         stages: [pre-push]
+        require_serial: true

@@ -83,13 +83,9 @@ pytest-factoryboy = ">=2.8.1,<3"
 # Static Code Analysis
 # ------------------------------------------------------------------------------
 [tool.pixi.feature.static-code-analysis.pypi-dependencies]
-prospector = ">=1.17.3,<2"
+ruff = ">=0.9.0,<1"
+mypy = ">=1.13.0,<2"
 django-stubs = ">=5.2.5,<6"
-pylint-django = ">=2.6.1,<3"
-bandit = ">=1.8.6,<2"
-black = ">=25.1.0,<26"
-mypy = ">=1.0.0,<2"
-isort = ">=5.0.0,<6"
 
 # ------------------------------------------------------------------------------
 # Miscellaneous
@@ -247,43 +243,21 @@ env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", ENVIRONMENT = "test" }
 # ==============================================================================
 # Pixi Tasks - Code Quality
 # ==============================================================================
-[tool.pixi.tasks."code-quality:lint"]
-description = "Run linting with prospector"
-cmd = ["prospector", "-X"]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint", PYTHONIOENCODING = "utf-8" }
-
-[tool.pixi.tasks."code-quality:bandit"]
-description = "Run security checks with bandit"
-cmd = ["bandit", "-r", "app"]
-
 [tool.pixi.tasks."code-quality:format"]
-description = "Format code with black"
-cmd = ["black", "app", "tests"]
+description = "Format code with ruff (replaces black + isort)"
+cmd = ["ruff", "format", "app", "tests"]
 
-[tool.pixi.tasks."code-quality:format-check"]
-description = "Check code formatting with black"
-cmd = ["black", "--check", "app", "tests"]
-
-[tool.pixi.tasks."code-quality:isort"]
-description = "Sort imports with isort"
-cmd = ["isort", "app", "tests"]
-
-[tool.pixi.tasks."code-quality:isort-check"]
-description = "Check import sorting with isort"
-cmd = ["isort", "--check-only", "app", "tests"]
+[tool.pixi.tasks."code-quality:lint"]
+description = "Lint code with ruff (replaces prospector + bandit + flake8 + everything)"
+cmd = ["ruff", "check", "--fix", "app", "tests"]
 
 [tool.pixi.tasks."code-quality:typecheck"]
 description = "Run type checking with mypy"
 cmd = ["mypy", "app"]
 
 [tool.pixi.tasks."code-quality:all"]
-description = "Run all code quality checks"
-cmd = [
-    "sh",
-    "-c",
-    "black --check app tests && isort --check-only app tests && mypy app && prospector && bandit -r app",
-]
-env = { DJANGO_SETTINGS_MODULE = "app.config.entrypoint" }
+description = "Run format + lint + typecheck (CI uses this)"
+depends-on = ["code-quality:format", "code-quality:lint", "code-quality:typecheck"]
 
 # ==============================================================================
 # Pixi Tasks - Pre-commit (with pre-push support)
