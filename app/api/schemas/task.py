@@ -17,6 +17,12 @@ class CreateTaskPublic(Schema):
     options: ODMOptionsPublic
 
 
+class UpdateTaskInternal(Schema):
+    options: Optional[ODMOptionsPublic] = None
+    status: Optional[ODMTaskStatus] = None
+    step: Optional[ODMProcessingStage] = None
+
+
 class TaskResponse(ModelSchema):
     workspace_uuid: UUID = Field(..., alias="workspace.uuid")
     status: str

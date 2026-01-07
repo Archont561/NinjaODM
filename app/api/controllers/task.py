@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import List
+from typing import List, Literal
 from ninja import Query
 from ninja_extra import (
     api_controller,
@@ -16,6 +16,7 @@ from app.api.permissions.task import IsTaskOwner, IsTaskStateTerminal, CanCreate
 from app.api.schemas.task import (
     CreateTaskInternal,
     CreateTaskPublic,
+    UpdateTaskInternal,
     TaskResponse,
     TaskFilterSchema,
 )
@@ -34,6 +35,7 @@ class TaskControllerPublic(ModelControllerBase):
         model=ODMTask,
         create_schema=CreateTaskPublic,
         retrieve_schema=TaskResponse,
+        update_schema=UpdateTaskInternal,
         allowed_routes=["find_one", "create", "delete"],
         delete_route_info={
             "permissions": [IsTaskOwner & IsTaskStateTerminal],
@@ -55,23 +57,10 @@ class TaskControllerPublic(ModelControllerBase):
         ).select_related("workspace")
         return filters.filter(queryset)
 
-    @http_post("/{uuid:task_uuid}/pause/", response=model_config.retrieve_schema)
-    def pause_task(self, request, task_uuid: UUID):
-        task = self.get_object_or_exception(ODMTask, uuid=task_uuid)
-        self.service.pause(task)
-        return task
-
-    @http_post("/{uuid:task_uuid}/resume/", response=model_config.retrieve_schema)
-    def resume_task(self, request, task_uuid: UUID):
-        task = self.get_object_or_exception(ODMTask, uuid=task_uuid)
-        self.service.resume(task)
-        return task
-
-    @http_post("/{uuid:task_uuid}/cancel/", response=model_config.retrieve_schema)
-    def cancel_task(self, request, task_uuid: UUID):
-        task = self.get_object_or_exception(ODMTask, uuid=task_uuid)
-        self.service.cancel(task)
-        return task
+    @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
+    def pause_task(self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]):
+        task = self.get_object_or_exception(ODMTask, uuid=uuid)
+        return self.service.action(action, task, self.model_config.update_schema())
 
 
 @api_controller(
@@ -84,6 +73,7 @@ class TaskControllerInternal(ModelControllerBase):
     model_config = ModelConfig(
         model=ODMTask,
         create_schema=CreateTaskInternal,
+        update_schema=UpdateTaskInternal,
         retrieve_schema=TaskResponse,
         allowed_routes=["find_one", "create", "delete"],
         delete_route_info={
@@ -103,20 +93,8 @@ class TaskControllerInternal(ModelControllerBase):
         queryset = self.model_config.model.objects.all()
         return filters.filter(queryset)
 
-    @http_post("/{uuid:task_uuid}/pause/", response=model_config.retrieve_schema)
-    def pause_task(self, request, task_uuid: UUID):
-        task = self.get_object_or_exception(ODMTask, uuid=task_uuid)
-        self.service.pause(task)
-        return task
-
-    @http_post("/{uuid:task_uuid}/resume/", response=model_config.retrieve_schema)
-    def resume_task(self, request, task_uuid: UUID):
-        task = self.get_object_or_exception(ODMTask, uuid=task_uuid)
-        self.service.resume(task)
-        return task
-
-    @http_post("/{uuid:task_uuid}/cancel/", response=model_config.retrieve_schema)
-    def cancel_task(self, request, task_uuid: UUID):
-        task = self.get_object_or_exception(ODMTask, uuid=task_uuid)
-        self.service.cancel(task)
-        return task
+    @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
+    def pause_task(self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]):
+        task = self.get_object_or_exception(ODMTask, uuid=uuid)
+        return self.service.action(action, task, self.model_config.update_schema())
+    
