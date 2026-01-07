@@ -1,8 +1,19 @@
 import sys
-
+import django.dispatch
 from .settings.mixins.base import PROJECT_DIR
 from .settings.main import get_settings
 from .settings.utils import to_django, is_linting_context, setup_loguru
+
+# Monkeypatch Django Signal to support older libraries like django-tus
+# that still pass the removed 'providing_args' argument.
+_old_init = django.dispatch.Signal.__init__
+
+
+def _new_init(self, providing_args=None, use_caching=False):
+    return _old_init(self, use_caching=use_caching)
+
+
+django.dispatch.Signal.__init__ = _new_init
 
 # Add project root to path
 if str(PROJECT_DIR) not in sys.path:
