@@ -1,5 +1,7 @@
+from typing import List
 from uuid import UUID
 from django.http import FileResponse
+from ninja import Query
 from ninja_extra import (
     ModelControllerBase,
     ModelConfig,
@@ -11,7 +13,7 @@ from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.image import Image
 from app.api.permissions.image import IsImageOwner
-from app.api.schemas.image import ImageResponse
+from app.api.schemas.image import ImageResponse, ImageFilterSchema
 from app.api.services.image import ImageModelService
 
 
@@ -26,15 +28,16 @@ class ImageControllerPublic(ModelControllerBase):
     model_config = ModelConfig(
         model=Image,
         retrieve_schema=ImageResponse,
-        allowed_routes=["find_one", "list", "delete"],
-        pagination=None,
-        list_route_info={
-            "queryset_getter": lambda self,
-            **kw: self.model_config.model.objects.filter(
-                workspace__user_id=self.context.request.user.id
-            ).select_related("workspace"),
-        },
+        allowed_routes=["find_one", "delete"],
     )
+
+    @http_get("/", response=List[model_config.retrieve_schema])
+    def list_images(self, filters: ImageFilterSchema = Query(...)):
+        user_id = self.context.request.user.id
+        queryset = self.model_config.model.objects.filter(
+            workspace__user_id=user_id
+        ).select_related("workspace")
+        return filters.filter(queryset)
     
     @http_get("/{uuid}/download")
     def download_image_file(self, request, uuid: UUID):
@@ -54,5 +57,9 @@ class ImageControllerInternal(ModelControllerBase):
     model_config = ModelConfig(
         model=Image,
         retrieve_schema=ImageResponse,
-        allowed_routes=["find_one", "list", "delete"],
+        allowed_routes=["find_one", "delete"],
     )
+
+    @http_get("/", response=List[model_config.retrieve_schema])
+    def list_images(self, filters: ImageFilterSchema = Query(...)):
+        return filters.filter(self.model_config.model.objects.all())
