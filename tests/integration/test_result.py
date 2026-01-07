@@ -56,7 +56,7 @@ class TestTaskResultAPIInternal:
         ],
     )
     def test_list_results_filtering(
-        self, results_list, odm_task_result_factory, query_format, expected_count
+        self, results_list, query_format, expected_count
     ):
         now = timezone.now()
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
