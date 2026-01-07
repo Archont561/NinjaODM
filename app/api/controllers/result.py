@@ -36,7 +36,7 @@ class ResultControllerPublic(ModelControllerBase):
         },
     )
 
-    @http_get("/download/{uuid}")
+    @http_get("/{uuid}/download")
     def download_result_file(self, request, uuid: UUID):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         return FileResponse(
