@@ -1,9 +1,80 @@
 import pytest
+from datetime import timedelta
+from django.utils import timezone
 from ninja_extra.testing import TestClient
+
 from app.api.models.task import ODMTask
-from app.api.constants.odm import ODMTaskStatus
-from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
+from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
 from app.api.controllers.task import TaskControllerInternal, TaskControllerPublic
+from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
+
+
+@pytest.fixture
+def tasks_list(workspace_factory, odm_task_factory):
+    now = timezone.now()
+    user_ws = workspace_factory(user_id=999)
+    other_ws1 = workspace_factory(user_id=1)
+    other_ws2 = workspace_factory(user_id=2)
+
+    def create_odm_task(workspace, status, step, days_ago):
+        return odm_task_factory(
+            workspace=workspace,
+            status=status,
+            step=step,
+            created_at=now - timedelta(days=days_ago)
+        )
+
+    return [
+        create_odm_task(
+            workspace=user_ws,
+            status=ODMTaskStatus.QUEUED,
+            step=ODMProcessingStage.DATASET,
+            days_ago=0,
+        ),
+        create_odm_task(
+            workspace=user_ws,
+            status=ODMTaskStatus.RUNNING,
+            step=ODMProcessingStage.SFM,
+            days_ago=1,
+        ),
+        create_odm_task(
+            workspace=user_ws,
+            status=ODMTaskStatus.COMPLETED,
+            step=ODMProcessingStage.TEXTURING,
+            days_ago=5,
+        ),
+        create_odm_task(
+            workspace=user_ws,
+            status=ODMTaskStatus.FAILED,
+            step=ODMProcessingStage.MVS,
+            days_ago=10,
+        ),
+        create_odm_task(
+            workspace=other_ws1,
+            status=ODMTaskStatus.PAUSED,
+            step=ODMProcessingStage.MERGING,
+            days_ago=2,
+        ),
+        create_odm_task(
+            workspace=other_ws1,
+            status=ODMTaskStatus.CANCELLED,
+            step=ODMProcessingStage.SFM,
+            days_ago=7,
+        ),
+        create_odm_task(
+            workspace=other_ws2,
+            status=ODMTaskStatus.RUNNING,
+            step=ODMProcessingStage.MESHING,
+            days_ago=3,
+        ),
+        create_odm_task(
+            workspace=other_ws2,
+            status=ODMTaskStatus.TIMEOUT,
+            step=ODMProcessingStage.ORTHOPHOTO_PROCESSING,
+            days_ago=14,
+        ),
+    ]
+
 
 
 @pytest.mark.django_db
@@ -14,16 +85,37 @@ class TestTaskAPIInternal:
             TaskControllerInternal, auth=AuthStrategyEnum.service
         )
 
-    def test_list_tasks(self, odm_task_factory, workspace_factory):
-        ws1 = workspace_factory(user_id=1)
-        ws2 = workspace_factory(user_id=2)
-        odm_task_factory.create_batch(2, workspace=ws1)
-        odm_task_factory.create_batch(3, workspace=ws2)
-
-        resp = self.client.get("/")
+    @pytest.mark.parametrize(
+        "query_format, expected_count",
+        [
+            ("", 8),
+            (f"status={ODMTaskStatus.QUEUED.label}", 1),
+            (f"status={ODMTaskStatus.RUNNING.label}", 2),
+            (f"status={ODMTaskStatus.COMPLETED.label}", 1),
+            (f"step={ODMProcessingStage.DATASET.label}", 1),
+            (f"step={ODMProcessingStage.SFM.label}", 2),
+            (f"step={ODMProcessingStage.MVS.label}", 1),
+            (f"step={ODMProcessingStage.POSTPROCESSING.label}", 0),
+            ("created_after={after}", 5),
+            ("created_before={before}", 6),
+            ("created_after={after}&created_before={before}", 3),
+            (f"status={ODMTaskStatus.RUNNING.label}&created_after={{after}}", 2),
+            (f"step={ODMProcessingStage.SFM.label}&created_after={{after}}", 1),
+            (f"step={ODMProcessingStage.DATASET.label}&created_before={{before}}", 0),
+        ],
+    )
+    def test_list_tasks_filtering(
+        self, tasks_list, query_format, expected_count
+    ):
+        now = timezone.now()
+        after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        query = query_format.format(after=after_date, before=before_date)
+        url = "/" + f"?{query}" if query else ""
+        resp = self.client.get(url)
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data) >= 5
+        assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_create_task(self, workspace_factory, settings, tmp_path):
         settings.TASKS_DIR = tmp_path
@@ -101,12 +193,38 @@ class TestTaskAPIPublic:
     def other_task(self, odm_task_factory, other_workspace):
         return odm_task_factory(workspace=other_workspace)
 
-    def test_list_tasks_sees_only_own(self, user_task, other_task):
-        resp = self.client.get("/")
+    @pytest.mark.parametrize(
+        "query_format, expected_count",
+        [
+            ("", 4),
+            (f"status={ODMTaskStatus.QUEUED.label}", 1),
+            (f"status={ODMTaskStatus.RUNNING.label}", 1),
+            (f"status={ODMTaskStatus.COMPLETED.label}", 1),
+            (f"status={ODMTaskStatus.FAILED.label}", 1),
+            (f"step={ODMProcessingStage.DATASET.label}", 1),
+            (f"step={ODMProcessingStage.SFM.label}", 1),
+            (f"step={ODMProcessingStage.TEXTURING.label}", 1),
+            (f"step={ODMProcessingStage.MVS.label}", 1),
+            ("created_after={after}", 3),
+            ("created_before={before}", 2),
+            ("created_after={after}&created_before={before}", 1),
+            (f"status={ODMTaskStatus.RUNNING.label}&created_after={{after}}", 1),
+            (f"step={ODMProcessingStage.SFM.label}&created_after={{after}}", 1),
+            (f"status={ODMTaskStatus.FAILED.label}&created_after={{after}}", 0),
+        ],
+    )
+    def test_list_own_tasks_filtering(
+        self, tasks_list, query_format, expected_count
+    ):
+        now = timezone.now()
+        after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        query = query_format.format(after=after_date, before=before_date)
+        url = "/" + f"?{query}" if query else ""
+        resp = self.client.get(url)
         assert resp.status_code == 200
         data = resp.json()
-        assert len(data) == 1
-        assert data[0]["uuid"] == str(user_task.uuid)
+        assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_create_task_in_own_workspace(self, user_workspace, settings, tmp_path):
         settings.TASKS_DIR = tmp_path
