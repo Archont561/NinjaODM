@@ -77,6 +77,7 @@ def tasks_list(workspace_factory, odm_task_factory):
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestTaskAPIInternal:
     @classmethod
     def setup_method(cls):
@@ -160,13 +161,14 @@ class TestTaskAPIInternal:
         self, odm_task_factory, action, expected_status, expected_odm_status
     ):
         task = odm_task_factory()
-        resp = self.client.post(f"/{task.uuid}/{action}/")
+        resp = self.client.post(f"/{task.uuid}/{action}")
         assert resp.status_code == expected_status
         task.refresh_from_db()
         assert task.odm_status == expected_odm_status
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestTaskAPIPublic:
     @classmethod
     def setup_method(cls):
@@ -278,7 +280,7 @@ class TestTaskAPIPublic:
     def test_custom_actions_on_own_task(
         self, user_task, action, expected_status, expected_odm_status
     ):
-        resp = self.client.post(f"/{user_task.uuid}/{action}/")
+        resp = self.client.post(f"/{user_task.uuid}/{action}")
         assert resp.status_code == expected_status
         user_task.refresh_from_db()
         assert user_task.odm_status == expected_odm_status
@@ -286,7 +288,7 @@ class TestTaskAPIPublic:
     @pytest.mark.parametrize("action", ["pause", "resume", "cancel"])
     def test_action_other_task_denied(self, other_task, action):
         original_status = other_task.status
-        resp = self.client.post(f"/{other_task.uuid}/{action}/")
+        resp = self.client.post(f"/{other_task.uuid}/{action}")
         assert resp.status_code in (403, 404)
         other_task.refresh_from_db()
         assert other_task.status == original_status
@@ -307,11 +309,11 @@ class TestTaskAPIUnauthorized:
         [
             ("get", "public_client", "/"),
             ("get", "public_client", "/{uuid}"),
-            ("post", "public_client", "/{uuid}/pause/"),
+            ("post", "public_client", "/{uuid}/pause"),
             ("get", "internal_client", "/"),
             ("get", "internal_client", "/{uuid}"),
             ("delete", "internal_client", "/{uuid}"),
-            ("post", "internal_client", "/{uuid}/pause/"),
+            ("post", "internal_client", "/{uuid}/pause"),
             ("get", "user_client", "/"),
             ("get", "user_client", "/{uuid}"),
             ("delete", "user_client", "/{uuid}"),
