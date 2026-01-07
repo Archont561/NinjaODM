@@ -1,11 +1,11 @@
 from __future__ import annotations
 from enum import IntEnum, auto, unique, Enum
 from typing import (
-    Optional, 
-    FrozenSet, 
-    List, 
-    Tuple, 
-    Union, 
+    Optional,
+    FrozenSet,
+    List,
+    Tuple,
+    Union,
 )
 
 
@@ -18,7 +18,6 @@ class ChoicesMixin(Enum):
     @classmethod
     def choices(cls) -> List[Tuple[Union[int, str], str]]:
         return [(member.value, member.label) for member in cls]
-
 
 
 @unique

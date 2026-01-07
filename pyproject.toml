@@ -416,7 +416,7 @@ plugins = [
 warn_unused_configs = true
 disallow_untyped_decorators = false
 exclude = [
-  "migrations", 
+  "migrations",
   ".pixi",
   "app/manage.py",
   "app/.*/migrations/.*",

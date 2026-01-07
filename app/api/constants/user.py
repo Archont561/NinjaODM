@@ -1,5 +1,6 @@
 from typing import List
 
+
 class ServiceUser:
     """
     Lightweight, stateless user compatible with Django auth.
