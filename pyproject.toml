@@ -511,11 +511,14 @@ plugins = [
 ]
 warn_unused_configs = true
 disallow_untyped_decorators = false
-exclude = ["migrations", ".pixi", ".venv", "tests/factories.py"]
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-ignore_errors = true
+exclude = [
+  "migrations", 
+  ".pixi",
+  "app/manage.py",
+  "app/.*/migrations/.*",
+  "app/config",
+  "app/tests"
+]
 
 [tool.django-stubs]
 django_settings_module = "app.config.entrypoint"
