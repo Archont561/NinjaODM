@@ -28,6 +28,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
       DJANGO_SECRET_KEY: "test-secret-key-min-30-characters-long-for-ci"
       ENVIRONMENT: "test"
+      ODM_CONTAINER_URL: "test_odm_url"
+      ODM_CONTAINER_VOLUME: "test_odm_volume"
 
     steps:
       - name: Checkout source
