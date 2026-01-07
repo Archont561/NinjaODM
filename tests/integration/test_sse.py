@@ -5,6 +5,8 @@ from asgiref.sync import sync_to_async
 from django.test import AsyncClient
 
 from app.api.controllers.workspace import WorkspaceControllerPublic
+from app.api.controllers.task import TaskControllerPublic
+from app.api.constants.odm import ODMTaskStatus
 from ..auth_clients import AuthenticatedTestClient, AuthStrategyEnum
 
 
@@ -14,6 +16,12 @@ class SetupStrategy:
 
     async def create_one(factory):
         return await sync_to_async(factory)(name="Test Workspace", user_id=999)
+
+
+class TaskSetupStrategy:
+    async def create_one(factory, workspace_factory):
+        user_workspace = await SetupStrategy.create_one(workspace_factory)
+        return await sync_to_async(factory)(workspace=user_workspace, status=ODMTaskStatus.COMPLETED)
 
 
 class RequestStrategy:
@@ -32,6 +40,22 @@ class RequestStrategy:
             FILES={"image_file": file_obj}
         )
 
+class TaskRequestStrategy:
+    def create(client, odm_task, payload, **kwargs):
+        return client.post("/", json=payload)
+
+    def pause(client, odm_task, payload, **kwargs):
+        return client.post(f"/{odm_task.uuid}/pause", json=payload)
+
+    def resume(client, odm_task, payload, **kwargs):
+        return client.post(f"/{odm_task.uuid}/resume")
+
+    def cancel(client, odm_task, payload, **kwargs):
+        return client.post(f"/{odm_task.uuid}/cancel")
+
+    def delete(client, odm_task, payload, **kwargs):
+        return client.delete(f"/{odm_task.uuid}")
+    
 
 class SSEListener:
     def __init__(self, response):
@@ -40,7 +64,6 @@ class SSEListener:
     async def next_event(self, timeout: int = 2) -> str:
         try:
             chunk = await asyncio.wait_for(self.iterator.__anext__(), timeout=timeout)
-            print(chunk)
             return chunk.decode("utf-8")
         except (StopAsyncIteration, asyncio.TimeoutError):
             raise TimeoutError("SSE Stream stopped or timed out.")
@@ -54,6 +77,9 @@ class TestSSEAPIPublic:
     def setup_method(cls):
         cls.workspace_client = AuthenticatedTestClient(
             WorkspaceControllerPublic, auth=AuthStrategyEnum.jwt
+        )
+        cls.task_client = AuthenticatedTestClient(
+            TaskControllerPublic, auth=AuthStrategyEnum.jwt
         )
 
     @pytest_asyncio.fixture(autouse=True)
@@ -114,3 +140,37 @@ class TestSSEAPIPublic:
         except TimeoutError as e:
             pytest.fail(f"SSE Verification Failed: {e}")
     
+    @pytest.mark.parametrize(
+        "setup_strat, request_strat, payload, event_type, expected_status",
+        [
+            (TaskSetupStrategy.create_one, TaskRequestStrategy.pause, None, "task:updated", 200),
+            (TaskSetupStrategy.create_one, TaskRequestStrategy.resume, None, "task:updated", 200),
+            (TaskSetupStrategy.create_one, TaskRequestStrategy.cancel, None, "task:updated", 200),
+            (TaskSetupStrategy.create_one, TaskRequestStrategy.delete, None, "task:deleted", 204),
+        ]
+    )
+    async def test_odm_task_lifecycle_sse(
+        self, 
+        odm_task_factory,
+        workspace_factory,
+        setup_strat, 
+        request_strat, 
+        payload, 
+        event_type, 
+        expected_status
+    ):
+        odm_task = await setup_strat(odm_task_factory, workspace_factory)
+        print(odm_task)
+        response = await sync_to_async(request_strat)(
+            client=self.task_client, 
+            odm_task=odm_task, 
+            payload=payload, 
+        )
+        assert response.status_code == expected_status
+        try:
+            event_data = await self.sse_listener.next_event()
+            assert event_type in event_data
+            if odm_task:
+                assert str(odm_task.uuid) in event_data
+        except TimeoutError as e:
+            pytest.fail(f"SSE Verification Failed: {e}")
