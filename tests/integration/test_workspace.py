@@ -14,48 +14,23 @@ from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 @pytest.fixture
 def workspace_list(workspace_factory):
     now = timezone.now()
-    workspaces = []
 
-    # JWT user workspaces
-    workspaces.append(
-        workspace_factory(
-            name="ProjectA", user_id=999, created_at=now - timedelta(days=10)
+    def create_workspace(name, user_id, days_ago):
+        return workspace_factory(
+            name=name,
+            user_id=user_id,
+            created_at=now - timedelta(days=days_ago)
         )
-    )
-    workspaces.append(
-        workspace_factory(
-            name="ProjectB", user_id=999, created_at=now - timedelta(days=5)
-        )
-    )
-    workspaces.append(
-        workspace_factory(
-            name="ProjectC", user_id=999, created_at=now - timedelta(days=1)
-        )
-    )
-    workspaces.append(
-        workspace_factory(
-            name="SharedProject", user_id=999, created_at=now - timedelta(days=3)
-        )
-    )
 
-    # Other users’ workspaces
-    workspaces.append(
-        workspace_factory(
-            name="OtherUser1", user_id=1, created_at=now - timedelta(days=8)
-        )
-    )
-    workspaces.append(
-        workspace_factory(
-            name="OtherUser2", user_id=2, created_at=now - timedelta(days=2)
-        )
-    )
-    workspaces.append(
-        workspace_factory(
-            name="OtherProject", user_id=3, created_at=now - timedelta(days=6)
-        )
-    )
-
-    return workspaces
+    return [
+        create_workspace("ProjectA",      999, 10),
+        create_workspace("ProjectB",      999,  5),
+        create_workspace("SharedProject", 999,  3),
+        create_workspace("ProjectC",      999,  1),
+        create_workspace("OtherUser1",      1,  8),
+        create_workspace("OtherProject",    3,  6),
+        create_workspace("OtherUser2",      2,  2),
+    ]
 
 
 @pytest.mark.django_db
