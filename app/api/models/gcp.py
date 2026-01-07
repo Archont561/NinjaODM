@@ -36,7 +36,7 @@ class GroundControlPoint(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, geo_mo
         return (
             f"{self.label} "
             f"(lng={self.lng:.6f}, lat={self.lat:.6f}, alt={self.alt:.2f}, "
-            f"imgx={self.imgx:.1f}, imgy={self.imy:.1f})"
+            f"imgx={self.imgx:.1f}, imgy={self.imgy:.1f})"
         )
 
     @property
