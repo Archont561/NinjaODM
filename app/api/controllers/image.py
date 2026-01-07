@@ -1,7 +1,10 @@
+from uuid import UUID
+from django.http import FileResponse
 from ninja_extra import (
     ModelControllerBase,
     ModelConfig,
     api_controller,
+    http_get,
 )
 
 from app.api.auth.service import ServiceHMACAuth
@@ -32,6 +35,13 @@ class ImageControllerPublic(ModelControllerBase):
             ).select_related("workspace"),
         },
     )
+    
+    @http_get("/{uuid}/download")
+    def download_image_file(self, request, uuid: UUID):
+        image = self.get_object_or_exception(self.model_config.model, uuid=uuid)
+        return FileResponse(
+            image.image_file.open("rb"), as_attachment=True, filename=image.image_file.name
+        )
 
 
 @api_controller(
