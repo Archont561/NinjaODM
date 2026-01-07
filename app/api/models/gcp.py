@@ -3,7 +3,9 @@ from app.api.models.mixins import UUIDPrimaryKeyModelMixin, TimeStampedModelMixi
 from app.api.models.image import Image
 
 
-class GroundControlPoint(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, geo_models.Model):
+class GroundControlPoint(
+    UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, geo_models.Model
+):
     # World coordinates (WGS84, 3D)
     point = geo_models.PointField(srid=4326, dim=3)
 

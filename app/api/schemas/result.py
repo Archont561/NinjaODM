@@ -1,7 +1,7 @@
 from typing import Optional, Any
 from uuid import UUID
 from datetime import datetime
-from pydantic import Field, field_validator, computed_field
+from pydantic import Field, field_validator
 from ninja import ModelSchema, FilterSchema
 
 from app.api.models.result import ODMTaskResult
@@ -38,7 +38,9 @@ class ResultFilterSchema(FilterSchema):
                 return ODMTaskResultType[normalized_name].value
             except KeyError:
                 pass
-            
-            raise ValueError(f"Invalid Result Type: '{v}'. Accepted values: {[e.label for e in ODMTaskResultType]}")
-            
+
+            raise ValueError(
+                f"Invalid Result Type: '{v}'. Accepted values: {[e.label for e in ODMTaskResultType]}"
+            )
+
         return v

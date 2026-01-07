@@ -97,7 +97,7 @@ class TaskControllerInternal(ModelControllerBase):
             ),
         },
     )
-    
+
     @http_get("/", response=List[model_config.retrieve_schema])
     def list_tasks(self, filters: TaskFilterSchema = Query(...)):
         queryset = self.model_config.model.objects.all()

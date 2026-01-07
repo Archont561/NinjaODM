@@ -38,12 +38,14 @@ class ImageControllerPublic(ModelControllerBase):
             workspace__user_id=user_id
         ).select_related("workspace")
         return filters.filter(queryset)
-    
+
     @http_get("/{uuid}/download")
     def download_image_file(self, request, uuid: UUID):
         image = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         return FileResponse(
-            image.image_file.open("rb"), as_attachment=True, filename=image.image_file.name
+            image.image_file.open("rb"),
+            as_attachment=True,
+            filename=image.image_file.name,
         )
 
 

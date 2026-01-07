@@ -17,19 +17,17 @@ def workspace_list(workspace_factory):
 
     def create_workspace(name, user_id, days_ago):
         return workspace_factory(
-            name=name,
-            user_id=user_id,
-            created_at=now - timedelta(days=days_ago)
+            name=name, user_id=user_id, created_at=now - timedelta(days=days_ago)
         )
 
     return [
-        create_workspace("ProjectA",      999, 10),
-        create_workspace("ProjectB",      999,  5),
-        create_workspace("SharedProject", 999,  3),
-        create_workspace("ProjectC",      999,  1),
-        create_workspace("OtherUser1",      1,  8),
-        create_workspace("OtherProject",    3,  6),
-        create_workspace("OtherUser2",      2,  2),
+        create_workspace("ProjectA", 999, 10),
+        create_workspace("ProjectB", 999, 5),
+        create_workspace("SharedProject", 999, 3),
+        create_workspace("ProjectC", 999, 1),
+        create_workspace("OtherUser1", 1, 8),
+        create_workspace("OtherProject", 3, 6),
+        create_workspace("OtherUser2", 2, 2),
     ]
 
 

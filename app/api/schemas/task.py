@@ -33,11 +33,11 @@ class TaskResponse(ModelSchema):
     @staticmethod
     def resolve_status(obj: ODMTask):
         return obj.odm_status.label
-    
+
     @staticmethod
     def resolve_step(obj: ODMTask):
         return obj.odm_step.label
-    
+
 
 class TaskFilterSchema(FilterSchema):
     status: Optional[ODMTaskStatus] = Field(None, q="status")
@@ -57,9 +57,11 @@ class TaskFilterSchema(FilterSchema):
                 return ODMTaskStatus[normalized_name].value
             except KeyError:
                 pass
-            
-            raise ValueError(f"Invalid Task Status Type: '{v}'. Accepted values: {[e.label for e in ODMTaskStatus]}")
-            
+
+            raise ValueError(
+                f"Invalid Task Status Type: '{v}'. Accepted values: {[e.label for e in ODMTaskStatus]}"
+            )
+
         return v
 
     @field_validator("step", mode="before")
@@ -74,7 +76,9 @@ class TaskFilterSchema(FilterSchema):
                 return ODMProcessingStage[normalized_name].value
             except KeyError:
                 pass
-            
-            raise ValueError(f"Invalid Task Status Type: '{v}'. Accepted values: {[e.label for e in ODMProcessingStage]}")
-            
+
+            raise ValueError(
+                f"Invalid Task Status Type: '{v}'. Accepted values: {[e.label for e in ODMProcessingStage]}"
+            )
+
         return v

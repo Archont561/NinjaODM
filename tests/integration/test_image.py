@@ -21,14 +21,14 @@ def images_list(workspace_factory, image_factory):
             workspace=workspace,
             name=name,
             is_thumbnail=is_thumbnail,
-            created_at=now - timedelta(days=days_ago)
+            created_at=now - timedelta(days=days_ago),
         )
 
     return [
-        create_image(user_ws, "Image 1", True, 1), 
+        create_image(user_ws, "Image 1", True, 1),
         create_image(user_ws, "Image 2", False, 2),
-        create_image(other_ws1, "Image 3", True, 5), 
-        create_image(other_ws1, "Image 4", False, 10), 
+        create_image(other_ws1, "Image 3", True, 5),
+        create_image(other_ws1, "Image 4", False, 10),
         create_image(other_ws2, "Image 5", True, 3),
         create_image(other_ws2, "Image 6", False, 7),
     ]
@@ -45,7 +45,7 @@ class TestImageAPIInternal:
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
-            ("", 6), 
+            ("", 6),
             ("name=Image 1", 1),
             ("is_thumbnail=True", 3),
             ("is_thumbnail=False", 3),
@@ -55,9 +55,7 @@ class TestImageAPIInternal:
             ("name=Image&is_thumbnail=True", 3),
         ],
     )
-    def test_list_images_filtering(
-        self, images_list, query_format, expected_count
-    ):
+    def test_list_images_filtering(self, images_list, query_format, expected_count):
         now = timezone.now()
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
@@ -99,15 +97,13 @@ class TestImageAPIPublic:
             ("name=Image 1", 1),
             ("is_thumbnail=True", 1),
             ("is_thumbnail=False", 1),
-            ("created_after={after}",  2),
+            ("created_after={after}", 2),
             ("created_before={before}", 1),
             ("created_after={after}&created_before={before}", 1),
             ("name=Image&is_thumbnail=True", 1),
         ],
     )
-    def test_list_own_images_filtering(
-        self, images_list, query_format, expected_count
-    ):
+    def test_list_own_images_filtering(self, images_list, query_format, expected_count):
         now = timezone.now()
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
@@ -142,26 +138,24 @@ class TestImageAPIPublic:
         file_path = Path(image.image_file.path)
         assert not file_path.exists()
 
-    def test_download_own_image_file(self, workspace_factory, image_factory, temp_image_file):
+    def test_download_own_image_file(
+        self, workspace_factory, image_factory, temp_image_file
+    ):
         user_workspace = workspace_factory(user_id=999)
-        image = image_factory(
-            workspace=user_workspace,
-            image_file=temp_image_file
-        )
+        image = image_factory(workspace=user_workspace, image_file=temp_image_file)
         response = self.client.get(f"/{image.uuid}/download")
         assert response.status_code == 200
         assert response["Content-Type"] == "image/jpeg"
-        assert 'attachment' in response["Content-Disposition"]
+        assert "attachment" in response["Content-Disposition"]
         assert 'filename="test.jpg"' in response["Content-Disposition"]
         temp_image_file.seek(0)
         assert response.content == temp_image_file.read()
 
-    def test_cannot_download_others_image_file(self, workspace_factory, image_factory, temp_image_file):
+    def test_cannot_download_others_image_file(
+        self, workspace_factory, image_factory, temp_image_file
+    ):
         other_workspace = workspace_factory(user_id=12345)
-        image = image_factory(
-            workspace=other_workspace,
-            image_file=temp_image_file
-        )
+        image = image_factory(workspace=other_workspace, image_file=temp_image_file)
         response = self.client.get(f"/{image.uuid}/download")
         assert response.status_code in (403, 404)
 

@@ -21,7 +21,7 @@ def tasks_list(workspace_factory, odm_task_factory):
             workspace=workspace,
             status=status,
             step=step,
-            created_at=now - timedelta(days=days_ago)
+            created_at=now - timedelta(days=days_ago),
         )
 
     return [
@@ -76,7 +76,6 @@ def tasks_list(workspace_factory, odm_task_factory):
     ]
 
 
-
 @pytest.mark.django_db
 class TestTaskAPIInternal:
     @classmethod
@@ -104,9 +103,7 @@ class TestTaskAPIInternal:
             (f"step={ODMProcessingStage.DATASET.label}&created_before={{before}}", 0),
         ],
     )
-    def test_list_tasks_filtering(
-        self, tasks_list, query_format, expected_count
-    ):
+    def test_list_tasks_filtering(self, tasks_list, query_format, expected_count):
         now = timezone.now()
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
@@ -213,9 +210,7 @@ class TestTaskAPIPublic:
             (f"status={ODMTaskStatus.FAILED.label}&created_after={{after}}", 0),
         ],
     )
-    def test_list_own_tasks_filtering(
-        self, tasks_list, query_format, expected_count
-    ):
+    def test_list_own_tasks_filtering(self, tasks_list, query_format, expected_count):
         now = timezone.now()
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")

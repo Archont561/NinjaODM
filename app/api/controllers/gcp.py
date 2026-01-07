@@ -12,9 +12,9 @@ from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.gcp import GroundControlPoint
 from app.api.permissions.gcp import IsGCPOwner, CanCreateGCP
 from app.api.schemas.gcp import (
-    GCPCreate, 
-    GCPUpdate, 
-    GCPResponse, 
+    GCPCreate,
+    GCPUpdate,
+    GCPResponse,
     GCPFeatureCollection,
     GCPFilterSchema,
 )
@@ -39,21 +39,23 @@ class GCPControllerPublic(ModelControllerBase):
         create_route_info={
             "path": "/?image_uuid=uuid",
             "permissions": [CanCreateGCP],
-            "custom_handler": lambda self, data, **kw: self.service.create(data, **self.context.kwargs, **kw)
+            "custom_handler": lambda self, data, **kw: self.service.create(
+                data, **self.context.kwargs, **kw
+            ),
         },
     )
 
     def get_queryset(self):
         user_id = self.context.request.user.id
-        return self.model_config.model.objects.filter(
-            image__workspace__user_id=user_id
-        )
+        return self.model_config.model.objects.filter(image__workspace__user_id=user_id)
 
     @http_get("/", response=List[model_config.retrieve_schema])
     def list_gcps(self, filters: GCPFilterSchema = Query(...)):
         return filters.filter(self.get_queryset())
 
-    @http_get("/geojson", response=GCPFeatureCollection, tags=["gcp", "public", "geojson"])
+    @http_get(
+        "/geojson", response=GCPFeatureCollection, tags=["gcp", "public", "geojson"]
+    )
     def list_gcps_as_geojson(self, filters: GCPFilterSchema = Query(...)):
         return self.service.queryset_to_geojson(filters.filter(self.get_queryset()))
 
@@ -75,7 +77,9 @@ class GCPControllerInternal(ModelControllerBase):
         create_route_info={
             "path": "/?image_uuid=uuid",
             "permissions": [CanCreateGCP],
-            "custom_handler": lambda self, data, **kw: self.service.create(data, **self.context.kwargs, **kw)
+            "custom_handler": lambda self, data, **kw: self.service.create(
+                data, **self.context.kwargs, **kw
+            ),
         },
     )
 
@@ -83,4 +87,3 @@ class GCPControllerInternal(ModelControllerBase):
     def list_gcps(self, filters: GCPFilterSchema = Query(...)):
         queryset = self.model_config.model.objects.all()
         return filters.filter(queryset)
-    

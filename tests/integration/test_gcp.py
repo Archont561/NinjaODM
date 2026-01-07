@@ -9,7 +9,6 @@ from app.api.controllers.gcp import GCPControllerInternal, GCPControllerPublic
 from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 
 
-
 @pytest.fixture
 def gcps_list(workspace_factory, image_factory, ground_control_point_factory):
     now = timezone.now()
@@ -21,7 +20,7 @@ def gcps_list(workspace_factory, image_factory, ground_control_point_factory):
         return ground_control_point_factory(
             image=image_factory(workspace=workspace),
             label=label,
-            created_at=now - timedelta(days=days_ago)
+            created_at=now - timedelta(days=days_ago),
         )
 
     return [
@@ -57,9 +56,7 @@ class TestGCPAPIInternal:
             ("created_before={before}", 8),
         ],
     )
-    def test_list_gcps_filtering(
-        self, gcps_list, query_format, expected_count
-    ):
+    def test_list_gcps_filtering(self, gcps_list, query_format, expected_count):
         now = timezone.now()
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
@@ -215,9 +212,7 @@ class TestGCPAPIPublic:
             ("created_before={before}", 3),
         ],
     )
-    def test_list_own_gcps_filtering(
-        self, gcps_list, query_format, expected_count
-    ):
+    def test_list_own_gcps_filtering(self, gcps_list, query_format, expected_count):
         now = timezone.now()
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
@@ -227,7 +222,6 @@ class TestGCPAPIPublic:
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
-
 
     def test_list_as_geojson(
         self, workspace_factory, image_factory, ground_control_point_factory

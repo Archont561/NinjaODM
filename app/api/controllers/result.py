@@ -30,7 +30,7 @@ class ResultControllerPublic(ModelControllerBase):
         retrieve_schema=ResultResponse,
         allowed_routes=["find_one", "delete"],
     )
-    
+
     @http_get("/", response=List[model_config.retrieve_schema])
     def list_results(self, filters: ResultFilterSchema = Query(...)):
         user_id = self.context.request.user.id
@@ -63,4 +63,3 @@ class ResultControllerInternal(ModelControllerBase):
     @http_get("/", response=List[model_config.retrieve_schema])
     def list_results(self, filters: ResultFilterSchema = Query(...)):
         return filters.filter(self.model_config.model.objects.all())
-    
