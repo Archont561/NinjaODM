@@ -1,9 +1,12 @@
 from uuid import UUID
+from typing import List
+from ninja import Query
 from ninja_extra import (
     api_controller,
     ModelControllerBase,
     ModelConfig,
     http_post,
+    http_get,
 )
 
 from app.api.auth.service import ServiceHMACAuth
@@ -14,6 +17,7 @@ from app.api.schemas.task import (
     CreateTaskInternal,
     CreateTaskPublic,
     TaskResponse,
+    TaskFilterSchema,
 )
 from app.api.services.task import TaskModelService
 
@@ -30,8 +34,7 @@ class TaskControllerPublic(ModelControllerBase):
         model=ODMTask,
         create_schema=CreateTaskPublic,
         retrieve_schema=TaskResponse,
-        allowed_routes=["find_one", "create", "delete", "list"],
-        pagination=None,
+        allowed_routes=["find_one", "create", "delete"],
         delete_route_info={
             "permissions": [IsTaskOwner & IsTaskStateTerminal],
         },
@@ -42,13 +45,15 @@ class TaskControllerPublic(ModelControllerBase):
                 data, **self.context.kwargs, **kw
             ),
         },
-        list_route_info={
-            "queryset_getter": lambda self,
-            **kw: self.model_config.model.objects.filter(
-                workspace__user_id=self.context.request.user.id
-            ).select_related("workspace"),
-        },
     )
+
+    @http_get("/", response=List[model_config.retrieve_schema])
+    def list_tasks(self, filters: TaskFilterSchema = Query(...)):
+        user_id = self.context.request.user.id
+        queryset = self.model_config.model.objects.filter(
+            workspace__user_id=user_id
+        ).select_related("workspace")
+        return filters.filter(queryset)
 
     @http_post("/{uuid:task_uuid}/pause/", response=model_config.retrieve_schema)
     def pause_task(self, request, task_uuid: UUID):
@@ -80,8 +85,7 @@ class TaskControllerInternal(ModelControllerBase):
         model=ODMTask,
         create_schema=CreateTaskInternal,
         retrieve_schema=TaskResponse,
-        allowed_routes=["find_one", "list", "create", "delete"],
-        pagination=None,
+        allowed_routes=["find_one", "create", "delete"],
         delete_route_info={
             "permissions": [IsTaskStateTerminal],
         },
@@ -93,6 +97,11 @@ class TaskControllerInternal(ModelControllerBase):
             ),
         },
     )
+    
+    @http_get("/", response=List[model_config.retrieve_schema])
+    def list_tasks(self, filters: TaskFilterSchema = Query(...)):
+        queryset = self.model_config.model.objects.all()
+        return filters.filter(queryset)
 
     @http_post("/{uuid:task_uuid}/pause/", response=model_config.retrieve_schema)
     def pause_task(self, request, task_uuid: UUID):
