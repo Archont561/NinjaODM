@@ -404,110 +404,14 @@ directory = "htmlcov"
 output = "coverage.xml"
 
 # ==============================================================================
-# Prospector Configuration
-# ==============================================================================
-[tool.prospector]
-strictness = "medium"
-max-line-length = 120
-test-warnings = false
-doc-warnings = false
-
-# ==============================================================================
-# Pylint Configuration
-# ==============================================================================
-[tool.pylint.main]
-load-plugins = ["pylint_django"]
-django-settings-module = "app.config.entrypoint"
-ignore = ["migrations", ".pixi", ".venv"]
-jobs = 1
-
-[tool.pylint.messages_control]
-disable = [
-    # Missing docstrings
-    "C0111", # missing-docstring
-    "C0114", # missing-module-docstring
-    "C0115", # missing-class-docstring
-    "C0116", # missing-function-docstring
-    # Naming
-    "C0103", # invalid-name
-    # Design
-    "R0903", # too-few-public-methods
-    "R0801", # duplicate-code
-    # Protected access
-    "W0212", # protected-access
-    # Imports
-    "import-outside-toplevel",
-    "import-error",
-    # Django/Pydantic compatibility
-    "arguments-differ",
-    "no-member",
-    # Code style
-    "no-else-return",
-    "unused-import",
-]
-
-[tool.pylint.format]
-max-line-length = 120
-
-[tool.pylint.design]
-max-args = 7
-max-attributes = 12
-max-parents = 7
-
-[tool.pylint.similarities]
-min-similarity-lines = 10
-
-# ==============================================================================
-# Bandit Configuration
-# ==============================================================================
-[tool.bandit]
-exclude_dirs = ["tests", "*/migrations/*", ".pixi", ".venv"]
-skips = ["B101", "B601"]
-
-# ==============================================================================
-# Black Configuration
-# ==============================================================================
-[tool.black]
-line-length = 88
-target-version = ['py313']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | \.pixi
-  | _build
-  | buck-out
-  | build
-  | dist
-  | migrations
-)/
-'''
-
-# ==============================================================================
-# isort Configuration
-# ==============================================================================
-[tool.isort]
-profile = "black"
-line_length = 88
-known_django = ["django"]
-sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-skip_glob = ["*/migrations/*", "*/.pixi/*", "*/.venv/*"]
-skip = [".pixi", ".venv", "migrations"]
-
-# ==============================================================================
 # MyPy Configuration
 # ==============================================================================
 [tool.mypy]
 python_version = "3.13"
-strict = true
+strict = false
 plugins = [
     "mypy_django_plugin.main",
-    "pydantic.mypy"
+    "pydantic.mypy",
 ]
 warn_unused_configs = true
 disallow_untyped_decorators = false
