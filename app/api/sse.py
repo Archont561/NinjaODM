@@ -10,13 +10,11 @@ from app.api.auth.user import ServiceUserJWTAuth
 
 sse_router = Router()
 
+
 def emit_event(user_id: str, event_name: str, data: dict):
     conn = get_redis_connection("default")
     channel = f"user_{user_id}_events"
-    payload = {
-        "event": event_name,
-        "data": data
-    }
+    payload = {"event": event_name, "data": data}
     conn.publish(channel, json.dumps(payload))
 
 
@@ -33,8 +31,7 @@ async def redis_event_stream(user_id: str):
         while True:
             try:
                 message = await asyncio.wait_for(
-                    pubsub.get_message(ignore_subscribe_messages=True),
-                    timeout=20.0
+                    pubsub.get_message(ignore_subscribe_messages=True), timeout=20.0
                 )
 
                 if message:
@@ -54,8 +51,7 @@ async def redis_event_stream(user_id: str):
 @sse_router.get("/events", auth=ServiceUserJWTAuth())
 async def sse_endpoint(request):
     response = StreamingHttpResponse(
-        redis_event_stream(request.user.id),
-        content_type="text/event-stream"
+        redis_event_stream(request.user.id), content_type="text/event-stream"
     )
     response["Cache-Control"] = "no-cache"
     response["X-Accel-Buffering"] = "no"

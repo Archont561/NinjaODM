@@ -7,7 +7,7 @@ from app.api.models.image import Image
 
 class CanCreateGCP(permissions.BasePermission):
     def has_permission(self, request: HttpRequest, controller):
-        image_uuid = request.GET.get('image_uuid')
+        image_uuid = request.GET.get("image_uuid")
         try:
             image = Image.objects.get(uuid=image_uuid)
         except Image.DoesNotExist:

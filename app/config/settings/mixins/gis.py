@@ -11,7 +11,9 @@ class GISSettingsMixin(BaseSettingsMixin):
         return self.PROJECT_DIR / ".pixi" / "envs" / self.ENVIRONMENT
 
     @staticmethod
-    def _get_library_path(env_path: Path, lib_name: str, is_spatialite: bool = False) -> Path:
+    def _get_library_path(
+        env_path: Path, lib_name: str, is_spatialite: bool = False
+    ) -> Path:
         """Return platform-specific library path."""
         if sys.platform == "win32":
             return env_path / "Library" / "bin" / f"{lib_name}.dll"
@@ -40,4 +42,8 @@ class GISSettingsMixin(BaseSettingsMixin):
     @computed_field
     @property
     def SPATIALITE_LIBRARY_PATH(self) -> str:
-        return str(self._get_library_path(self.PIXI_ENV_PATH, "mod_spatialite", is_spatialite=True))
+        return str(
+            self._get_library_path(
+                self.PIXI_ENV_PATH, "mod_spatialite", is_spatialite=True
+            )
+        )

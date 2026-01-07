@@ -77,8 +77,12 @@ class ODMTaskFactory(DjangoModelFactory):
         model = ODMTask
 
     workspace = factory.SubFactory(WorkspaceFactory)
-    status = factory.LazyFunction(lambda: random.choice([s.value for s in ODMTaskStatus]))
-    step = factory.LazyFunction(lambda: random.choice([s.value for s in ODMProcessingStage]))
+    status = factory.LazyFunction(
+        lambda: random.choice([s.value for s in ODMTaskStatus])
+    )
+    step = factory.LazyFunction(
+        lambda: random.choice([s.value for s in ODMProcessingStage])
+    )
     options = factory.LazyFunction(dict)
 
 
@@ -87,4 +91,6 @@ class ODMTaskResultFactory(DjangoModelFactory):
         model = ODMTaskResult
 
     workspace = factory.SubFactory(WorkspaceFactory)
-    result_type = factory.LazyFunction(lambda: random.choice([s.value for s in ODMTaskResultType]))
+    result_type = factory.LazyFunction(
+        lambda: random.choice([s.value for s in ODMTaskResultType])
+    )

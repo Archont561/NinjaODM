@@ -8,7 +8,7 @@ from app.api.models.workspace import Workspace
 
 class CanCreateTask(permissions.BasePermission):
     def has_permission(self, request: HttpRequest, controller):
-        workspace_uuid = request.GET.get('workspace_uuid')
+        workspace_uuid = request.GET.get("workspace_uuid")
         try:
             workspace = Workspace.objects.get(uuid=workspace_uuid)
         except Workspace.DoesNotExist:

@@ -5,13 +5,29 @@ from app.api.models.mixins import UUIDPrimaryKeyModelMixin, TimeStampedModelMixi
 
 
 ADJECTIVES = [
-    "focused", "brave", "calm", "eager", "frosty",
-    "happy", "keen", "mighty", "quiet", "swift",
+    "focused",
+    "brave",
+    "calm",
+    "eager",
+    "frosty",
+    "happy",
+    "keen",
+    "mighty",
+    "quiet",
+    "swift",
 ]
 
 NOUNS = [
-    "turing", "hopper", "lovelace", "einstein", "curie",
-    "tesla", "newton", "galileo", "darwin", "morse",
+    "turing",
+    "hopper",
+    "lovelace",
+    "einstein",
+    "curie",
+    "tesla",
+    "newton",
+    "galileo",
+    "darwin",
+    "morse",
 ]
 
 
