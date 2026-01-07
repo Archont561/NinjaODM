@@ -1,8 +1,6 @@
-
 import time
 import hmac
 import hashlib
-from typing import Literal
 from enum import Enum
 from ninja_extra.testing import TestClient, TestAsyncClient
 from ninja_jwt.tokens import AccessToken

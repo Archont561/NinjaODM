@@ -1,65 +1,112 @@
 import pytest
 from datetime import timedelta
 from django.utils import timezone
+from ninja_extra.testing import TestClient
 
 from app.api.models.workspace import Workspace
+from app.api.controllers.workspace import (
+    WorkspaceControllerInternal,
+    WorkspaceControllerPublic,
+)
+from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
+
+
+@pytest.fixture
+def workspace_list(workspace_factory):
+    now = timezone.now()
+    workspaces = []
+
+    # JWT user workspaces
+    workspaces.append(
+        workspace_factory(
+            name="ProjectA", user_id=999, created_at=now - timedelta(days=10)
+        )
+    )
+    workspaces.append(
+        workspace_factory(
+            name="ProjectB", user_id=999, created_at=now - timedelta(days=5)
+        )
+    )
+    workspaces.append(
+        workspace_factory(
+            name="ProjectC", user_id=999, created_at=now - timedelta(days=1)
+        )
+    )
+    workspaces.append(
+        workspace_factory(
+            name="SharedProject", user_id=999, created_at=now - timedelta(days=3)
+        )
+    )
+
+    # Other users’ workspaces
+    workspaces.append(
+        workspace_factory(
+            name="OtherUser1", user_id=1, created_at=now - timedelta(days=8)
+        )
+    )
+    workspaces.append(
+        workspace_factory(
+            name="OtherUser2", user_id=2, created_at=now - timedelta(days=2)
+        )
+    )
+    workspaces.append(
+        workspace_factory(
+            name="OtherProject", user_id=3, created_at=now - timedelta(days=6)
+        )
+    )
+
+    return workspaces
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
 class TestWorkspaceAPIInternal:
+    @classmethod
+    def setup_method(cls):
+        cls.client = AuthenticatedTestClient(
+            WorkspaceControllerInternal, auth=AuthStrategyEnum.service
+        )
+
     @pytest.mark.parametrize(
-        "query_params, expected_count",
+        "query_format, expected_count",
         [
-            # 1. No filters - should see all
-            ("", 4),
-            # 2. Filter by name (partial match)
+            ("", 7),
             ("name=ProjectA", 1),
-            ("name=Project", 2),  # Matches ProjectA and ProjectB
+            ("name=Project", 5),
             ("name=NonExistent", 0),
-            # 3. Filter by date (After)
-            ("created_after={after_date}", 3),
-            # 4. Filter by date range (Between)
-            ("created_after={after_date}&created_before={before_date}", 1),
-            # 5. Combined filters
-            ("name=Project&created_after={after_date}", 2),
+            ("created_after={after}", 4),
+            ("created_before={before}", 6),
+            ("name=Project&created_after={after}", 3),
+            ("name=ProjectC&created_after={after}", 1),
         ],
     )
     def test_list_workspaces_filtering(
-        self, service_api_client, workspace_factory, query_params, expected_count
+        self, workspace_list, query_format, expected_count
     ):
         now = timezone.now()
-        workspace_factory(name="Old Task", created_at=now - timedelta(days=10))
-        workspace_factory(name="ProjectA", created_at=now - timedelta(days=5))
-        workspace_factory(name="ProjectB", created_at=now - timedelta(days=1))
-        workspace_factory(name="Shared", user_id=999)
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        formatted_query = query_params.format(
-            after_date=after_date, before_date=before_date
-        )
-        url = "/internal/workspaces/"
-        if formatted_query:
-            url += f"?{formatted_query}"
-        response = service_api_client.get(url)
+        query = query_format.format(after=after_date, before=before_date)
+        url = "/" + f"?{query}" if query else ""
+        resp = self.client.get(url)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == expected_count, f"Failed for query: {query}"
 
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data) == expected_count, f"Failed for query: {formatted_query}"
-
-    def test_create_workspace(self, service_api_client):
+    def test_create_workspace(self):
         payload = {"name": "Service WS", "user_id": 1234}
-        response = service_api_client.post("internal/workspaces/", json=payload)
+        response = self.client.post("/", json=payload)
         assert response.status_code == 201
 
-    def test_get_workspace(self, service_api_client, workspace_factory):
+    def test_get_workspace(self, workspace_factory):
         ws = workspace_factory(user_id=1234, name="Other WS")
-        resp = service_api_client.get(f"internal/workspaces/{ws.uuid}")
+        resp = self.client.get(f"/{ws.uuid}")
         assert resp.status_code == 200
 
-    def test_update_workspace(self, service_api_client, workspace_factory):
+    def test_update_workspace(self, workspace_factory):
         ws = workspace_factory(user_id=1234, name="Other WS")
-        resp = service_api_client.patch(
-            f"internal/workspaces/{ws.uuid}", json={"name": "Updated", "user_id": 333}
+        resp = self.client.patch(
+            f"/{ws.uuid}", json={"name": "Updated", "user_id": 333}
         )
         assert resp.status_code == 200
 
@@ -67,9 +114,9 @@ class TestWorkspaceAPIInternal:
         assert ws.name == "Updated"
         assert ws.user_id == 333
 
-    def test_delete_workspace(self, service_api_client, workspace_factory):
+    def test_delete_workspace(self, workspace_factory):
         ws = workspace_factory(user_id=1234, name="Other WS")
-        resp = service_api_client.delete(f"internal/workspaces/{ws.uuid}")
+        resp = self.client.delete(f"/{ws.uuid}")
         assert resp.status_code == 204
 
         with pytest.raises(Workspace.DoesNotExist):
@@ -79,161 +126,86 @@ class TestWorkspaceAPIInternal:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestWorkspaceAPIPublic:
+    @classmethod
+    def setup_method(cls):
+        cls.client = AuthenticatedTestClient(
+            WorkspaceControllerPublic, auth=AuthStrategyEnum.jwt
+        )
+
+    @pytest.mark.parametrize(
+        "query_format, expected_count",
+        [
+            ("", 4),
+            ("name=ProjectA", 1),
+            ("name=Project", 4),
+            ("name=NonExistent", 0),
+            ("created_after={after}", 3),
+            ("created_before={before}", 3),
+            ("name=Project&created_after={after}", 3),
+            ("name=ProjectC&created_after={after}", 1),
+        ],
+    )
+    def test_list_workspaces_filtering(
+        self, workspace_list, query_format, expected_count
+    ):
+        now = timezone.now()
+        after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        query = query_format.format(after=after_date, before=before_date)
+        url = "/" + f"?{query}" if query else ""
+        resp = self.client.get(url)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == expected_count, f"Failed for query: {query}"
+
     @pytest.fixture
     def user_workspace(self, workspace_factory):
-        # valid_token fixture in conftest uses user_id = 999
-        return workspace_factory(user_id=999, name="My WS")
+        return workspace_factory(user_id=999, name="User WS")
 
     @pytest.fixture
     def other_workspace(self, workspace_factory):
         return workspace_factory(user_id=1234, name="Other WS")
 
-    @pytest.mark.parametrize(
-        "workspaces_to_create, query_params, expected_names",
-        [
-            # 1. No filters – return all user workspaces
-            (
-                [
-                    {"name": "ProjectA", "user_id": 999},
-                    {"name": "ProjectB", "user_id": 999},
-                    {"name": "OtherUser", "user_id": 1},  # should be ignored
-                ],
-                "",
-                ["ProjectA", "ProjectB"],
-            ),
-            # 2. Name filter – partial match
-            (
-                [
-                    {"name": "ProjectA", "user_id": 999},
-                    {"name": "ProjectB", "user_id": 999},
-                    {"name": "ProjectA", "user_id": 1},  # other user
-                ],
-                "name=ProjectA",
-                ["ProjectA"],  # only user's workspace
-            ),
-            # 3. created_after filter
-            (
-                [
-                    {"name": "Old", "user_id": 999, "days_ago": 10},
-                    {"name": "Recent", "user_id": 999, "days_ago": 2},
-                ],
-                "created_after={after_date}",
-                ["Recent"],
-            ),
-            # 4. created_before filter
-            (
-                [
-                    {"name": "Old", "user_id": 999, "days_ago": 10},
-                    {"name": "Recent", "user_id": 999, "days_ago": 2},
-                ],
-                "created_before={before_date}",
-                ["Old"],
-            ),
-            # 5. Combined filters: name + created_after
-            (
-                [
-                    {"name": "ProjectA", "user_id": 999, "days_ago": 5},
-                    {"name": "ProjectB", "user_id": 999, "days_ago": 1},
-                    {"name": "ProjectA", "user_id": 1, "days_ago": 1},  # other user
-                ],
-                "name=ProjectA&created_after={after_date}",
-                ["ProjectA"],
-            ),
-        ],
-    )
-    def test_list_workspaces_public_filters(
-        self,
-        service_user_api_client,
-        workspace_factory,
-        workspaces_to_create,
-        query_params,
-        expected_names,
-    ):
-        now = timezone.now()
-        created_workspaces = {}
-
-        # Create workspaces using factory
-        for ws in workspaces_to_create:
-            created_at = now - timedelta(days=ws.get("days_ago", 0))
-            workspace = workspace_factory(
-                name=ws["name"],
-                user_id=ws["user_id"],
-                created_at=created_at,
-            )
-            created_workspaces[ws["name"]] = workspace
-
-        # Prepare dynamic dates for query
-        after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
-        before_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
-        formatted_query = query_params.format(
-            after_date=after_date, before_date=before_date
-        )
-
-        url = "/workspaces/"
-        if formatted_query:
-            url += f"?{formatted_query}"
-
-        response = service_user_api_client.get(url)
-        assert response.status_code == 200
-        data = response.json()
-
-        # Check returned workspace names match expected
-        returned_names = [ws["name"] for ws in data]
-        assert set(returned_names) == set(expected_names)
-
-    def test_create_workspace(self, service_user_api_client):
+    def test_create_workspace(self):
         payload = {"name": "JWT WS"}
-        resp = service_user_api_client.post("/workspaces/", json=payload)
+        resp = self.client.post("/", json=payload)
         assert resp.status_code == 201
         ws = Workspace.objects.get(uuid=resp.json()["uuid"])
         assert ws.name == "JWT WS"
         assert ws.user_id == 999
 
-    def test_get_own_workspace(self, service_user_api_client, user_workspace):
-        resp = service_user_api_client.get(f"/workspaces/{user_workspace.uuid}")
+    def test_get_own_workspace(self, user_workspace):
+        resp = self.client.get(f"/{user_workspace.uuid}")
         assert resp.status_code == 200
         assert resp.json()["uuid"] == str(user_workspace.uuid)
 
-    def test_get_other_workspace_denied(self, service_user_api_client, other_workspace):
-        resp = service_user_api_client.get(f"/workspaces/{other_workspace.uuid}")
+    def test_get_other_workspace_denied(self, other_workspace):
+        resp = self.client.get(f"/{other_workspace.uuid}")
         assert resp.status_code in (403, 404)
 
-    def test_update_own_workspace(self, service_user_api_client, user_workspace):
-        resp = service_user_api_client.patch(
-            f"/workspaces/{user_workspace.uuid}", json={"name": "Updated"}
-        )
+    def test_update_own_workspace(self, user_workspace):
+        resp = self.client.patch(f"/{user_workspace.uuid}", json={"name": "Updated"})
         assert resp.status_code == 200
         user_workspace.refresh_from_db()
         assert user_workspace.name == "Updated"
 
-    def test_update_other_workspace_denied(
-        self, service_user_api_client, other_workspace
-    ):
-        resp = service_user_api_client.patch(
-            f"/workspaces/{other_workspace.uuid}", json={"name": "Hack"}
-        )
+    def test_update_other_workspace_denied(self, other_workspace):
+        resp = self.client.patch(f"/{other_workspace.uuid}", json={"name": "Hack"})
         assert resp.status_code in (403, 404)
 
-    def test_delete_own_workspace(self, service_user_api_client, user_workspace):
-        resp = service_user_api_client.delete(f"/workspaces/{user_workspace.uuid}")
+    def test_delete_own_workspace(self, user_workspace):
+        resp = self.client.delete(f"/{user_workspace.uuid}")
         assert resp.status_code == 204
         with pytest.raises(Workspace.DoesNotExist):
             Workspace.objects.get(uuid=user_workspace.uuid)
 
-    def test_delete_other_workspace_denied(
-        self, service_user_api_client, other_workspace
-    ):
-        resp = service_user_api_client.delete(f"/workspaces/{other_workspace.uuid}")
+    def test_delete_other_workspace_denied(self, other_workspace):
+        resp = self.client.delete(f"/{other_workspace.uuid}")
         assert resp.status_code in (403, 404)
 
-    def test_upload_image_own_workspace(
-        self,
-        service_user_api_client,
-        user_workspace,
-        temp_image_file,
-    ):
-        resp = service_user_api_client.post(
-            f"/workspaces/{user_workspace.uuid}/upload-image",
+    def test_upload_image_own_workspace(self, user_workspace, temp_image_file):
+        resp = self.client.post(
+            f"/{user_workspace.uuid}/upload-image",
             **{"FILES": {"image_file": temp_image_file}},
         )
         assert resp.status_code == 200
@@ -242,13 +214,10 @@ class TestWorkspaceAPIPublic:
         assert data["workspace_uuid"] == str(user_workspace.uuid)
 
     def test_upload_image_other_workspace_denied(
-        self,
-        service_user_api_client,
-        other_workspace,
-        temp_image_file,
+        self, other_workspace, temp_image_file
     ):
-        resp = service_user_api_client.post(
-            f"/workspaces/{other_workspace.uuid}/upload-image",
+        resp = self.client.post(
+            f"/{other_workspace.uuid}/upload-image",
             **{"FILES": {"image_file": temp_image_file}},
         )
         assert resp.status_code in (403, 404)
@@ -256,40 +225,44 @@ class TestWorkspaceAPIPublic:
 
 @pytest.mark.django_db
 class TestWorkspaceAPIUnauthorized:
-    @pytest.mark.parametrize(
-        "method, url, payload",
-        [
-            ("get", "/workspaces/", None),
-            ("post", "/workspaces/", {"name": "Fail"}),
-            ("get", "/workspaces/{uuid}", None),
-            ("patch", "/workspaces/{uuid}", {"name": "Fail"}),
-            ("delete", "/workspaces/{uuid}", None),
-        ],
-    )
-    def test_public_workspace_access_denied(
-        self, api_client, workspace_factory, method, url, payload
-    ):
-        ws = workspace_factory(user_id=999)
-        url = url.format(uuid=ws.uuid)
-
-        resp = getattr(api_client, method)(url, json=payload)
-        assert resp.status_code in (401, 403)
+    @classmethod
+    def setup_method(cls):
+        cls.public_client = TestClient(WorkspaceControllerPublic)
+        cls.internal_client = TestClient(WorkspaceControllerInternal)
+        cls.user_client = AuthenticatedTestClient(
+            WorkspaceControllerInternal, auth=AuthStrategyEnum.jwt
+        )
 
     @pytest.mark.parametrize(
-        "method, url, payload",
+        "client_type, method, url_template, payload",
         [
-            ("get", "/internal/workspaces/", None),
-            ("post", "/internal/workspaces/", {"user_id": 999, "name": "Fail"}),
-            ("get", "/internal/workspaces/{uuid}", None),
-            ("patch", "/internal/workspaces/{uuid}", {"name": "Fail"}),
-            ("delete", "/internal/workspaces/{uuid}", None),
+            # Public client
+            ("public_client", "get", "/", None),
+            ("public_client", "post", "/", {"name": "Fail"}),
+            ("public_client", "get", "/{uuid}", None),
+            ("public_client", "patch", "/{uuid}", {"name": "Fail"}),
+            ("public_client", "delete", "/{uuid}", None),
+            # Internal client
+            ("internal_client", "get", "/", None),
+            ("internal_client", "post", "/", {"name": "Fail", "user_id": 999}),
+            ("internal_client", "get", "/{uuid}", None),
+            ("internal_client", "patch", "/{uuid}", {"name": "Fail"}),
+            ("internal_client", "delete", "/{uuid}", None),
+            # User client
+            ("user_client", "get", "/", None),
+            ("user_client", "post", "/", {"name": "Fail"}),
+            ("user_client", "get", "/{uuid}", None),
+            ("user_client", "patch", "/{uuid}", {"name": "Fail"}),
+            ("user_client", "delete", "/{uuid}", None),
         ],
     )
-    def test_internal_workspace_access_denied(
-        self, api_client, workspace_factory, method, url, payload
+    def test_access_denied(
+        self, workspace_factory, client_type, method, url_template, payload
     ):
         ws = workspace_factory(user_id=999)
-        url = url.format(uuid=ws.uuid)
-
-        resp = getattr(api_client, method)(url, json=payload)
-        assert resp.status_code in (401, 403)
+        client = getattr(self, client_type)
+        url = url_template.format(uuid=ws.uuid)
+        response = getattr(client, method)(url, json=payload)
+        assert response.status_code in (401, 403)
+        if method == "delete":
+            assert Workspace.objects.filter(pk=ws.pk).exists()

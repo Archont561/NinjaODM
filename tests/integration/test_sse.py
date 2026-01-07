@@ -3,13 +3,14 @@ import pytest_asyncio
 import asyncio
 from asgiref.sync import sync_to_async
 from django.test import AsyncClient
-from ninja_extra.testing import TestClient as NinjaExtraTestClient
+
+from ..auth_clients import AuthenticatedTestClient, AuthStrategyEnum
 
 from app.api.controllers.workspace import WorkspaceControllerPublic
 
 
 @pytest_asyncio.fixture(scope="function")
-async def api_sse_public_client(valid_token, mock_redis):
+async def sse_connection(valid_token, mock_redis):
     client = AsyncClient()
 
     class SSEConnection:
@@ -22,8 +23,7 @@ async def api_sse_public_client(valid_token, mock_redis):
             return await asyncio.wait_for(self.iterator.__anext__(), timeout=timeout)
 
     response = await client.get(
-        "/api/events",
-        headers={"Authorization": f"Bearer {valid_token}"}
+        "/api/events", headers={"Authorization": f"Bearer {valid_token}"}
     )
 
     assert response.status_code == 200, f"SSE Auth failed: {response.content}"
@@ -38,17 +38,20 @@ async def api_sse_public_client(valid_token, mock_redis):
 @pytest.mark.django_db
 @pytest.mark.asyncio
 class TestSSEAPIPublic:
-    async def test_workspace_creation_triggers_sse_event(self, api_sse_public_client, valid_token):
-        client = NinjaExtraTestClient(WorkspaceControllerPublic)
-        response = await sync_to_async(client.post)(
-            "/",
-            headers={"Authorization": f"Bearer {valid_token}"},
-            json={"name": "New Workspace"},
+    @classmethod
+    def setup_method(cls):
+        cls.workspace_client = AuthenticatedTestClient(
+            WorkspaceControllerPublic, auth=AuthStrategyEnum.jwt
+        )
+
+    async def test_workspace_creation_triggers_sse_event(self, sse_connection):
+        response = await sync_to_async(self.workspace_client.post)(
+            "/", json={"name": "New Workspace"}
         )
         assert response.status_code == 201
 
         try:
-            event_line = await api_sse_public_client.next_event()
+            event_line = await sse_connection.next_event()
             data = event_line.decode()
 
             assert "workspace:created" in data

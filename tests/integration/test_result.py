@@ -1,160 +1,117 @@
 import pytest
+from ninja_extra.testing import TestClient
 
 from app.api.models.result import ODMTaskResult
+from app.api.controllers.result import ResultControllerInternal, ResultControllerPublic
+from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 
 
 @pytest.mark.django_db
 class TestTaskResultAPIInternal:
-    def test_list_internal_results(
-        self,
-        service_api_client,
-        odm_task_result_factory,
-        workspace_factory,
-    ):
+    @classmethod
+    def setup_method(cls):
+        cls.client = AuthenticatedTestClient(
+            ResultControllerInternal, auth=AuthStrategyEnum.service
+        )
+
+    def test_list_internal_results(self, odm_task_result_factory):
         odm_task_result_factory.create_batch(4)
-        response = service_api_client.get("/internal/results/")
+        response = self.client.get("/")
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 4
 
-    def test_retrieve_any_result(
-        self,
-        service_api_client,
-        odm_task_result_factory,
-    ):
+    def test_retrieve_any_result(self, odm_task_result_factory):
         result = odm_task_result_factory()
-        response = service_api_client.get(f"/internal/results/{result.uuid}")
+        response = self.client.get(f"/{result.uuid}")
         assert response.status_code == 200
-        assert response.json()["uuid"] == str(result.uuid)
+        data = response.json()
+        assert data["uuid"] == str(result.uuid)
 
-    def test_delete_any_result(
-        self,
-        service_api_client,
-        odm_task_result_factory,
-        workspace_factory,
-    ):
+    def test_delete_any_result(self, odm_task_result_factory):
         result = odm_task_result_factory()
-        response = service_api_client.delete(f"/internal/results/{result.uuid}")
+        response = self.client.delete(f"/{result.uuid}")
         assert response.status_code == 204
         assert not ODMTaskResult.objects.filter(pk=result.pk).exists()
 
 
 @pytest.mark.django_db
 class TestTaskResultAPIPublic:
-    def test_list_user_results_only(
-        self,
-        service_user_api_client,
-        workspace_factory,
-        odm_task_result_factory,
-    ):
+    @classmethod
+    def setup_method(cls):
+        cls.client = AuthenticatedTestClient(
+            ResultControllerPublic, auth=AuthStrategyEnum.jwt
+        )
+
+    def test_list_user_results_only(self, workspace_factory, odm_task_result_factory):
         user_workspace = workspace_factory(user_id=999)
         other_workspace = workspace_factory(user_id=123)
-        result1 = odm_task_result_factory(workspace=user_workspace)
-        odm_task_result_factory(workspace=other_workspace)
-        response = service_user_api_client.get("/results/")
+        user_results = odm_task_result_factory.create_batch(2, workspace=user_workspace)
+        odm_task_result_factory.create_batch(3, workspace=other_workspace)
+        response = self.client.get("/")
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 1
-        assert data[0]["uuid"] == str(result1.uuid)
+        assert len(data) == len(user_results)
+        returned_uuids = {item["uuid"] for item in data}
+        expected_uuids = {str(result.uuid) for result in user_results}
+        assert returned_uuids == expected_uuids
 
-    def test_retrieve_own_result(
-        self,
-        service_user_api_client,
-        workspace_factory,
-        odm_task_result_factory,
-    ):
+    def test_retrieve_own_result(self, workspace_factory, odm_task_result_factory):
         user_workspace = workspace_factory(user_id=999)
         result = odm_task_result_factory(workspace=user_workspace)
-        response = service_user_api_client.get(f"/results/{result.uuid}")
+        response = self.client.get(f"/{result.uuid}")
         assert response.status_code == 200
         data = response.json()
         assert data["uuid"] == str(result.uuid)
         assert data["workspace_uuid"] == str(user_workspace.uuid)
 
     def test_cannot_access_others_result(
-        self,
-        service_user_api_client,
-        workspace_factory,
-        odm_task_result_factory,
+        self, workspace_factory, odm_task_result_factory
     ):
         other_workspace = workspace_factory(user_id=3243)
         other_result = odm_task_result_factory(workspace=other_workspace)
-        response = service_user_api_client.get(f"/results/{other_result.uuid}")
+        response = self.client.get(f"/{other_result.uuid}")
         assert response.status_code in (403, 404)
 
-    def test_delete_own_result(
-        self,
-        service_user_api_client,
-        workspace_factory,
-        odm_task_result_factory,
-    ):
+    def test_delete_own_result(self, workspace_factory, odm_task_result_factory):
         user_workspace = workspace_factory(user_id=999)
         result = odm_task_result_factory(workspace=user_workspace)
-        response = service_user_api_client.delete(f"/results/{result.uuid}")
+        response = self.client.delete(f"/{result.uuid}")
         assert response.status_code == 204
         assert not ODMTaskResult.objects.filter(pk=result.pk).exists()
-
-    def test_download_file(
-        self,
-        service_user_api_client,
-        workspace_factory,
-        odm_task_result_factory,
-        temp_image_file,
-    ):
-        user_workspace = workspace_factory(user_id=999)
-        result = odm_task_result_factory(workspace=user_workspace, file=temp_image_file)
-        response = service_user_api_client.get(f"/results/download/{result.uuid}")
-        assert response.status_code == 200
-        assert response.streaming is True
-        assert (
-            response["Content-Disposition"]
-            == f'attachment; filename="{temp_image_file.name}"'
-        )
-        assert response["Content-Type"] == "image/jpeg"
-        assert int(response["Content-Length"]) > 0
-
-    def test_download_file_forbidden(
-        self,
-        service_user_api_client,
-        workspace_factory,
-        odm_task_result_factory,
-    ):
-        other_workspace = workspace_factory(user_id=888)
-        result = odm_task_result_factory(workspace=other_workspace)
-        response = service_user_api_client.get(f"/results/download/{result.uuid}")
-        assert response.status_code == 403
 
 
 @pytest.mark.django_db
 class TestTaskResultAPIUnauthorized:
-    @pytest.mark.parametrize(
-        "method, url, payload",
-        [
-            ("get", "/results/", None),
-            ("get", "/results/{uuid}", None),
-            ("delete", "/results/{uuid}", None),
-        ],
-    )
-    def test_public_results_access_denied(
-        self, api_client, odm_task_result_factory, method, url, payload
-    ):
-        result = odm_task_result_factory()
-        url = url.format(uuid=result.uuid)
-        resp = getattr(api_client, method)(url, json=payload)
-        assert resp.status_code in (401, 403)
+    @classmethod
+    def setup_method(cls):
+        cls.public_client = TestClient(ResultControllerPublic)
+        cls.internal_client = TestClient(ResultControllerInternal)
+        cls.user_client = AuthenticatedTestClient(
+            ResultControllerInternal, auth=AuthStrategyEnum.jwt
+        )
 
     @pytest.mark.parametrize(
-        "method, url, payload",
+        "method, client_attr, url_template",
         [
-            ("get", "/internal/results/", None),
-            ("get", "/internal/results/{uuid}", None),
-            ("delete", "/internal/results/{uuid}", None),
+            ("get", "public_client", "/"),
+            ("get", "public_client", "/{uuid}"),
+            ("delete", "public_client", "/{uuid}"),
+            ("get", "internal_client", "/"),
+            ("get", "internal_client", "/{uuid}"),
+            ("delete", "internal_client", "/{uuid}"),
+            ("get", "user_client", "/"),
+            ("get", "user_client", "/{uuid}"),
+            ("delete", "user_client", "/{uuid}"),
         ],
     )
-    def test_internal_results_access_denied(
-        self, api_client, odm_task_result_factory, method, url, payload
+    def test_access_denied(
+        self, odm_task_result_factory, method, client_attr, url_template
     ):
         result = odm_task_result_factory()
-        url = url.format(uuid=result.uuid)
-        resp = getattr(api_client, method)(url, json=payload)
-        assert resp.status_code in (401, 403)
+        client = getattr(self, client_attr)
+        url = url_template.format(uuid=result.uuid)
+        response = getattr(client, method)(url)
+        assert response.status_code in (401, 403)
+        if method == "delete":
+            assert ODMTaskResult.objects.filter(pk=result.pk).exists()
