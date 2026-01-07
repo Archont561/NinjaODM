@@ -84,6 +84,29 @@ class TestImageAPIPublic:
         file_path = Path(image.image_file.path)
         assert not file_path.exists()
 
+    def test_download_own_image_file(self, workspace_factory, image_factory, temp_image_file):
+        user_workspace = workspace_factory(user_id=999)
+        image = image_factory(
+            workspace=user_workspace,
+            image_file=temp_image_file
+        )
+        response = self.client.get(f"/{image.uuid}/download")
+        assert response.status_code == 200
+        assert response["Content-Type"] == "image/jpeg"
+        assert 'attachment' in response["Content-Disposition"]
+        assert 'filename="test.jpg"' in response["Content-Disposition"]
+        temp_image_file.seek(0)
+        assert response.content == temp_image_file.read()
+
+    def test_cannot_download_others_image_file(self, workspace_factory, image_factory, temp_image_file):
+        other_workspace = workspace_factory(user_id=12345)
+        image = image_factory(
+            workspace=other_workspace,
+            image_file=temp_image_file
+        )
+        response = self.client.get(f"/{image.uuid}/download")
+        assert response.status_code in (403, 404)
+
 
 @pytest.mark.django_db
 class TestImageAPIUnauthorized:
