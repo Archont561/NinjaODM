@@ -1,18 +1,11 @@
 import io
 import pytest
-import time
-import hmac
-import hashlib
 import fakeredis
 from unittest.mock import patch
-from ninja_extra.testing import TestClient
 from pytest_factoryboy import register
 from PIL import Image as PILImage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from ninja_jwt.tokens import AccessToken
-
-from app.api.api import create_api
-
 
 from tests.factories import (
     WorkspaceFactory,
@@ -30,11 +23,6 @@ register(GroundControlPointFactory)
 register(ODMTaskFactory)
 register(ODMTaskResultFactory)
 register(AuthorizedServiceFactory)
-
-
-@pytest.fixture
-def api_client():
-    return TestClient(create_api())
 
 
 @pytest.fixture
@@ -72,97 +60,6 @@ def temp_image_file(temp_media):
         content=buffer.getvalue(),
         content_type="image/jpeg",
     )
-
-
-def build_service_auth_header(
-    *,
-    api_key: str,
-    api_secret: str,
-    method: str,
-    path: str,
-    timestamp: int | None = None,
-):
-    timestamp = timestamp or int(time.time())
-    message = f"{api_key}:{timestamp}:{method.upper()}:{path}".encode()
-
-    signature = hmac.new(
-        api_secret.encode(),
-        message,
-        hashlib.sha256,
-    ).hexdigest()
-
-    return f"Bearer {api_key}:{timestamp}:{signature}"
-
-
-@pytest.fixture
-def service_api_client(authorized_service_factory, api_client):
-    service = authorized_service_factory()
-
-    class AuthorizedClient:
-        def request(self, method, path, **kwargs):
-            headers = kwargs.pop("headers", {})
-
-            headers["Authorization"] = build_service_auth_header(
-                api_key=service.api_key,
-                api_secret=service.api_secret,
-                method=method,
-                path=path,
-            )
-
-            return api_client.request(
-                method,
-                path,
-                headers=headers,
-                **kwargs,
-            )
-
-        def get(self, path, **kwargs):
-            return self.request("GET", path, **kwargs)
-
-        def post(self, path, **kwargs):
-            return self.request("POST", path, **kwargs)
-
-        def patch(self, path, **kwargs):
-            return self.request("PATCH", path, **kwargs)
-
-        def put(self, path, **kwargs):
-            return self.request("PUT", path, **kwargs)
-
-        def delete(self, path, **kwargs):
-            return self.request("DELETE", path, **kwargs)
-
-    return AuthorizedClient()
-
-
-@pytest.fixture
-def service_user_api_client(api_client, valid_token):
-    class JWTClient:
-        def __init__(self, api_client, token):
-            self.api_client = api_client
-            self.token = token
-
-        def request(self, method, path, **kwargs):
-            headers = kwargs.pop("headers", {})
-            # ServiceUserJWTAuth expects 'Bearer <token>'
-            headers["Authorization"] = f"Bearer {self.token}"
-            return self.api_client.request(method, path, headers=headers, **kwargs)
-
-        def get(self, path, **kwargs):
-            return self.request("GET", path, **kwargs)
-
-        def post(self, path, **kwargs):
-            return self.request("POST", path, **kwargs)
-
-        def put(self, path, **kwargs):
-            return self.request("PUT", path, **kwargs)
-
-        def patch(self, path, **kwargs):
-            return self.request("PATCH", path, **kwargs)
-
-        def delete(self, path, **kwargs):
-            return self.request("DELETE", path, **kwargs)
-
-    return JWTClient(api_client, valid_token)
 
 
 @pytest.fixture
