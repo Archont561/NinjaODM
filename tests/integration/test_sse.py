@@ -4,60 +4,34 @@ import asyncio
 from asgiref.sync import sync_to_async
 from django.test import AsyncClient
 
+# Import your controllers
 from app.api.controllers.workspace import WorkspaceControllerPublic
 from app.api.controllers.task import TaskControllerPublic
+from app.api.controllers.image import ImageControllerPublic # Assumed
+from app.api.controllers.result import ResultControllerPublic # Assumed
 from app.api.constants.odm import ODMTaskStatus
 from ..auth_clients import AuthenticatedTestClient, AuthStrategyEnum
 
 
-class SetupStrategy:
-    async def none(factory):
-        return None
+WORKSPACE_ACTIONS = {
+    "create": lambda client, obj, payload, **kwargs: client.post("/", json=payload),
+    "update": lambda client, obj, payload, **kwargs: client.patch(f"/{obj.uuid}", json=payload),
+    "delete": lambda client, obj, payload, **kwargs: client.delete(f"/{obj.uuid}"),
+    "upload_image": lambda client, obj, payload, file_obj=None, **kwargs: client.post(
+        f"/{obj.uuid}/upload-image", FILES={"image_file": file_obj}
+    ),
+}
 
-    async def create_one(factory):
-        return await sync_to_async(factory)(name="Test Workspace", user_id=999)
+TASK_ACTIONS = {
+    "pause": lambda client, obj, **kwargs: client.post(f"/{obj.uuid}/pause"),
+    "resume": lambda client, obj, **kwargs: client.post(f"/{obj.uuid}/resume"),
+    "cancel": lambda client, obj, **kwargs: client.post(f"/{obj.uuid}/cancel"),
+    "delete": lambda client, obj, **kwargs: client.delete(f"/{obj.uuid}"),
+}
 
-
-class TaskSetupStrategy:
-    async def create_one(factory, workspace_factory):
-        user_workspace = await SetupStrategy.create_one(workspace_factory)
-        return await sync_to_async(factory)(workspace=user_workspace, status=ODMTaskStatus.COMPLETED)
-
-
-class RequestStrategy:
-    def create(client, workspace, payload, **kwargs):
-        return client.post("/", json=payload)
-
-    def update(client, workspace, payload, **kwargs):
-        return client.patch(f"/{workspace.uuid}", json=payload)
-
-    def delete(client, workspace, payload, **kwargs):
-        return client.delete(f"/{workspace.uuid}")
-    
-    def upload_image(client, workspace, payload, file_obj=None, **kwargs):
-        return client.post(
-            f"/{workspace.uuid}/upload-image",
-            FILES={"image_file": file_obj}
-        )
-
-class TaskRequestStrategy:
-    def create(client, odm_task, payload, **kwargs):
-        return client.post("/", json=payload)
-
-    def pause(client, odm_task, payload, **kwargs):
-        return client.post(f"/{odm_task.uuid}/pause", json=payload)
-
-    def resume(client, odm_task, payload, **kwargs):
-        return client.post(f"/{odm_task.uuid}/resume")
-
-    def cancel(client, odm_task, payload, **kwargs):
-        return client.post(f"/{odm_task.uuid}/cancel")
-
-    def delete(client, odm_task, payload, **kwargs):
-        return client.delete(f"/{odm_task.uuid}")
-    
 
 class SSEListener:
+    """Helper to parse SSE stream events."""
     def __init__(self, response):
         self.iterator = response.streaming_content.__aiter__()
 
@@ -73,104 +47,114 @@ class SSEListener:
 @pytest.mark.asyncio
 class TestSSEAPIPublic:
 
-    @classmethod
-    def setup_method(cls):
-        cls.workspace_client = AuthenticatedTestClient(
-            WorkspaceControllerPublic, auth=AuthStrategyEnum.jwt
-        )
-        cls.task_client = AuthenticatedTestClient(
-            TaskControllerPublic, auth=AuthStrategyEnum.jwt
-        )
+    @pytest.fixture
+    def workspace_client(self):
+        return AuthenticatedTestClient(WorkspaceControllerPublic, auth=AuthStrategyEnum.jwt)
 
-    @pytest_asyncio.fixture(autouse=True)
-    async def setup_sse_context(self, valid_token, mock_redis):
+    @pytest.fixture
+    def task_client(self):
+        return AuthenticatedTestClient(TaskControllerPublic, auth=AuthStrategyEnum.jwt)
+
+    @pytest_asyncio.fixture
+    async def sse_listener(self, valid_token, mock_redis):
         client = AsyncClient()
         response = await client.get(
             "/api/events", headers={"Authorization": f"Bearer {valid_token}"}
         )
         assert response.status_code == 200
-        self.sse_listener = SSEListener(response)
         
-        # Heartbeat check
-        heartbeat = await self.sse_listener.next_event()
+        listener = SSEListener(response)
+        
+        heartbeat = await listener.next_event()
         assert ": ok" in heartbeat
         
-        yield
+        yield listener
+        
         response.close()
 
+    async def _run_lifecycle_test(
+        self,
+        client,
+        action_func,
+        listener,
+        target_obj=None,
+        payload=None,
+        expected_status=200,
+        expected_event_key=None,
+        **kwargs
+    ):
+        """
+        Executes an action and asserts that the expected SSE event was emitted.
+        """
+        response = await sync_to_async(action_func)(
+            client=client, 
+            obj=target_obj, 
+            payload=payload, 
+            **kwargs
+        )
+        assert response.status_code == expected_status, f"API Error: {response.content}"
+
+        try:
+            event_data = await listener.next_event()
+            assert expected_event_key in event_data
+            
+            if target_obj and hasattr(target_obj, 'uuid'):
+                assert str(target_obj.uuid) in event_data
+        except TimeoutError as e:
+            pytest.fail(f"SSE Verification Failed for {expected_event_key}: {e}")
+
     @pytest.mark.parametrize(
-        "setup_strat, request_strat, payload, event_type, expected_status",
+        "action_key, payload, event_type, expected_status",
         [
-            # Case 1: Create
-            (SetupStrategy.none, RequestStrategy.create, {"name": "New"}, "workspace:created", 201),
-            
-            # Case 2: Update
-            (SetupStrategy.create_one, RequestStrategy.update, {"name": "Upd"}, "workspace:updated", 200),
-            
-            # Case 3: Delete
-            (SetupStrategy.create_one, RequestStrategy.delete, None, "workspace:deleted", 204),
-            
-            # Case 4: Image Upload
-            (SetupStrategy.create_one, RequestStrategy.upload_image, None, "workspace:images-uploaded", 200),
+            ("create", {"name": "New"}, "workspace:created", 201),
+            ("update", {"name": "Upd"}, "workspace:updated", 200),
+            ("delete", None, "workspace:deleted", 204),
+            ("upload_image", None, "workspace:images-uploaded", 200),
         ]
     )
-    async def test_workspace_lifecycle_sse(
-        self, 
-        workspace_factory,
-        temp_image_file,
-        setup_strat, 
-        request_strat, 
-        payload, 
-        event_type, 
-        expected_status
+    async def test_workspace_lifecycle(
+        self, workspace_client, sse_listener, workspace_factory, temp_image_file, 
+        action_key, payload, event_type, expected_status,
     ):
-        workspace = await setup_strat(workspace_factory)
-        response = await sync_to_async(request_strat)(
-            client=self.workspace_client, 
-            workspace=workspace, 
-            payload=payload, 
-            file_obj=temp_image_file
+        workspace = None
+        if action_key != "create":
+            workspace = await sync_to_async(workspace_factory)(name="Test Workspace", user_id=999)
+
+        await self._run_lifecycle_test(
+            client=workspace_client,
+            target_obj=workspace,
+            action_func=WORKSPACE_ACTIONS[action_key],
+            listener=sse_listener,
+            payload=payload,
+            expected_status=expected_status,
+            expected_event_key=event_type,
+            file_obj=temp_image_file if action_key == "upload_image" else None
         )
-        assert response.status_code == expected_status
-        try:
-            event_data = await self.sse_listener.next_event()
-            assert event_type in event_data
-            if workspace:
-                assert str(workspace.uuid) in event_data
-        except TimeoutError as e:
-            pytest.fail(f"SSE Verification Failed: {e}")
-    
+
     @pytest.mark.parametrize(
-        "setup_strat, request_strat, payload, event_type, expected_status",
+        "action_key, payload, event_type, expected_status",
         [
-            (TaskSetupStrategy.create_one, TaskRequestStrategy.pause, None, "task:updated", 200),
-            (TaskSetupStrategy.create_one, TaskRequestStrategy.resume, None, "task:updated", 200),
-            (TaskSetupStrategy.create_one, TaskRequestStrategy.cancel, None, "task:updated", 200),
-            (TaskSetupStrategy.create_one, TaskRequestStrategy.delete, None, "task:deleted", 204),
+            ("pause", None, "task:updated", 200),
+            ("resume", None, "task:updated", 200),
+            ("cancel", None, "task:updated", 200),
+            ("delete", None, "task:deleted", 204),
         ]
     )
-    async def test_odm_task_lifecycle_sse(
-        self, 
-        odm_task_factory,
-        workspace_factory,
-        setup_strat, 
-        request_strat, 
-        payload, 
-        event_type, 
-        expected_status
+    async def test_odm_task_lifecycle(
+        self, task_client, sse_listener, odm_task_factory, workspace_factory,
+        action_key, payload, event_type, expected_status
     ):
-        odm_task = await setup_strat(odm_task_factory, workspace_factory)
-        print(odm_task)
-        response = await sync_to_async(request_strat)(
-            client=self.task_client, 
-            odm_task=odm_task, 
-            payload=payload, 
+        user_workspace = await sync_to_async(workspace_factory)(user_id=999)
+        odm_task = await sync_to_async(odm_task_factory)(
+            workspace=user_workspace, status=ODMTaskStatus.COMPLETED
         )
-        assert response.status_code == expected_status
-        try:
-            event_data = await self.sse_listener.next_event()
-            assert event_type in event_data
-            if odm_task:
-                assert str(odm_task.uuid) in event_data
-        except TimeoutError as e:
-            pytest.fail(f"SSE Verification Failed: {e}")
+
+        await self._run_lifecycle_test(
+            client=task_client,
+            target_obj=odm_task,
+            action_func=TASK_ACTIONS[action_key],
+            listener=sse_listener,
+            payload=payload,
+            expected_status=expected_status,
+            expected_event_key=event_type
+        )
