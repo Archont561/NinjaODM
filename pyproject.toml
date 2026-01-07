@@ -100,7 +100,7 @@ pre-commit = ">=4.3.0,<5"
 [tool.pixi.environments]
 prod = ["django", "geo-libs"]
 dev = ["django", "geo-libs", "geo-libs-dev", "static-code-analysis", "test", "miscellaneous"]
-test = ["django", "geo-libs", "static-code-analysis", "test"]
+test = ["django", "geo-libs-dev", "static-code-analysis", "test"]
 
 # ==============================================================================
 # Pixi Tasks - Django
