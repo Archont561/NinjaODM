@@ -336,7 +336,7 @@ cmd = [
 # ==============================================================================
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = ["-ra", "--strict-markers", "--reuse-db", "-v"]
+addopts = ["-ra", "--strict-markers", "--reuse-db", "-v", "-x"]
 DJANGO_SETTINGS_MODULE = "app.config.entrypoint"
 testpaths = ["tests"]
 pythonpath = ["."]
