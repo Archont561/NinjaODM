@@ -3,9 +3,7 @@ import hmac
 import hashlib
 from typing import Optional, Tuple
 
-from ninja_jwt.authentication import JWTAuth
 from ninja.security import HttpBearer
-from ninja_jwt.tokens import AccessToken
 from django.http import HttpRequest
 
 from app.api.models.service import AuthorizedService
@@ -70,7 +68,9 @@ class ServiceHMACAuth(HttpBearer):
         except AuthorizedService.DoesNotExist:
             return None
 
-    def _build_message(self, request: HttpRequest, api_key: str, timestamp: int) -> bytes:
+    def _build_message(
+        self, request: HttpRequest, api_key: str, timestamp: int
+    ) -> bytes:
         method = request.method.upper()
 
         return f"{api_key}:{timestamp}:{method}:{request.path}".encode()

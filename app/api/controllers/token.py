@@ -1,6 +1,5 @@
-from ninja_extra import api_controller, route, http_post
-from ninja import Schema, Body
-from ninja.errors import HttpError
+from ninja_extra import api_controller, http_post
+from ninja import Body
 from injector import inject
 
 from app.api.schemas.token import (

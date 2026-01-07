@@ -1,8 +1,6 @@
 from __future__ import annotations
 from enum import IntEnum, auto, unique
-from typing import Dict, Optional, Type, FrozenSet
-
-from pydantic import BaseModel, Field
+from typing import Optional, FrozenSet
 
 
 class ChoicesMixin:
@@ -88,6 +86,7 @@ class ODMProcessingStage(ChoicesMixin, IntEnum):
             return stage.__class__(stage.value + 1)
         except ValueError:
             return None
+
 
 @unique
 class ODMTaskResultType(ChoicesMixin, IntEnum):

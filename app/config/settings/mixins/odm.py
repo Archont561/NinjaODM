@@ -1,10 +1,11 @@
-from typing import Any, Dict, List
+from typing import List
 from pydantic import Field, computed_field
 
 from pathlib import Path
 from .base import BaseSettingsMixin
 
 FILE_MIME_TYPE = str
+
 
 class ODMSettingsMixin(BaseSettingsMixin):
     TASKS_DIR_NAME: str = Field(default="tasks")
@@ -16,11 +17,17 @@ class ODMSettingsMixin(BaseSettingsMixin):
     ODM_CONTAINER_VOLUME: str = Field(...)
     ODM_CONTAINER_URL: str = Field(...)
 
-    WORKSPACE_ALLOWED_FILE_MIME_TYPES: List[FILE_MIME_TYPE] = Field(default=[
-        "image/jpeg", "image/png", "image/bmp",
-        "image/webp", "image/tiff", "image/heif",
-        "image/heic",
-    ])
+    WORKSPACE_ALLOWED_FILE_MIME_TYPES: List[FILE_MIME_TYPE] = Field(
+        default=[
+            "image/jpeg",
+            "image/png",
+            "image/bmp",
+            "image/webp",
+            "image/tiff",
+            "image/heif",
+            "image/heic",
+        ]
+    )
 
     @computed_field
     @property

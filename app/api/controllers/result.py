@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import List
 from django.http import FileResponse
 from ninja_extra import (
     ModelControllerBase,
@@ -30,7 +29,8 @@ class ResultControllerPublic(ModelControllerBase):
         allowed_routes=["find_one", "list", "delete"],
         pagination=None,
         list_route_info={
-            "queryset_getter": lambda self, **kw: self.model_config.model.objects.filter(
+            "queryset_getter": lambda self,
+            **kw: self.model_config.model.objects.filter(
                 workspace__user_id=self.context.request.user.id
             ).select_related("workspace"),
         },
@@ -40,9 +40,7 @@ class ResultControllerPublic(ModelControllerBase):
     def download_result_file(self, request, uuid: UUID):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         return FileResponse(
-            result.file.open("rb"),
-            as_attachment=True,
-            filename=result.file.name
+            result.file.open("rb"), as_attachment=True, filename=result.file.name
         )
 
 

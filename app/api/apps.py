@@ -7,4 +7,4 @@ class ApiConfig(AppConfig):
     verbose_name = "API"
 
     def ready(self):
-        import app.api.signals
+        pass

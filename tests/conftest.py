@@ -10,7 +10,6 @@ from pytest_factoryboy import register
 from PIL import Image as PILImage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from ninja_jwt.tokens import AccessToken
-from pathlib import Path
 
 from app.api.api import create_api
 
@@ -172,7 +171,9 @@ def mock_redis():
     async_redis = fakeredis.FakeAsyncRedis(server=server)
     sync_redis = fakeredis.FakeRedis(server=server)
 
-    with patch("app.api.sse.aioredis.from_url", return_value=async_redis), \
-         patch("django_redis.client.DefaultClient.get_client", return_value=sync_redis), \
-         patch("django_redis.get_redis_connection", return_value=sync_redis):
+    with (
+        patch("app.api.sse.aioredis.from_url", return_value=async_redis),
+        patch("django_redis.client.DefaultClient.get_client", return_value=sync_redis),
+        patch("django_redis.get_redis_connection", return_value=sync_redis),
+    ):
         yield server

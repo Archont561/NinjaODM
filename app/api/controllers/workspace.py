@@ -10,7 +10,6 @@ from ninja_extra import (
     http_post,
     http_generic,
 )
-from django.conf import settings
 from django_tus.views import TusUpload
 from django_tus.signals import tus_upload_finished_signal
 
@@ -34,9 +33,7 @@ from app.api.services.workspace import WorkspaceModelService
 class WorkspaceTusUploadView(TusUpload):
     def send_signal(self, tus_file):
         tus_upload_finished_signal.send(
-            sender=self.workspace.__class__,
-            tus_file=tus_file,
-            workspace=self.workspace
+            sender=self.workspace.__class__, tus_file=tus_file, workspace=self.workspace
         )
 
 
@@ -55,7 +52,9 @@ class WorkspaceControllerPublic(ModelControllerBase):
         update_schema=UpdateWorkspacePublic,
         allowed_routes=["find_one", "patch", "delete", "create"],
         create_route_info={
-            "custom_handler": lambda self, data, **kw: self.service.create(data, user_id=self.context.request.user.id, **kw),
+            "custom_handler": lambda self, data, **kw: self.service.create(
+                data, user_id=self.context.request.user.id, **kw
+            ),
         },
     )
 
@@ -88,7 +87,7 @@ class WorkspaceControllerPublic(ModelControllerBase):
             "POST": tus_view.post,
             "PATCH": lambda r: tus_view.patch(r, resource_id),
             "HEAD": lambda r: tus_view.head(r, resource_id),
-            "OPTIONS": tus_view.options
+            "OPTIONS": tus_view.options,
         }
 
         handler = method_map.get(request.method.upper())
@@ -98,7 +97,9 @@ class WorkspaceControllerPublic(ModelControllerBase):
     def tus_upload(self, request, uuid: UUID):
         return self._run_tus_logic(request, uuid)
 
-    @http_generic("/{uuid}/upload-images-tus/{resource_id}", methods=["patch", "head", "options"])
+    @http_generic(
+        "/{uuid}/upload-images-tus/{resource_id}", methods=["patch", "head", "options"]
+    )
     def tus_upload_with_resource(self, request, uuid: UUID, resource_id: UUID):
         return self._run_tus_logic(request, uuid, resource_id)
 

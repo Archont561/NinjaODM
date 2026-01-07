@@ -4,16 +4,11 @@ from ninja_extra import (
     ModelControllerBase,
     ModelConfig,
     http_post,
-    http_get,
 )
-from ninja_extra.exceptions import PermissionDenied
-from ninja import Schema
-from typing import List
 
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.task import ODMTask
-from app.api.models.workspace import Workspace
 from app.api.permissions.task import IsTaskOwner, IsTaskStateTerminal, CanCreateTask
 from app.api.schemas.task import (
     CreateTaskInternal,
@@ -43,10 +38,13 @@ class TaskControllerPublic(ModelControllerBase):
         create_route_info={
             "path": "/?workspace_uuid=uuid",
             "permissions": [CanCreateTask],
-            "custom_handler": lambda self, data, **kw: self.service.create(data, **self.context.kwargs, **kw)
+            "custom_handler": lambda self, data, **kw: self.service.create(
+                data, **self.context.kwargs, **kw
+            ),
         },
         list_route_info={
-            "queryset_getter": lambda self, **kw: self.model_config.model.objects.filter(
+            "queryset_getter": lambda self,
+            **kw: self.model_config.model.objects.filter(
                 workspace__user_id=self.context.request.user.id
             ).select_related("workspace"),
         },
@@ -90,7 +88,9 @@ class TaskControllerInternal(ModelControllerBase):
         create_route_info={
             "path": "/?workspace_uuid=uuid",
             "permissions": [CanCreateTask],
-            "custom_handler": lambda self, data, **kw: self.service.create(data, **self.context.kwargs, **kw)
+            "custom_handler": lambda self, data, **kw: self.service.create(
+                data, **self.context.kwargs, **kw
+            ),
         },
     )
 

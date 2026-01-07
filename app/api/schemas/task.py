@@ -1,6 +1,4 @@
 from uuid import UUID
-from typing import Optional
-from pydantic import Field
 from ninja import ModelSchema, Schema
 
 from app.api.models.task import ODMTask
@@ -27,7 +25,6 @@ class TaskResponse(ModelSchema):
             "options",
             "created_at",
         ]
-
 
     @staticmethod
     def resolve_workspace_uuid(obj: ODMTask):

@@ -1,8 +1,7 @@
 from uuid import UUID
-from typing import Optional
 
 from pydantic import Field
-from ninja import ModelSchema, Schema
+from ninja import ModelSchema
 
 from app.api.models.result import ODMTaskResult
 

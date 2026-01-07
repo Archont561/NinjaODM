@@ -1,4 +1,3 @@
-from typing import List
 from ninja_extra import (
     ModelControllerBase,
     ModelConfig,
@@ -27,7 +26,8 @@ class ImageControllerPublic(ModelControllerBase):
         allowed_routes=["find_one", "list", "delete"],
         pagination=None,
         list_route_info={
-            "queryset_getter": lambda self, **kw: self.model_config.model.objects.filter(
+            "queryset_getter": lambda self,
+            **kw: self.model_config.model.objects.filter(
                 workspace__user_id=self.context.request.user.id
             ).select_related("workspace"),
         },

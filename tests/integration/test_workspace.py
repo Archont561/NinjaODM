@@ -1,31 +1,25 @@
 import pytest
 from datetime import timedelta
 from django.utils import timezone
-from urllib.parse import urlencode
 
 from app.api.models.workspace import Workspace
 
 
 @pytest.mark.django_db
 class TestWorkspaceAPIInternal:
-
     @pytest.mark.parametrize(
         "query_params, expected_count",
         [
             # 1. No filters - should see all
             ("", 4),
-
             # 2. Filter by name (partial match)
             ("name=ProjectA", 1),
-            ("name=Project", 2), # Matches ProjectA and ProjectB
+            ("name=Project", 2),  # Matches ProjectA and ProjectB
             ("name=NonExistent", 0),
-
             # 3. Filter by date (After)
             ("created_after={after_date}", 3),
-
             # 4. Filter by date range (Between)
             ("created_after={after_date}&created_before={before_date}", 1),
-
             # 5. Combined filters
             ("name=Project&created_after={after_date}", 2),
         ],
@@ -41,8 +35,7 @@ class TestWorkspaceAPIInternal:
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
         formatted_query = query_params.format(
-            after_date=after_date,
-            before_date=before_date
+            after_date=after_date, before_date=before_date
         )
         url = "/internal/workspaces/"
         if formatted_query:
@@ -66,8 +59,7 @@ class TestWorkspaceAPIInternal:
     def test_update_workspace(self, service_api_client, workspace_factory):
         ws = workspace_factory(user_id=1234, name="Other WS")
         resp = service_api_client.patch(
-            f"internal/workspaces/{ws.uuid}",
-            json={"name": "Updated", "user_id": 333}
+            f"internal/workspaces/{ws.uuid}", json={"name": "Updated", "user_id": 333}
         )
         assert resp.status_code == 200
 
@@ -87,7 +79,6 @@ class TestWorkspaceAPIInternal:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestWorkspaceAPIPublic:
-
     @pytest.fixture
     def user_workspace(self, workspace_factory):
         # valid_token fixture in conftest uses user_id = 999
@@ -110,7 +101,6 @@ class TestWorkspaceAPIPublic:
                 "",
                 ["ProjectA", "ProjectB"],
             ),
-
             # 2. Name filter – partial match
             (
                 [
@@ -121,7 +111,6 @@ class TestWorkspaceAPIPublic:
                 "name=ProjectA",
                 ["ProjectA"],  # only user's workspace
             ),
-
             # 3. created_after filter
             (
                 [
@@ -131,7 +120,6 @@ class TestWorkspaceAPIPublic:
                 "created_after={after_date}",
                 ["Recent"],
             ),
-
             # 4. created_before filter
             (
                 [
@@ -141,7 +129,6 @@ class TestWorkspaceAPIPublic:
                 "created_before={before_date}",
                 ["Old"],
             ),
-
             # 5. Combined filters: name + created_after
             (
                 [
@@ -155,7 +142,12 @@ class TestWorkspaceAPIPublic:
         ],
     )
     def test_list_workspaces_public_filters(
-        self, service_user_api_client, workspace_factory, workspaces_to_create, query_params, expected_names
+        self,
+        service_user_api_client,
+        workspace_factory,
+        workspaces_to_create,
+        query_params,
+        expected_names,
     ):
         now = timezone.now()
         created_workspaces = {}
@@ -173,7 +165,9 @@ class TestWorkspaceAPIPublic:
         # Prepare dynamic dates for query
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
-        formatted_query = query_params.format(after_date=after_date, before_date=before_date)
+        formatted_query = query_params.format(
+            after_date=after_date, before_date=before_date
+        )
 
         url = "/workspaces/"
         if formatted_query:
@@ -205,13 +199,19 @@ class TestWorkspaceAPIPublic:
         assert resp.status_code in (403, 404)
 
     def test_update_own_workspace(self, service_user_api_client, user_workspace):
-        resp = service_user_api_client.patch(f"/workspaces/{user_workspace.uuid}", json={"name": "Updated"})
+        resp = service_user_api_client.patch(
+            f"/workspaces/{user_workspace.uuid}", json={"name": "Updated"}
+        )
         assert resp.status_code == 200
         user_workspace.refresh_from_db()
         assert user_workspace.name == "Updated"
 
-    def test_update_other_workspace_denied(self, service_user_api_client, other_workspace):
-        resp = service_user_api_client.patch(f"/workspaces/{other_workspace.uuid}", json={"name": "Hack"})
+    def test_update_other_workspace_denied(
+        self, service_user_api_client, other_workspace
+    ):
+        resp = service_user_api_client.patch(
+            f"/workspaces/{other_workspace.uuid}", json={"name": "Hack"}
+        )
         assert resp.status_code in (403, 404)
 
     def test_delete_own_workspace(self, service_user_api_client, user_workspace):
@@ -220,7 +220,9 @@ class TestWorkspaceAPIPublic:
         with pytest.raises(Workspace.DoesNotExist):
             Workspace.objects.get(uuid=user_workspace.uuid)
 
-    def test_delete_other_workspace_denied(self, service_user_api_client, other_workspace):
+    def test_delete_other_workspace_denied(
+        self, service_user_api_client, other_workspace
+    ):
         resp = service_user_api_client.delete(f"/workspaces/{other_workspace.uuid}")
         assert resp.status_code in (403, 404)
 
@@ -254,7 +256,6 @@ class TestWorkspaceAPIPublic:
 
 @pytest.mark.django_db
 class TestWorkspaceAPIUnauthorized:
-
     @pytest.mark.parametrize(
         "method, url, payload",
         [

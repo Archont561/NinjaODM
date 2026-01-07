@@ -5,7 +5,6 @@ import pytest
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.constants.user import ServiceUser
-from app.api.models.service import AuthorizedService
 
 
 @pytest.mark.django_db
@@ -31,7 +30,9 @@ class TestAuthorizedService:
 
         assert auth.authenticate(request, invalid_token) is None
 
-    def test_valid_hmac_signature_returns_the_service(self, rf, authorized_service_factory):
+    def test_valid_hmac_signature_returns_the_service(
+        self, rf, authorized_service_factory
+    ):
         auth = ServiceHMACAuth()
         request = rf.post("/test/")
 
@@ -53,7 +54,9 @@ class TestAuthorizedService:
         assert authenticated_service == service
         assert request.service == service
 
-    def test_hmac_timestamp_outside_allowed_window_is_rejected(self, rf, authorized_service_factory):
+    def test_hmac_timestamp_outside_allowed_window_is_rejected(
+        self, rf, authorized_service_factory
+    ):
         auth = ServiceHMACAuth()
         request = rf.post("/test/")
 
@@ -76,7 +79,9 @@ class TestAuthorizedService:
 
 
 class TestServiceUserJWTAuth:
-    def test_authenticate_creates_service_user_with_correct_attributes(self, rf, valid_token):
+    def test_authenticate_creates_service_user_with_correct_attributes(
+        self, rf, valid_token
+    ):
         auth = ServiceUserJWTAuth()
 
         request = rf.get("/")

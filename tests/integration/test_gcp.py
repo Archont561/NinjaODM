@@ -211,7 +211,7 @@ class TestGCPAPIPublic:
     ):
         user_workspace = workspace_factory(user_id=999)
         user_image = image_factory(workspace=user_workspace)
-        gcp = ground_control_point_factory(image=user_image, label="GeoJSON-Test")
+        ground_control_point_factory(image=user_image, label="GeoJSON-Test")
 
         response = service_user_api_client.get("/gcps/geojson")
         assert response.status_code == 200
@@ -395,18 +395,17 @@ class TestGCPAPIPublic:
 
 @pytest.mark.django_db
 class TestGCPAPIUnauthorized:
-
     @pytest.mark.parametrize(
         "method, url, payload",
         [
             ("get", "/gcps/", None),
             ("get", "/gcps/geojson", None),
             ("get", "/gcps/{uuid}", None),
-            ("post", "/gcps/?image_uuid={image_uuid}", {
-                "gcp_point": [0, 0, 0],
-                "image_point": [0, 0],
-                "label": "test"
-            }),
+            (
+                "post",
+                "/gcps/?image_uuid={image_uuid}",
+                {"gcp_point": [0, 0, 0], "image_point": [0, 0], "label": "test"},
+            ),
             ("patch", "/gcps/{uuid}", {"label": "test"}),
             ("delete", "/gcps/{uuid}", None),
         ],
@@ -429,11 +428,11 @@ class TestGCPAPIUnauthorized:
         [
             ("get", "/internal/gcps/", None),
             ("get", "/internal/gcps/{uuid}", None),
-            ("post", "/internal/gcps/?image_uuid={image_uuid}", {
-                "gcp_point": [0, 0, 0],
-                "image_point": [0, 0],
-                "label": "test"
-            }),
+            (
+                "post",
+                "/internal/gcps/?image_uuid={image_uuid}",
+                {"gcp_point": [0, 0, 0], "image_point": [0, 0], "label": "test"},
+            ),
             ("patch", "/internal/gcps/{uuid}", {"label": "test"}),
             ("delete", "/internal/gcps/{uuid}", None),
         ],

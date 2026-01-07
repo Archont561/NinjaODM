@@ -1,7 +1,7 @@
 from uuid import UUID
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 from geojson_pydantic import Feature, Point, FeatureCollection
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
 from ninja import ModelSchema, Schema
 from ninja_schema.orm.utils.converter import convert_django_field
@@ -20,7 +20,7 @@ def convert_point_field(field, **kwargs) -> Tuple[type, FieldInfo]:
 
 class GCPCreate(Schema):
     gcp_point: Tuple[float, float, float]  # (lng, lat, alt)
-    image_point: Tuple[float, float]       # (imgx, imgy)
+    image_point: Tuple[float, float]  # (imgx, imgy)
     label: str
 
 
@@ -56,6 +56,7 @@ class GCPProperties(BaseModel):
     image_uuid: UUID
     image_point: Tuple[float, float]
     label: str
+
 
 GCPFeature = Feature[Point, GCPProperties]
 GCPFeatureCollection = FeatureCollection[GCPFeature]

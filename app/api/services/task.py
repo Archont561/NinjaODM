@@ -1,8 +1,6 @@
 from ninja_extra import ModelService
-from django.shortcuts import get_object_or_404
 
 from app.api.models.task import ODMTask
-from app.api.models.workspace import Workspace
 from app.api.constants.odm import ODMTaskStatus
 
 

@@ -22,12 +22,16 @@ class TestODMTaskResult:
         with open(temp_file, "rb") as f:
             task_result = odm_task_result_factory(
                 result_type=ODMTaskResultType.MESH.value,
-                file=File(f, name=temp_file.name)
+                file=File(f, name=temp_file.name),
             )
 
         assert task_result.file.name is not None
         uploaded_file_path = Path(task_result.file.path)
         assert uploaded_file_path.exists()
         assert uploaded_file_path.read_text() == "This is a test file"
-        expected_path = Path(getattr(settings, "MEDIA_ROOT")) / getattr(settings, "RESULTS_DIR_NAME") / str(task_result.workspace.uuid)
-        assert uploaded_file_path.parent
+        expected_path = (
+            Path(settings.MEDIA_ROOT)
+            / settings.RESULTS_DIR_NAME
+            / str(task_result.workspace.uuid)
+        )
+        assert uploaded_file_path.parent == expected_path

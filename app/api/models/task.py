@@ -1,4 +1,3 @@
-from uuid import UUID
 from django.db import models
 from django.conf import settings
 from pathlib import Path
@@ -43,7 +42,11 @@ class ODMTask(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):
         """
         /<TASKS_DIR>/{workspace_uuid}/{task_uuid} under the workspace.
         """
-        return Path(getattr(settings, "TASKS_DIR")) / str(self.workspace.uuid) / str(self.uuid)
+        return (
+            Path(getattr(settings, "TASKS_DIR"))
+            / str(self.workspace.uuid)
+            / str(self.uuid)
+        )
 
     def get_current_step_options(self) -> dict:
         return self.options.get(self.step, {})
