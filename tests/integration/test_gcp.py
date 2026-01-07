@@ -1,10 +1,41 @@
 import pytest
 from uuid import uuid4
+from datetime import timedelta
+from django.utils import timezone
 from ninja_extra.testing import TestClient
 
 from app.api.models.gcp import GroundControlPoint
 from app.api.controllers.gcp import GCPControllerInternal, GCPControllerPublic
 from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
+
+
+
+@pytest.fixture
+def gcps_list(workspace_factory, image_factory, ground_control_point_factory):
+    now = timezone.now()
+    user_ws = workspace_factory(user_id=999)
+    other_ws1 = workspace_factory(user_id=1)
+    other_ws2 = workspace_factory(user_id=2)
+
+    def create_gcp(workspace, label, days_ago):
+        return ground_control_point_factory(
+            image=image_factory(workspace=workspace),
+            label=label,
+            created_at=now - timedelta(days=days_ago)
+        )
+
+    return [
+        create_gcp(user_ws, "GCP_A", 0),
+        create_gcp(user_ws, "GCP_B", 1),
+        create_gcp(user_ws, "GCP_C", 3),
+        create_gcp(user_ws, "GCP_D", 5),
+        create_gcp(user_ws, "GCP_E", 7),
+        create_gcp(other_ws1, "GCP_F", 2),
+        create_gcp(other_ws1, "GCP_G", 4),
+        create_gcp(other_ws2, "GCP_H", 6),
+        create_gcp(other_ws2, "GCP_I", 8),
+        create_gcp(other_ws2, "GCP_J", 10),
+    ]
 
 
 @pytest.mark.django_db
@@ -15,12 +46,29 @@ class TestGCPAPIInternal:
             GCPControllerInternal, auth=AuthStrategyEnum.service
         )
 
-    def test_list_all_gcps(self, ground_control_point_factory):
-        ground_control_point_factory.create_batch(5)
-        response = self.client.get("/")
+    @pytest.mark.parametrize(
+        "query_format, expected_count",
+        [
+            ("", 10),
+            ("label=GCP_A", 1),
+            ("label=GCP", 10),
+            ("created_after={after}&created_before={before}", 3),
+            ("created_after={after}", 5),
+            ("created_before={before}", 8),
+        ],
+    )
+    def test_list_gcps_filtering(
+        self, gcps_list, query_format, expected_count
+    ):
+        now = timezone.now()
+        after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        query = query_format.format(after=after_date, before=before_date)
+        url = "/" + f"?{query}" if query else ""
+        response = self.client.get(url)
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 5
+        assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_retrieve_any_gcp(self, ground_control_point_factory):
         gcp = ground_control_point_factory()
@@ -155,23 +203,31 @@ class TestGCPAPIPublic:
             GCPControllerPublic, auth=AuthStrategyEnum.jwt
         )
 
-    def test_list_user_gcps_only(
-        self, workspace_factory, image_factory, ground_control_point_factory
+    @pytest.mark.parametrize(
+        "query_format, expected_count",
+        [
+            ("", 5),
+            ("label=GCP_C", 1),
+            ("label=GCP", 5),
+            ("label=GCP_INVALID", 0),
+            ("created_after={after}&created_before={before}", 1),
+            ("created_after={after}", 3),
+            ("created_before={before}", 3),
+        ],
+    )
+    def test_list_own_gcps_filtering(
+        self, gcps_list, query_format, expected_count
     ):
-        user_workspace = workspace_factory(user_id=999)
-        other_workspace = workspace_factory(user_id=123)
-
-        user_image = image_factory(workspace=user_workspace)
-        other_image = image_factory(workspace=other_workspace)
-
-        user_gcp = ground_control_point_factory(image=user_image)
-        ground_control_point_factory(image=other_image)  # Should NOT be visible
-
-        response = self.client.get("/")
+        now = timezone.now()
+        after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        query = query_format.format(after=after_date, before=before_date)
+        url = "/" + f"?{query}" if query else ""
+        response = self.client.get(url)
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 1
-        assert data[0]["uuid"] == str(user_gcp.uuid)
+        assert len(data) == expected_count, f"Failed for query: {query}"
+
 
     def test_list_as_geojson(
         self, workspace_factory, image_factory, ground_control_point_factory
