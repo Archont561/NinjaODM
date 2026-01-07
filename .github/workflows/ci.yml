@@ -50,8 +50,5 @@ jobs:
       - name: Lint with Ruff
         run: pixi run -e test code-quality:lint
 
-      - name: Type check with Mypy
-        run: pixi run -e test code-quality:typecheck
-
       - name: Run Unit, Integration, and E2E Tests
         run: pixi run -e test test

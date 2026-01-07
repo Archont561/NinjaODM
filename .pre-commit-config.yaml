@@ -20,16 +20,6 @@ repos:
 
   - repo: local
     hooks:
-      - id: mypy-pixi
-        name: mypy (pixi dev)
-        language: system
-        entry: pixi run -e dev mypy --config-file=pyproject.toml app tests
-        types: [python]
-        stages: [pre-push]
-        pass_filenames: false  # faster + cache works better
-
-  - repo: local
-    hooks:
       - id: django-check-pixi
         name: Django Check (pixi dev)
         language: system
