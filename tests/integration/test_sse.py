@@ -35,6 +35,9 @@ GCP_ACTIONS = {
     "delete": lambda client, obj, payload, **kwargs: client.delete(f"/{obj.uuid}"),
 }
 
+IMAGE_ACTIONS = {
+    "delete": lambda client, obj, payload, **kwargs: client.delete(f"/{obj.uuid}"),
+}
 
 class SSEListener:
     """Helper to parse SSE stream events."""
@@ -64,6 +67,10 @@ class TestSSEAPIPublic:
     @pytest.fixture
     def gcp_client(self):
         return AuthenticatedTestClient(GCPControllerPublic, auth=AuthStrategyEnum.jwt)
+
+    @pytest.fixture
+    def image_client(self):
+        return AuthenticatedTestClient(ImageControllerPublic, auth=AuthStrategyEnum.jwt)
 
     @pytest_asyncio.fixture
     async def sse_listener(self, valid_token, mock_redis):
@@ -205,4 +212,30 @@ class TestSSEAPIPublic:
             expected_status=expected_status,
             expected_event_key=event_type,
             **kwargs
+        )
+
+    @pytest.mark.parametrize(
+        "action_key, payload, event_type, expected_status",
+        [
+            ("delete", None, "image:deleted", 204),
+        ]
+    )
+    async def test_image_lifecycle(
+        self, image_client, sse_listener, 
+        workspace_factory, image_factory, temp_image_file, 
+        action_key, payload, event_type, expected_status,
+    ):
+        user_workspace = await sync_to_async(workspace_factory)(user_id=999)
+        image = await sync_to_async(image_factory)(
+            workspace=user_workspace, image_file=temp_image_file
+        )
+
+        await self._run_lifecycle_test(
+            client=image_client,
+            target_obj=image,
+            action_func=IMAGE_ACTIONS[action_key],
+            listener=sse_listener,
+            payload=payload,
+            expected_status=expected_status,
+            expected_event_key=event_type,
         )
