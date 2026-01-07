@@ -7,7 +7,9 @@ from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
 @pytest.mark.django_db
 class TestODMTask:
     def test_task_creation(self, odm_task_factory):
-        task = odm_task_factory(status=ODMTaskStatus.RUNNING.value, step=ODMProcessingStage.MVS.value)
+        task = odm_task_factory(
+            status=ODMTaskStatus.RUNNING.value, step=ODMProcessingStage.MVS.value
+        )
         assert task.odm_status == ODMTaskStatus.RUNNING
         assert task.odm_step == ODMProcessingStage.MVS
         assert task.uuid is not None
@@ -21,7 +23,9 @@ class TestODMTask:
         assert task.task_dir == expected_path
 
     def test_get_current_step_options_returns_dict(self, odm_task_factory):
-        task = odm_task_factory(options={ODMProcessingStage.DATASET.value: {"param": 123}})
+        task = odm_task_factory(
+            options={ODMProcessingStage.DATASET.value: {"param": 123}}
+        )
         options = task.get_current_step_options()
         assert isinstance(options, dict)
         if task.odm_step == ODMProcessingStage.DATASET:

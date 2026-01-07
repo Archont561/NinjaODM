@@ -58,7 +58,9 @@ class TaskControllerPublic(ModelControllerBase):
         return filters.filter(queryset)
 
     @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
-    def pause_task(self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]):
+    def pause_task(
+        self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]
+    ):
         task = self.get_object_or_exception(ODMTask, uuid=uuid)
         return self.service.action(action, task, self.model_config.update_schema())
 
@@ -94,7 +96,8 @@ class TaskControllerInternal(ModelControllerBase):
         return filters.filter(queryset)
 
     @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
-    def pause_task(self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]):
+    def pause_task(
+        self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]
+    ):
         task = self.get_object_or_exception(ODMTask, uuid=uuid)
         return self.service.action(action, task, self.model_config.update_schema())
-    

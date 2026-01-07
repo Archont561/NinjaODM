@@ -145,7 +145,9 @@ class TestTaskResultAPIPublic:
         response = self.client.get(f"/{other_result.uuid}")
         assert response.status_code in (403, 404)
 
-    def test_delete_own_result(self, workspace_factory, odm_task_result_factory, temp_image_file):
+    def test_delete_own_result(
+        self, workspace_factory, odm_task_result_factory, temp_image_file
+    ):
         user_workspace = workspace_factory(user_id=999)
         result = odm_task_result_factory(workspace=user_workspace, file=temp_image_file)
         response = self.client.delete(f"/{result.uuid}")

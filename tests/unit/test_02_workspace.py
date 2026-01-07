@@ -8,6 +8,9 @@ class TestWorkspace:
         workspace = workspace_factory(name="Project Alpha")
         assert workspace.name == "Project Alpha"
         assert isinstance(workspace.uuid, str) or workspace.uuid is not None
-        assert isinstance(workspace.created_at, datetime.datetime) or workspace.uuid is not None
+        assert (
+            isinstance(workspace.created_at, datetime.datetime)
+            or workspace.uuid is not None
+        )
         assert workspace.user_id is not None
         assert isinstance(workspace.user_id, int)

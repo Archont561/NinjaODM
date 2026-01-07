@@ -5,7 +5,6 @@ from PIL import Image as PILImage
 
 @pytest.mark.django_db
 class TestImage:
-
     def test_image_creation(self, image_factory):
         image = image_factory(name="example.png")
         assert image.name == "example.png"
@@ -28,7 +27,9 @@ class TestImage:
             assert im.width <= 128
             assert im.height <= 128
 
-    def test_make_thumbnail_on_thumbnail_returns_self(self, image_factory, temp_image_file):
+    def test_make_thumbnail_on_thumbnail_returns_self(
+        self, image_factory, temp_image_file
+    ):
         thumb = image_factory(is_thumbnail=True, image_file=temp_image_file)
         result = thumb.make_thumbnail()
         assert result.image_file == thumb.image_file

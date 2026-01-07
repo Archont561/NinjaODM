@@ -6,7 +6,6 @@ from django.contrib.gis.geos import Point
 
 @pytest.mark.django_db
 class TestGroundControlPoint:
-
     def test_gcp_creation_with_factory(self, ground_control_point_factory):
         gcp = ground_control_point_factory()
         # Basic field types
@@ -61,12 +60,12 @@ class TestGroundControlPoint:
         # Creating another GCP with the same image & label should fail
         with pytest.raises(IntegrityError):
             ground_control_point_factory(
-                image=gcp1.image,
-                label=gcp1.label,
-                point=Point(0, 0, 1)
+                image=gcp1.image, label=gcp1.label, point=Point(0, 0, 1)
             )
 
-    def test_gcp_img_coordinates_must_be_non_negative(self, ground_control_point_factory):
+    def test_gcp_img_coordinates_must_be_non_negative(
+        self, ground_control_point_factory
+    ):
         # Negative imgx
         with pytest.raises(IntegrityError):
             with transaction.atomic():
