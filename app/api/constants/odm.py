@@ -1,30 +1,24 @@
 from __future__ import annotations
-from enum import IntEnum, auto, unique
-from typing import Optional, FrozenSet
+from enum import IntEnum, auto, unique, Enum
+from typing import (
+    Optional, 
+    FrozenSet, 
+    List, 
+    Tuple, 
+    Union, 
+)
 
 
-class ChoicesMixin:
-    """
-    Mixin that adds a Django-style `choices()` method to any Enum subclass.
-    """
-
+class ChoicesMixin(Enum):
     @property
     def label(self) -> str:
-        """
-        Human‑readable label for this enum member.
-
-        - For StrEnum: based on the string value
-        - For IntEnum/Enum: based on the member name
-        """
         source = self.value if isinstance(self.value, str) else self.name
         return source.replace("_", " ").title()
 
     @classmethod
-    def choices(cls):
-        """
-        Return Django-style choices: list of (value, label) tuples.
-        """
+    def choices(cls) -> List[Tuple[Union[int, str], str]]:
         return [(member.value, member.label) for member in cls]
+
 
 
 @unique
