@@ -106,7 +106,7 @@ class TestTaskResultAPIPublic:
         result = odm_task_result_factory(workspace=user_workspace, file=temp_image_file)
         response = service_user_api_client.get(f"/results/download/{result.uuid}")
         assert response.status_code == 200
-        assert response.streaming is True   
+        assert response.streaming is True
         assert response["Content-Disposition"] == f'attachment; filename="{temp_image_file.name}"'
         assert response["Content-Type"] == "image/jpeg"
         assert int(response["Content-Length"]) > 0
@@ -122,7 +122,7 @@ class TestTaskResultAPIPublic:
         response = service_user_api_client.get(f"/results/download/{result.uuid}")
         assert response.status_code == 403
 
-    
+
 @pytest.mark.django_db
 class TestTaskResultAPIUnauthorized:
 
@@ -157,4 +157,3 @@ class TestTaskResultAPIUnauthorized:
         url = url.format(uuid=result.uuid)
         resp = getattr(api_client, method)(url, json=payload)
         assert resp.status_code in (401, 403)
-    

@@ -105,4 +105,3 @@ class TestServiceUserJWTAuth:
         assert user.pk == 123
         assert user.id == 123
         assert user.scopes == ["a", "b"]
-    

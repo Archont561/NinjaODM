@@ -43,4 +43,3 @@ class TaskModelService(ModelService):
         instance.status = ODMTaskStatus.CANCELLING
         instance.save(update_fields=["status"])
         # → kill + cleanup
-    

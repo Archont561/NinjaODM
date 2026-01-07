@@ -66,4 +66,3 @@ class GroundControlPoint(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, geo_mo
             f"{self.image.name} "
             f"{self.label}"
         )
-    

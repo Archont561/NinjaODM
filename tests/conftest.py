@@ -16,8 +16,8 @@ from app.api.api import create_api
 
 
 from tests.factories import (
-    WorkspaceFactory, 
-    ImageFactory, 
+    WorkspaceFactory,
+    ImageFactory,
     GroundControlPointFactory,
     ODMTaskFactory,
     ODMTaskResultFactory,
@@ -176,4 +176,3 @@ def mock_redis():
          patch("django_redis.client.DefaultClient.get_client", return_value=sync_redis), \
          patch("django_redis.get_redis_connection", return_value=sync_redis):
         yield server
-    

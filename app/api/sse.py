@@ -23,27 +23,27 @@ def emit_event(user_id: str, event_name: str, data: dict):
 async def redis_event_stream(user_id: str):
     redis = aioredis.from_url(settings.CACHES["default"]["LOCATION"])
     pubsub = redis.pubsub()
-    
+
     channel_name = f"user_{user_id}_events"
     await pubsub.subscribe(channel_name)
-    
+
     yield ": ok\n\n"
 
     try:
         while True:
             try:
                 message = await asyncio.wait_for(
-                    pubsub.get_message(ignore_subscribe_messages=True), 
+                    pubsub.get_message(ignore_subscribe_messages=True),
                     timeout=20.0
                 )
-                
+
                 if message:
                     data = message["data"].decode("utf-8")
                     yield f"data: {data}\n\n"
-                
+
             except asyncio.TimeoutError:
                 yield ": heartbeat\n\n"
-                
+
     except asyncio.CancelledError:
         await pubsub.unsubscribe(channel_name)
     finally:

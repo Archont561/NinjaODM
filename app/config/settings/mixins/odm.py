@@ -26,4 +26,3 @@ class ODMSettingsMixin(BaseSettingsMixin):
     @property
     def TASKS_DIR(self) -> Path:
         return self.DATA_DIR / self.TASKS_DIR_NAME
-    

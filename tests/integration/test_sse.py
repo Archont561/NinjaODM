@@ -11,7 +11,7 @@ from app.api.controllers.workspace import WorkspaceControllerPublic
 @pytest_asyncio.fixture(scope="function")
 async def api_sse_public_client(valid_token, mock_redis):
     client = AsyncClient()
-    
+
     class SSEConnection:
         def __init__(self, response):
             self.response = response
@@ -22,14 +22,14 @@ async def api_sse_public_client(valid_token, mock_redis):
             return await asyncio.wait_for(self.iterator.__anext__(), timeout=timeout)
 
     response = await client.get(
-        "/api/events", 
+        "/api/events",
         headers={"Authorization": f"Bearer {valid_token}"}
     )
-    
+
     assert response.status_code == 200, f"SSE Auth failed: {response.content}"
-    
+
     conn = SSEConnection(response)
-    
+
     heartbeat = await conn.next_event()
     assert b": ok" in heartbeat
     return conn
@@ -41,8 +41,8 @@ class TestSSEAPIPublic:
     async def test_workspace_creation_triggers_sse_event(self, api_sse_public_client, valid_token):
         client = NinjaExtraTestClient(WorkspaceControllerPublic)
         response = await sync_to_async(client.post)(
-            "/", 
-            headers={"Authorization": f"Bearer {valid_token}"}, 
+            "/",
+            headers={"Authorization": f"Bearer {valid_token}"},
             json={"name": "New Workspace"},
         )
         assert response.status_code == 201
@@ -50,7 +50,7 @@ class TestSSEAPIPublic:
         try:
             event_line = await api_sse_public_client.next_event()
             data = event_line.decode()
-            
+
             assert "workspace:created" in data
             assert "New Workspace" in data
         except asyncio.TimeoutError:

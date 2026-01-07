@@ -15,7 +15,7 @@ class CanCreateTask(permissions.BasePermission):
             return False
 
         controller.context.kwargs["workspace"] = workspace
-        
+
         is_service = bool(getattr(request, "service", None))
         is_owner = workspace.user_id == request.user.id
 

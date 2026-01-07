@@ -78,7 +78,7 @@ class SFMAlgorithm(OptionEnum):
     INCREMENTAL = auto()
     TRIANGULATION = auto()
     PLANAR = auto()
-    
+
 
 class OrthophotoCompression(OptionEnum):
     JPEG = auto()
@@ -112,17 +112,17 @@ class StageModel(BaseModel):
         # exclude_unset=True ensures we only provide flags the user actually specified
         # by_alias=True ensures we use 'camera-lens' instead of 'camera_lens'
         data = self.model_dump(by_alias=True, exclude_unset=True)
-        
+
         cli_args = []
         for key, value in data.items():
             # Convert booleans to lowercase 'true'/'false' strings for CLI compatibility
             if isinstance(value, bool):
                 value = str(value).lower()
-            
+
             # Handle cases where value might be None (though exclude_unset usually handles this)
             if value is not None:
                 cli_args.append(f"--{key}={value}")
-        
+
         return cli_arg
 
 
@@ -383,7 +383,7 @@ class TexturingStagePublic(StageModel):
         description="Use full 3D mesh instead of 2.5D approach for orthophoto generation."
     )
 
-    
+
 class TexturingStageInternal(TexturingStagePublic):
     texturing_keep_unseen_faces: bool = Field(
         False,
@@ -556,7 +556,7 @@ class OrthophotoStageInternal(OrthophotoStagePublic):
 
 class ReportStagePublic(StageModel):
     skip_report: bool = Field(
-        False, 
+        False,
         alias="skip-report",
         description="Skip generation of PDF report. This can save time if you don't need a report."
     )
@@ -569,7 +569,7 @@ class PostProcessingStageInternal(StageModel):
         description="Generate OGC 3D Tiles outputs"
     )
     copy_to: Optional[Path] = Field(
-        None, 
+        None,
         alias="copy-to",
         description="Generate OGC 3D Tiles outputs"
     )
@@ -605,4 +605,3 @@ class ODMOptionsInternal(Schema):
     postprocess: Optional[PostProcessingStageInternal] = None
 
     model_config = {"extra": "forbid"}
-    

@@ -48,7 +48,7 @@ class ODMTaskStatus(ChoicesMixin, IntEnum):
     FAILED = auto()
     CANCELLED = auto()
     TIMEOUT = auto()
-    
+
     @classmethod
     def terminal_states(cls) -> FrozenSet[ODMTaskStatus]:
         return frozenset(
@@ -98,4 +98,3 @@ class ODMTaskResultType(ChoicesMixin, IntEnum):
     MESH = auto()
     ORTHOMOSAIC = auto()
     REPORT = auto()
-    

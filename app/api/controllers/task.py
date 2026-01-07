@@ -1,8 +1,8 @@
 from uuid import UUID
 from ninja_extra import (
-    api_controller, 
-    ModelControllerBase, 
-    ModelConfig, 
+    api_controller,
+    ModelControllerBase,
+    ModelConfig,
     http_post,
     http_get,
 )
@@ -111,4 +111,3 @@ class TaskControllerInternal(ModelControllerBase):
         task = self.get_object_or_exception(ODMTask, uuid=task_uuid)
         self.service.cancel(task)
         return task
-    

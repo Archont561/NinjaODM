@@ -31,9 +31,9 @@ class TestWorkspaceTusUpload:
 
         signal_mock = MagicMock()
         tus_upload_finished_signal.connect(signal_mock)
-        
+
         uploader = client.uploader(
-            file_stream=temp_image_file.file, 
+            file_stream=temp_image_file.file,
             chunk_size=1500,
             retries=1,
             retry_delay=0

@@ -15,7 +15,7 @@ class WorkspaceModelService(ModelService):
             "name": instance.name
         })
         return instance
-    
+
     def save_images(self, instance, image_files: List[UploadedFile]):
         images = []
         for image_file in image_files:
@@ -23,4 +23,3 @@ class WorkspaceModelService(ModelService):
             image.make_thumbnail()
             images.append(image)
         return images
-            

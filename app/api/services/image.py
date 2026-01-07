@@ -8,4 +8,3 @@ class ImageModelService(ModelService):
         file_path = Path(instance.image_file.path)
         if file_path.exists():
             file_path.unlink()
-    

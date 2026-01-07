@@ -21,14 +21,14 @@ class TaskResponse(ModelSchema):
     class Meta:
         model = ODMTask
         fields = [
-            "uuid", 
-            "status", 
-            "step", 
-            "options", 
+            "uuid",
+            "status",
+            "step",
+            "options",
             "created_at",
         ]
-    
-    
+
+
     @staticmethod
     def resolve_workspace_uuid(obj: ODMTask):
         return obj.workspace.uuid

@@ -32,4 +32,3 @@ class TokenControllerInternal:
     )
     def refresh_token(self, payload: RefreshRequestInternal = Body(...)):
         return self.token_service.refresh_token(payload.refresh)
-    

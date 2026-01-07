@@ -6,7 +6,7 @@ import time
 
 @pytest.mark.django_db
 class TestTokenObtainAuthorization:
-    
+
     def _make_hmac_auth_header(self, service, method, path):
         ts = str(int(time.time()))
         message = f"{service.api_key}:{ts}:{method}:{path}".encode()
@@ -53,8 +53,8 @@ class TestTokenObtainAuthorization:
 
     def test_no_auth_header_returns_401_or_403(self, api_client):
         response = api_client.post(
-            "/internal/token/pair", 
-            json={"user_id": 1, "scopes": []}, 
+            "/internal/token/pair",
+            json={"user_id": 1, "scopes": []},
             content_type="application/json"
         )
 
@@ -72,4 +72,3 @@ class TestTokenObtainAuthorization:
         )
 
         assert response.status_code in (401, 403)
-    

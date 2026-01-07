@@ -19,11 +19,10 @@ class ServiceUserJWTAuth(JWTAuth):
 
         user_id = validated_token.get("user_id")
         scopes = validated_token.get("scopes", [])
-        
+
         if user_id is None:
             return None
-            
+
         service_user = ServiceUser(user_id=int(user_id), scopes=scopes)
         request.user = service_user
         return service_user
-    

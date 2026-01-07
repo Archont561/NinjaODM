@@ -13,7 +13,7 @@ class TestODMTask:
         assert task.uuid is not None
         assert isinstance(task.created_at, datetime.datetime)
         assert task.workspace.uuid is not None
-        
+
     def test_task_dir_property(self, odm_task_factory, tmp_path, settings):
         setattr(settings, "TASKS_DIR", tmp_path)
         task = odm_task_factory()

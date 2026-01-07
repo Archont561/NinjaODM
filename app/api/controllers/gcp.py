@@ -46,7 +46,7 @@ class GCPControllerPublic(ModelControllerBase):
     @http_get("/geojson", response=GCPFeatureCollection, tags=["gcp", "public", "geojson"])
     def list_as_geojson(self, request, **kwargs):
         result =  self.service.queryset_to_geojson(self.get_queryset())
-        return result 
+        return result
 
 
 @api_controller(

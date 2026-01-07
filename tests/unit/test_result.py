@@ -14,14 +14,14 @@ class TestODMTaskResult:
         assert task_result.uuid is not None
         assert isinstance(task_result.created_at, datetime.datetime)
         assert task_result.workspace.uuid is not None
-        
+
     def test_file_upload(temp_media, tmp_path, odm_task_result_factory, settings):
         temp_file = tmp_path / "test_file.txt"
         temp_file.write_text("This is a test file")
 
         with open(temp_file, "rb") as f:
             task_result = odm_task_result_factory(
-                result_type=ODMTaskResultType.MESH.value, 
+                result_type=ODMTaskResultType.MESH.value,
                 file=File(f, name=temp_file.name)
             )
 
@@ -30,4 +30,4 @@ class TestODMTaskResult:
         assert uploaded_file_path.exists()
         assert uploaded_file_path.read_text() == "This is a test file"
         expected_path = Path(getattr(settings, "MEDIA_ROOT")) / getattr(settings, "RESULTS_DIR_NAME") / str(task_result.workspace.uuid)
-        assert uploaded_file_path.parent 
+        assert uploaded_file_path.parent

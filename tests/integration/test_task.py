@@ -49,7 +49,7 @@ class TestTaskAPIInternal:
 
         assert resp.status_code == 204
         assert not ODMTask.objects.filter(uuid=task.uuid).exists()
-    
+
     @pytest.mark.parametrize("status", ODMTaskStatus.non_terminal_states())
     def test_cannot_delete_non_terminal_task(
         self, service_api_client, odm_task_factory, status
@@ -164,7 +164,7 @@ class TestTaskAPIPublic:
 
         assert resp.status_code == 204
         assert not ODMTask.objects.filter(uuid=user_task.uuid).exists()
-    
+
     @pytest.mark.parametrize("status", ODMTaskStatus.non_terminal_states())
     def test_cannot_delete_own_non_terminal_task(
         self, service_api_client, user_task, status
@@ -175,7 +175,7 @@ class TestTaskAPIPublic:
 
         assert resp.status_code in (400, 403)
         assert ODMTask.objects.filter(uuid=user_task.uuid).exists()
-        
+
     @pytest.mark.parametrize(
         "action, expected_status, expected_odm_status",
         [
@@ -235,4 +235,3 @@ class TestTaskAPIUnauthorized:
         for action in ("pause", "resume", "cancel"):
             resp = api_client.post(f"{endpoint}{task.uuid}/{action}/")
             assert resp.status_code in (401, 403)
-

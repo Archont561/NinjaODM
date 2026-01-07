@@ -8,4 +8,3 @@ class ApiConfig(AppConfig):
 
     def ready(self):
         import app.api.signals
-    

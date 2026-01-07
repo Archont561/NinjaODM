@@ -25,15 +25,14 @@ class CoreController(ControllerBase):
     @http_get('/health', response=MessageSchema)
     def health_check(self):
         return {"message": "Service is healthy"}
-    
+
     @http_get('/health/detailed', response=HealthSchema)
     async def detailed_health_check(self):
         results = await asyncio.gather(*(func() for func in HEALTH_CHECKS.values()))
         health_mixins = dict(zip(HEALTH_CHECKS.keys(), results))
         overall_status = "healthy" if all("healthy" in v for v in health_mixins.values()) else "degraded"
         return {
-            "status": overall_status, 
-            "timestamp": time.time(), 
+            "status": overall_status,
+            "timestamp": time.time(),
             "mixins": health_mixins
         }
-    

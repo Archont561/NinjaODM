@@ -76,24 +76,24 @@ class WorkspaceControllerPublic(ModelControllerBase):
         workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         images = self.service.save_images(workspace, image_files)
         return images
-    
+
     def _run_tus_logic(self, request, uuid, resource_id=None):
         workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
 
         tus_view = WorkspaceTusUploadView()
         tus_view.request = request
         tus_view.workspace = workspace
-        
+
         method_map = {
             "POST": tus_view.post,
             "PATCH": lambda r: tus_view.patch(r, resource_id),
             "HEAD": lambda r: tus_view.head(r, resource_id),
             "OPTIONS": tus_view.options
         }
-        
+
         handler = method_map.get(request.method.upper())
         return handler(request)
-        
+
     @http_generic("/{uuid}/upload-images-tus/", methods=["post", "options"])
     def tus_upload(self, request, uuid: UUID):
         return self._run_tus_logic(request, uuid)
@@ -122,4 +122,3 @@ class WorkspaceControllerInternal(ModelControllerBase):
     @http_get("/", response=List[model_config.retrieve_schema])
     def list_workspaces(self, filters: WorkspaceFilterSchema = Query(...)):
         return filters.filter(self.model_config.model.objects.all())
-    

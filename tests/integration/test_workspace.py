@@ -14,18 +14,18 @@ class TestWorkspaceAPIInternal:
         [
             # 1. No filters - should see all
             ("", 4),
-            
+
             # 2. Filter by name (partial match)
             ("name=ProjectA", 1),
             ("name=Project", 2), # Matches ProjectA and ProjectB
             ("name=NonExistent", 0),
-            
+
             # 3. Filter by date (After)
-            ("created_after={after_date}", 3), 
-            
+            ("created_after={after_date}", 3),
+
             # 4. Filter by date range (Between)
             ("created_after={after_date}&created_before={before_date}", 1),
-            
+
             # 5. Combined filters
             ("name=Project&created_after={after_date}", 2),
         ],
@@ -41,7 +41,7 @@ class TestWorkspaceAPIInternal:
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
         formatted_query = query_params.format(
-            after_date=after_date, 
+            after_date=after_date,
             before_date=before_date
         )
         url = "/internal/workspaces/"
@@ -66,11 +66,11 @@ class TestWorkspaceAPIInternal:
     def test_update_workspace(self, service_api_client, workspace_factory):
         ws = workspace_factory(user_id=1234, name="Other WS")
         resp = service_api_client.patch(
-            f"internal/workspaces/{ws.uuid}", 
+            f"internal/workspaces/{ws.uuid}",
             json={"name": "Updated", "user_id": 333}
         )
         assert resp.status_code == 200
-        
+
         ws.refresh_from_db()
         assert ws.name == "Updated"
         assert ws.user_id == 333
@@ -79,7 +79,7 @@ class TestWorkspaceAPIInternal:
         ws = workspace_factory(user_id=1234, name="Other WS")
         resp = service_api_client.delete(f"internal/workspaces/{ws.uuid}")
         assert resp.status_code == 204
-        
+
         with pytest.raises(Workspace.DoesNotExist):
             Workspace.objects.get(uuid=ws.uuid)
 
@@ -292,4 +292,3 @@ class TestWorkspaceAPIUnauthorized:
 
         resp = getattr(api_client, method)(url, json=payload)
         assert resp.status_code in (401, 403)
-    

@@ -51,12 +51,12 @@ class ImageFactory(DjangoModelFactory):
     workspace = factory.SubFactory(WorkspaceFactory)
     name = factory.LazyAttribute(lambda _: f"{uuid.uuid4().hex}.png")
     is_thumbnail = False
-    
+
 
 class GroundControlPointFactory(DjangoModelFactory):
     class Meta:
         model = GroundControlPoint
-        
+
     label = factory.LazyFunction(lambda: faker.pystr(min_chars=8, max_chars=12))
     image = factory.SubFactory(ImageFactory)
 
@@ -80,7 +80,7 @@ class ODMTaskFactory(DjangoModelFactory):
     status = factory.LazyFunction(lambda: random.choice([s.value for s in ODMTaskStatus]))
     step = factory.LazyFunction(lambda: random.choice([s.value for s in ODMProcessingStage]))
     options = factory.LazyFunction(dict)
-    
+
 
 class ODMTaskResultFactory(DjangoModelFactory):
     class Meta:

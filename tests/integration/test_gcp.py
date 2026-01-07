@@ -218,10 +218,10 @@ class TestGCPAPIPublic:
         data = response.json()
 
         print(data)
-        
+
         assert data["type"] == "FeatureCollection"
         assert len(data["features"]) == 1
-        
+
         feature = data["features"][0]
         assert feature["type"] == "Feature"
         assert feature["geometry"]["type"] == "Point"
@@ -237,10 +237,10 @@ class TestGCPAPIPublic:
     ):
         user_workspace = workspace_factory(user_id=999)
         other_workspace = workspace_factory(user_id=456)
-        
+
         user_image = image_factory(workspace=user_workspace)
         other_image = image_factory(workspace=other_workspace)
-        
+
         ground_control_point_factory(image=user_image)
         ground_control_point_factory(image=other_image)
 
@@ -462,4 +462,3 @@ class TestGCPAPIUnauthorized:
 
         response = service_user_api_client.get(f"/internal/gcps/{gcp.uuid}")
         assert response.status_code in (401, 403)
-    

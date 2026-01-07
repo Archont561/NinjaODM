@@ -14,7 +14,7 @@ class CanCreateGCP(permissions.BasePermission):
             return False
 
         controller.context.kwargs["image"] = image
-        
+
         is_service = bool(getattr(request, "service", None))
         is_owner = image.workspace.user_id == request.user.id
 

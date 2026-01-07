@@ -40,8 +40,8 @@ class ResultControllerPublic(ModelControllerBase):
     def download_result_file(self, request, uuid: UUID):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         return FileResponse(
-            result.file.open("rb"), 
-            as_attachment=True, 
+            result.file.open("rb"),
+            as_attachment=True,
             filename=result.file.name
         )
 
@@ -58,4 +58,3 @@ class ResultControllerInternal(ModelControllerBase):
         retrieve_schema=ResultResponse,
         allowed_routes=["find_one", "list", "delete"],
     )
-    

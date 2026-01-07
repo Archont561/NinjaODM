@@ -33,4 +33,3 @@ class TestImage:
         result = thumb.make_thumbnail()
         assert result.image_file == thumb.image_file
         assert result == thumb
-    

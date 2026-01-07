@@ -38,7 +38,7 @@ class GCPResponse(ModelSchema):
     class Meta:
         model = GroundControlPoint
         fields = [
-            "uuid", 
+            "uuid",
             "created_at",
             "label",
         ]

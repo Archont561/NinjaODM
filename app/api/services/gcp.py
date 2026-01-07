@@ -26,7 +26,7 @@ class GCPModelService(ModelService):
             instance.label = data["label"]
         instance.save()
         return instance
-    
+
     def queryset_to_geojson(self, queryset):
         qs = queryset.select_related('image').values(
             'imgx', 'imgy', 'label', 'point', 'image__uuid'
@@ -47,4 +47,3 @@ class GCPModelService(ModelService):
             "type": "FeatureCollection",
             "features": features
         }
-    
