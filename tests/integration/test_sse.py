@@ -4,11 +4,11 @@ import asyncio
 from asgiref.sync import sync_to_async
 from django.test import AsyncClient
 
-# Import your controllers
 from app.api.controllers.workspace import WorkspaceControllerPublic
 from app.api.controllers.task import TaskControllerPublic
-from app.api.controllers.image import ImageControllerPublic # Assumed
-from app.api.controllers.result import ResultControllerPublic # Assumed
+from app.api.controllers.gcp import GCPControllerPublic 
+from app.api.controllers.image import ImageControllerPublic 
+from app.api.controllers.result import ResultControllerPublic
 from app.api.constants.odm import ODMTaskStatus
 from ..auth_clients import AuthenticatedTestClient, AuthStrategyEnum
 
@@ -27,6 +27,12 @@ TASK_ACTIONS = {
     "resume": lambda client, obj, **kwargs: client.post(f"/{obj.uuid}/resume"),
     "cancel": lambda client, obj, **kwargs: client.post(f"/{obj.uuid}/cancel"),
     "delete": lambda client, obj, **kwargs: client.delete(f"/{obj.uuid}"),
+}
+
+GCP_ACTIONS = {
+    "create": lambda client, obj, payload, **kwargs: client.post(f"/?image_uuid={kwargs.get('image_uuid')}", json=payload),
+    "update": lambda client, obj, payload, **kwargs: client.patch(f"/{obj.uuid}", json=payload),
+    "delete": lambda client, obj, payload, **kwargs: client.delete(f"/{obj.uuid}"),
 }
 
 
@@ -54,6 +60,10 @@ class TestSSEAPIPublic:
     @pytest.fixture
     def task_client(self):
         return AuthenticatedTestClient(TaskControllerPublic, auth=AuthStrategyEnum.jwt)
+
+    @pytest.fixture
+    def gcp_client(self):
+        return AuthenticatedTestClient(GCPControllerPublic, auth=AuthStrategyEnum.jwt)
 
     @pytest_asyncio.fixture
     async def sse_listener(self, valid_token, mock_redis):
@@ -157,4 +167,42 @@ class TestSSEAPIPublic:
             payload=payload,
             expected_status=expected_status,
             expected_event_key=event_type
+        )
+
+    @pytest.mark.parametrize(
+        "action_key, payload, event_type, expected_status",
+        [
+            ("create", {
+                "gcp_point": [12.34, 56.78, 100.0],
+                "image_point": [500.0, 300.0],
+                "label": "New",
+            }, "gcp:created", 201),
+            ("update", {"label": "Upd"}, "gcp:updated", 200),
+            ("delete", None, "gcp:deleted", 204),
+        ]
+    )
+    async def test_gcp_lifecycle(
+        self, gcp_client, sse_listener, 
+        workspace_factory, image_factory, ground_control_point_factory,
+        action_key, payload, event_type, expected_status
+    ):
+        gcp = None
+        kwargs = {}
+        user_workspace = await sync_to_async(workspace_factory)(user_id=999)
+        image = await sync_to_async(image_factory)(workspace=user_workspace)
+
+        if action_key == "create":
+            kwargs["image_uuid"] = image.uuid
+        else:
+            gcp = await sync_to_async(ground_control_point_factory)(image=image)
+
+        await self._run_lifecycle_test(
+            client=gcp_client,
+            target_obj=gcp,
+            action_func=GCP_ACTIONS[action_key],
+            listener=sse_listener,
+            payload=payload,
+            expected_status=expected_status,
+            expected_event_key=event_type,
+            **kwargs
         )
