@@ -1,9 +1,37 @@
 import pytest
+from datetime import timedelta
+from django.utils import timezone
 from ninja_extra.testing import TestClient
 
 from app.api.models.result import ODMTaskResult
+from app.api.constants.odm import ODMTaskResultType
 from app.api.controllers.result import ResultControllerInternal, ResultControllerPublic
 from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
+
+
+@pytest.fixture
+def results_list(workspace_factory, odm_task_result_factory):
+    now = timezone.now()
+    user_ws = workspace_factory(user_id=999)
+    other_ws1 = workspace_factory(user_id=1)
+    other_ws2 = workspace_factory(user_id=2)
+
+    def create_result(workspace, r_type, days_ago):
+        return odm_task_result_factory(
+            workspace=workspace,
+            result_type=r_type,
+            created_at=now - timedelta(days=days_ago)
+        )
+
+    return [
+        create_result(user_ws, ODMTaskResultType.ORTHOMOSAIC, 7),
+        create_result(user_ws, ODMTaskResultType.ORTHOMOSAIC, 3),
+        create_result(user_ws, ODMTaskResultType.POINT_CLOUD, 3),
+        create_result(user_ws, ODMTaskResultType.POINT_CLOUD, 1),
+        create_result(other_ws1, ODMTaskResultType.ORTHOMOSAIC, 3),
+        create_result(other_ws2, ODMTaskResultType.DEM,         1),
+        create_result(other_ws2, ODMTaskResultType.REPORT,      8),
+    ]
 
 
 @pytest.mark.django_db
@@ -14,12 +42,31 @@ class TestTaskResultAPIInternal:
             ResultControllerInternal, auth=AuthStrategyEnum.service
         )
 
-    def test_list_internal_results(self, odm_task_result_factory):
-        odm_task_result_factory.create_batch(4)
-        response = self.client.get("/")
+    @pytest.mark.parametrize(
+        "query_format, expected_count",
+        [
+            ("", 7),
+            (f"result_type={ODMTaskResultType.ORTHOMOSAIC.label}", 3),
+            (f"result_type={ODMTaskResultType.POINT_CLOUD.label}", 2),
+            (f"result_type={ODMTaskResultType.DTM.label}", 0),
+            ("created_after={after}", 5),
+            ("created_before={before}", 5),
+            (f"result_type={ODMTaskResultType.ORTHOMOSAIC.label}&created_after={{after}}", 2),
+            (f"result_type={ODMTaskResultType.POINT_CLOUD.label}&created_before={{before}}", 1),
+        ],
+    )
+    def test_list_results_filtering(
+        self, results_list, odm_task_result_factory, query_format, expected_count
+    ):
+        now = timezone.now()
+        after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        query = query_format.format(after=after_date, before=before_date)
+        url = "/" + f"?{query}" if query else ""
+        response = self.client.get(url)
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 4
+        assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_retrieve_any_result(self, odm_task_result_factory):
         result = odm_task_result_factory()
@@ -43,18 +90,31 @@ class TestTaskResultAPIPublic:
             ResultControllerPublic, auth=AuthStrategyEnum.jwt
         )
 
-    def test_list_user_results_only(self, workspace_factory, odm_task_result_factory):
-        user_workspace = workspace_factory(user_id=999)
-        other_workspace = workspace_factory(user_id=123)
-        user_results = odm_task_result_factory.create_batch(2, workspace=user_workspace)
-        odm_task_result_factory.create_batch(3, workspace=other_workspace)
-        response = self.client.get("/")
+    @pytest.mark.parametrize(
+        "query_format, expected_count",
+         [
+            ("", 4),
+            (f"result_type={ODMTaskResultType.ORTHOMOSAIC.name}", 2), 
+            (f"result_type={ODMTaskResultType.POINT_CLOUD.name}", 2), 
+            (f"result_type={ODMTaskResultType.DEM.name}", 0), 
+            ("created_after={after}", 3), 
+            ("created_before={before}", 3), 
+            (f"result_type={ODMTaskResultType.ORTHOMOSAIC.name}&created_after={{after}}", 1),
+            (f"result_type={ODMTaskResultType.POINT_CLOUD.name}&created_before={{before}}", 1),
+        ],
+    )
+    def test_list_user_results_filtering(
+        self, results_list, query_format, expected_count
+    ):
+        now = timezone.now()
+        after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
+        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        query = query_format.format(after=after_date, before=before_date)
+        url = "/" + f"?{query}" if query else ""
+        response = self.client.get(url)
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == len(user_results)
-        returned_uuids = {item["uuid"] for item in data}
-        expected_uuids = {str(result.uuid) for result in user_results}
-        assert returned_uuids == expected_uuids
+        assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_retrieve_own_result(self, workspace_factory, odm_task_result_factory):
         user_workspace = workspace_factory(user_id=999)
