@@ -39,6 +39,11 @@ IMAGE_ACTIONS = {
     "delete": lambda client, obj, payload, **kwargs: client.delete(f"/{obj.uuid}"),
 }
 
+TASK_RESULT_ACTIONS = {
+    "delete": lambda client, obj, payload, **kwargs: client.delete(f"/{obj.uuid}"),
+}
+
+
 class SSEListener:
     """Helper to parse SSE stream events."""
     def __init__(self, response):
@@ -71,6 +76,10 @@ class TestSSEAPIPublic:
     @pytest.fixture
     def image_client(self):
         return AuthenticatedTestClient(ImageControllerPublic, auth=AuthStrategyEnum.jwt)
+    
+    @pytest.fixture
+    def task_result_client(self):
+        return AuthenticatedTestClient(ResultControllerPublic, auth=AuthStrategyEnum.jwt)
 
     @pytest_asyncio.fixture
     async def sse_listener(self, valid_token, mock_redis):
@@ -234,6 +243,32 @@ class TestSSEAPIPublic:
             client=image_client,
             target_obj=image,
             action_func=IMAGE_ACTIONS[action_key],
+            listener=sse_listener,
+            payload=payload,
+            expected_status=expected_status,
+            expected_event_key=event_type,
+        )
+
+    @pytest.mark.parametrize(
+        "action_key, payload, event_type, expected_status",
+        [
+            ("delete", None, "task-result:deleted", 204),
+        ]
+    )
+    async def test_task_result_lifecycle(
+        self, task_result_client, sse_listener, 
+        workspace_factory, odm_task_result_factory, temp_image_file, 
+        action_key, payload, event_type, expected_status,
+    ):
+        user_workspace = await sync_to_async(workspace_factory)(user_id=999)
+        task_result = await sync_to_async(odm_task_result_factory)(
+            workspace=user_workspace, file=temp_image_file
+        )
+
+        await self._run_lifecycle_test(
+            client=task_result_client,
+            target_obj=task_result,
+            action_func=TASK_RESULT_ACTIONS[action_key],
             listener=sse_listener,
             payload=payload,
             expected_status=expected_status,
