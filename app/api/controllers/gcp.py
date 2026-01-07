@@ -1,3 +1,5 @@
+from typing import List
+from ninja import Query
 from ninja_extra import (
     ModelControllerBase,
     ModelConfig,
@@ -9,7 +11,13 @@ from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.gcp import GroundControlPoint
 from app.api.permissions.gcp import IsGCPOwner, CanCreateGCP
-from app.api.schemas.gcp import GCPCreate, GCPUpdate, GCPResponse, GCPFeatureCollection
+from app.api.schemas.gcp import (
+    GCPCreate, 
+    GCPUpdate, 
+    GCPResponse, 
+    GCPFeatureCollection,
+    GCPFilterSchema,
+)
 from app.api.services.gcp import GCPModelService
 
 
@@ -27,10 +35,7 @@ class GCPControllerPublic(ModelControllerBase):
         patch_schema=GCPUpdate,
         update_schema=GCPUpdate,
         retrieve_schema=GCPResponse,
-        pagination=None,
-        list_route_info={
-            "queryset_getter": lambda self, **kw: self.get_queryset(**kw),
-        },
+        allowed_routes=["find_one", "patch", "delete", "create"],
         create_route_info={
             "path": "/?image_uuid=uuid",
             "permissions": [CanCreateGCP],
@@ -38,15 +43,19 @@ class GCPControllerPublic(ModelControllerBase):
         },
     )
 
-    def get_queryset(self, **kwargs):
+    def get_queryset(self):
+        user_id = self.context.request.user.id
         return self.model_config.model.objects.filter(
-            image__workspace__user_id=self.context.request.user.id
+            image__workspace__user_id=user_id
         )
 
+    @http_get("/", response=List[model_config.retrieve_schema])
+    def list_gcps(self, filters: GCPFilterSchema = Query(...)):
+        return filters.filter(self.get_queryset())
+
     @http_get("/geojson", response=GCPFeatureCollection, tags=["gcp", "public", "geojson"])
-    def list_as_geojson(self, request, **kwargs):
-        result =  self.service.queryset_to_geojson(self.get_queryset())
-        return result
+    def list_gcps_as_geojson(self, filters: GCPFilterSchema = Query(...)):
+        return self.service.queryset_to_geojson(filters.filter(self.get_queryset()))
 
 
 @api_controller(
@@ -62,10 +71,16 @@ class GCPControllerInternal(ModelControllerBase):
         update_schema=GCPUpdate,
         patch_schema=GCPUpdate,
         retrieve_schema=GCPResponse,
-        pagination=None,
+        allowed_routes=["find_one", "patch", "delete", "create"],
         create_route_info={
             "path": "/?image_uuid=uuid",
             "permissions": [CanCreateGCP],
             "custom_handler": lambda self, data, **kw: self.service.create(data, **self.context.kwargs, **kw)
         },
     )
+
+    @http_get("/", response=List[model_config.retrieve_schema])
+    def list_gcps(self, filters: GCPFilterSchema = Query(...)):
+        queryset = self.model_config.model.objects.all()
+        return filters.filter(queryset)
+    
