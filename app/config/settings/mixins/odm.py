@@ -16,6 +16,7 @@ class ODMSettingsMixin(BaseSettingsMixin):
 
     NINJAODM_BASE_URL: str = Field(...)
     NODEODM_URL: str = Field(...)
+    NODEODM_WEBHOOK_SECRET: str = Field(...)
 
     WORKSPACE_ALLOWED_FILE_MIME_TYPES: List[FILE_MIME_TYPE] = Field(
         default=[
