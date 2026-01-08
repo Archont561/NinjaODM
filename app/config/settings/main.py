@@ -18,6 +18,7 @@ from .mixins import (
     TemplatesSettingsMixin,
     ODMSettingsMixin,
     TusSettingsMixin,
+    CelerySettingsMixin,
 )
 
 
@@ -38,6 +39,7 @@ class PydanticDjangoSettings(
     JWTSettingsMixin,
     ODMSettingsMixin,
     TusSettingsMixin,
+    CelerySettingsMixin,
 ):
     """
     Complete Django settings using multiple inheritance.

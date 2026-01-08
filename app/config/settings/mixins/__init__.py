@@ -14,6 +14,7 @@ from .templates import TemplatesSettingsMixin
 from .core import CoreSettingsMixin
 from .odm import ODMSettingsMixin
 from .tus import TusSettingsMixin
+from .celery import CelerySettingsMixin
 
 __all__ = [
     "AppsSettingsMixin",
@@ -32,4 +33,5 @@ __all__ = [
     "CoreSettingsMixin",
     "ODMSettingsMixin",
     "TusSettingsMixin",
+    "CelerySettingsMixin",
 ]
