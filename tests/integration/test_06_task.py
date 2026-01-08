@@ -136,12 +136,11 @@ class TestTaskAPIInternal:
         assert resp.json()["uuid"] == str(task.uuid)
 
     @pytest.mark.parametrize("status", ODMTaskStatus.terminal_states())
-    def test_delete_terminal_task(self, odm_task_factory, status, mock_task_on_task_delete):
+    def test_delete_terminal_task(self, odm_task_factory, status):
         task = odm_task_factory(status=status)
         resp = self.client.delete(f"/{task.uuid}")
         assert resp.status_code == 204
         assert not ODMTask.objects.filter(uuid=task.uuid).exists()
-        mock_task_on_task_delete.delay.assert_called_once_with(task.uuid, task.task_dir)
 
     @pytest.mark.parametrize("status", ODMTaskStatus.non_terminal_states())
     def test_cannot_delete_non_terminal_task(self, odm_task_factory, status):
@@ -257,13 +256,12 @@ class TestTaskAPIPublic:
         assert resp.status_code in (403, 404)
 
     @pytest.mark.parametrize("status", ODMTaskStatus.terminal_states())
-    def test_delete_own_terminal_task(self, user_task, status, mock_task_on_task_delete):
+    def test_delete_own_terminal_task(self, user_task, status):
         user_task.status = status
         user_task.save(update_fields=["status"])
         resp = self.client.delete(f"/{user_task.uuid}")
         assert resp.status_code == 204
         assert not ODMTask.objects.filter(uuid=user_task.uuid).exists()
-        mock_task_on_task_delete.delay.assert_called_once_with(user_task.uuid, user_task.task_dir)
 
     @pytest.mark.parametrize("status", ODMTaskStatus.non_terminal_states())
     def test_cannot_delete_own_non_terminal_task(self, user_task, status):

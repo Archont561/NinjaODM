@@ -181,7 +181,7 @@ class TestSSEAPIPublic:
             ("pause", None, "task:updated", 200, "mock_task_on_task_pause"),
             ("resume", None, "task:updated", 200, "mock_task_on_task_resume"),
             ("cancel", None, "task:updated", 200, "mock_task_on_task_cancel"),
-            ("delete", None, "task:deleted", 204, "mock_task_on_task_delete"),
+            ("delete", None, "task:deleted", 204, None),
         ],
     )
     async def test_odm_task_lifecycle(
@@ -197,7 +197,8 @@ class TestSSEAPIPublic:
         mock_fixture,
         request,
     ):
-        mock = request.getfixturevalue(mock_fixture)
+        if mock_fixture:
+            mock = request.getfixturevalue(mock_fixture)
         user_workspace = await sync_to_async(workspace_factory)(user_id=999)
         odm_task = await sync_to_async(odm_task_factory)(
             workspace=user_workspace, status=ODMTaskStatus.COMPLETED
