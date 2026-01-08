@@ -5,7 +5,6 @@ from app.api.constants.odm import ODMTaskStatus
 from app.api.sse import emit_event
 from app.api.tasks.task import (
     on_task_create,
-    on_task_delete,
     on_task_pause,
     on_task_resume,
     on_task_cancel,
@@ -56,14 +55,8 @@ class TaskModelService(ModelService):
             "status": instance.odm_status,
             "step": instance.odm_step,
         }
-        task_dir = instance.task_dir
-        task_uuid = instance.uuid
         user_id = instance.workspace.user_id
-
-        with transaction.atomic():
-            instance.delete()
-        
-        on_task_delete.delay(task_uuid, task_dir)
+        instance.delete()
         emit_event(user_id, "task:deleted", payload)
 
     def action(self, action, instance, update_schema):
