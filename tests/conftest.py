@@ -76,6 +76,26 @@ def mock_redis():
 
 @pytest.fixture
 def mock_task_on_task_create():
-    with patch("app.api.services.tasks.task.on_task_create") as mock:
+    with patch("app.api.services.task.on_task_create") as mock:
+        yield mock
+
+@pytest.fixture
+def mock_task_on_task_delete():
+    with patch("app.api.services.task.on_task_delete") as mock:
+        yield mock
+
+@pytest.fixture
+def mock_task_on_task_pause():
+    with patch("app.api.services.task.on_task_pause") as mock:
+        yield mock
+
+@pytest.fixture
+def mock_task_on_task_resume():
+    with patch("app.api.services.task.on_task_resume") as mock:
+        yield mock
+
+@pytest.fixture
+def mock_task_on_task_cancel():
+    with patch("app.api.services.task.on_task_cancel") as mock:
         yield mock
     
