@@ -3,7 +3,7 @@ from django.db import transaction
 
 from app.api.constants.odm import ODMTaskStatus
 from app.api.sse import emit_event
-from app.api.tasks.task import on_odm_task_creation
+from app.api.tasks.task import on_task_create
 
 
 class TaskModelService(ModelService):
@@ -17,7 +17,7 @@ class TaskModelService(ModelService):
                 **data,
             )
 
-        on_odm_task_creation.delay(instance.uuid)
+        on_task_create.delay(instance.uuid)
         emit_event(
             instance.workspace.user_id,
             "task:created",
