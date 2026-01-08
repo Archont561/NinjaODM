@@ -36,17 +36,15 @@ def valid_token():
 
 
 @pytest.fixture(autouse=True)
-def temp_media(tmp_path, settings):
-    """
-    Override MEDIA_ROOT for tests to a temporary folder.
-    Automatically cleaned up after the test.
-    """
+def test_settings(tmp_path, settings):
     settings.MEDIA_ROOT = tmp_path
-    yield tmp_path
+    settings.CELERY_TASK_ALWAYS_EAGER = True
+    settings.CELERY_TASK_EAGER_PROPAGATES = True
+    yield
 
 
 @pytest.fixture
-def temp_image_file(temp_media):
+def temp_image_file():
     """
     Creates a real temporary image file usable by Pillow.
     """
@@ -74,3 +72,10 @@ def mock_redis():
         patch("django_redis.get_redis_connection", return_value=sync_redis),
     ):
         yield server
+
+
+@pytest.fixture
+def mock_on_odm_task_creation_task():
+    with patch("app.api.services.task.on_odm_task_creation") as mock:
+        yield mock
+    
