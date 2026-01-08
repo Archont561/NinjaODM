@@ -115,8 +115,7 @@ class TestTaskAPIInternal:
         data = resp.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
 
-    def test_create_task(self, workspace_factory, settings, tmp_path):
-        settings.TASKS_DIR = tmp_path
+    def test_create_task(self, mock_on_odm_task_creation_task, workspace_factory):
         ws = workspace_factory(user_id=1234)
         payload = {
             "options": {},
@@ -127,7 +126,7 @@ class TestTaskAPIInternal:
         body = resp.json()
         task = ODMTask.objects.get(uuid=body["uuid"])
         assert task.workspace.uuid == ws.uuid
-        assert task.task_dir.exists()
+        mock_on_odm_task_creation_task.delay.assert_called_once_with(task.uuid)
 
     def test_get_task(self, odm_task_factory):
         task = odm_task_factory()
@@ -223,14 +222,13 @@ class TestTaskAPIPublic:
         data = resp.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
 
-    def test_create_task_in_own_workspace(self, user_workspace, settings, tmp_path):
-        settings.TASKS_DIR = tmp_path
+    def test_create_task_in_own_workspace(self, mock_on_odm_task_creation_task, user_workspace):
         payload = {"options": {}}
         resp = self.client.post(f"/?workspace_uuid={user_workspace.uuid}", json=payload)
         assert resp.status_code == 201
         task = ODMTask.objects.get(uuid=resp.json()["uuid"])
         assert task.workspace.user_id == 999
-        assert task.task_dir.exists()
+        mock_on_odm_task_creation_task.delay.assert_called_once_with(task.uuid)
 
     def test_create_task_in_other_workspace_denied(self, other_workspace):
         payload = {"options": {}}
