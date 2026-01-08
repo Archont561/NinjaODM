@@ -1,43 +1,21 @@
 services:
-  app-prod:
+  db:
+    image: postgis/postgis:15-3.5
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+
+  web:
     build:
       context: .
-      args:
-        ENVIRONMENT: prod
+    image: ninjaodm:v1.0
+    depends_on:
+      - db
     ports:
       - "8000:8000"
     env_file:
       - .env
     environment:
-      - ENVIRONMENT=prod
-      - DATABASE_URL=${DATABASE_URL}
       - GUNICORN_WORKERS=4
-    # CMD automatically uses prod environment
-
-  app-dev:
-    build:
-      context: .
-      args:
-        ENVIRONMENT: dev
-    ports:
-      - "8001:8000"
-    env_file:
-      - .env
-    environment:
-      - ENVIRONMENT=dev
-      - DATABASE_URL=${DATABASE_URL}
-    volumes:
-      - ./app:/workspace/app
-    # CMD automatically uses dev environment
-
-  app-test:
-    build:
-      context: .
-      args:
-        ENVIRONMENT: test
-    env_file:
-      - .env
-    environment:
-      - ENVIRONMENT=test
-      - DATABASE_URL=${DATABASE_URL}
-    command: test
+      - DATABASE_URL=postgis://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}

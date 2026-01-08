@@ -1,76 +1,12 @@
-# Version control
-.git
-.gitignore
-.gitattributes
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info/
-dist/
-build/
-
-# Pixi (don't copy existing environments - they'll be rebuilt)
-.pixi/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*.sublime-*
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-.ruff_cache/
-
-# Environment
-.env
-.env.*
-*.local
-
-# Documentation
-*.md
-docs/
-LICENSE
-README*
-
-# Docker
+.*
+*.log*
 Dockerfile*
 .dockerignore
 docker-compose*.yml
 
-# CI/CD
-.github/
-.gitlab-ci.yml
-.circleci/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Data directories (will be mounted as volumes)
 data/
 static/
 media/
+logs/
 *.sqlite3
 *.db
-
-# Logs
-*.log
-logs/
-
-# Build artifacts
-*.egg
-*.wheel
-
-# Node (if you have frontend)
-node_modules/
-npm-debug.log
-yarn-error.log
