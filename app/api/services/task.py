@@ -1,18 +1,23 @@
 from ninja_extra import ModelService
+from django.db import transaction
 
 from app.api.constants.odm import ODMTaskStatus
 from app.api.sse import emit_event
+from app.api.tasks import on_odm_task_creation
 
 
 class TaskModelService(ModelService):
     def create(self, schema, **kwargs):
         data = schema.model_dump()
         workspace = kwargs.get("workspace")
-        instance = self.model.objects.create(
-            workspace=workspace,
-            **data,
-        )
-        instance.task_dir.mkdir(parents=True)
+        
+        with transaction.atomic():
+            instance = self.model.objects.create(
+                workspace=workspace,
+                **data,
+            )
+
+        on_odm_task_creation.delay(instance.uuid)
         emit_event(
             instance.workspace.user_id,
             "task:created",
