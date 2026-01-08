@@ -3,7 +3,13 @@ from django.db import transaction
 
 from app.api.constants.odm import ODMTaskStatus
 from app.api.sse import emit_event
-from app.api.tasks.task import on_task_create
+from app.api.tasks.task import (
+    on_task_create,
+    on_task_delete,
+    on_task_pause,
+    on_task_resume,
+    on_task_cancel,
+)
 
 
 class TaskModelService(ModelService):
@@ -30,7 +36,9 @@ class TaskModelService(ModelService):
         return instance
 
     def update(self, instance, schema, **kwargs):
-        update_instance = super().update(instance, schema, **kwargs)
+        with transaction.atomic():
+            update_instance = super().update(instance, schema, **kwargs)
+
         emit_event(
             update_instance.workspace.user_id,
             "task:updated",
@@ -43,32 +51,40 @@ class TaskModelService(ModelService):
         return update_instance
 
     def delete(self, instance, **kwargs):
-        import shutil
-
         payload = {
             "uuid": str(instance.uuid),
             "status": instance.odm_status,
             "step": instance.odm_step,
         }
-        instance.delete()
         task_dir = instance.task_dir
-        if task_dir.exists() and task_dir.is_dir():
-            shutil.rmtree(task_dir, ignore_errors=True)
+        task_uuid = instance.uuid
+        user_id = instance.workspace.user_id
 
-        emit_event(instance.workspace.user_id, "task:deleted", payload)
+        with transaction.atomic():
+            instance.delete()
+        
+        on_task_delete.delay(task_uuid, task_dir)
+        emit_event(user_id, "task:deleted", payload)
 
     def action(self, action, instance, update_schema):
         match action:
             case "pause":
-                return self.update(
+                updated_instance = self.update(
                     instance, update_schema, status=ODMTaskStatus.PAUSING
                 )
+                on_task_pause.delay(updated_instance.uuid)
             case "resume":
-                return self.update(
+                updated_instance = self.update(
                     instance, update_schema, status=ODMTaskStatus.RESUMING
                 )
+                on_task_resume.delay(updated_instance.uuid)
             case "cancel":
-                return self.update(
+                updated_instance = self.update(
                     instance, update_schema, status=ODMTaskStatus.CANCELLING
                 )
-        raise ValueError(f"{self.__class__.__name__} has no '{action}' action!")
+                on_task_cancel.delay(updated_instance.uuid)
+            case _:
+                raise ValueError(f"{self.__class__.__name__} has no '{action}' action!")
+        
+        return updated_instance
+ 
