@@ -1,9 +1,13 @@
 from typing import List
 from ninja_extra import ModelService
 from ninja.files import UploadedFile
+from django.db import transaction
 
 from app.api.models.image import Image
 from app.api.sse import emit_event
+from app.api.tasks.workspace import (
+    on_workspace_images_uploaded,
+)
 
 
 class WorkspaceModelService(ModelService):
@@ -32,11 +36,12 @@ class WorkspaceModelService(ModelService):
 
     def save_images(self, instance, image_files: List[UploadedFile]):
         images = []
-        for image_file in image_files:
-            image = Image.objects.create(workspace=instance, image_file=image_file)
-            image.make_thumbnail()
-            images.append(image)
+        with transaction.atomic():
+            for image_file in image_files:
+                image = Image.objects.create(workspace=instance, image_file=image_file)
+                images.append(image)
 
+        on_workspace_images_uploaded.delay([image.uuid for image in images])
         emit_event(
             instance.user_id,
             "workspace:images-uploaded",
