@@ -1,17 +1,12 @@
 services:
-  db:
-    image: postgis/postgis:15-3.5
-    ports:
-      - "5432:5432"
-    env_file:
-      - .env
-
-  web:
+  django:
     build:
       context: .
     image: ninjaodm:v1.0
+    container_name: django
     depends_on:
       - db
+      - redis
     ports:
       - "8000:8000"
     env_file:
@@ -19,3 +14,30 @@ services:
     environment:
       - GUNICORN_WORKERS=4
       - DATABASE_URL=postgis://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+
+  celery:
+      build: .
+      command: celery worker -A app -l INFO
+      env_file:
+        - .env
+      depends_on:
+        - django
+        - redis
+
+  pgdb:
+      image: postgis/postgis:15-3.5
+      container_name: pgdb
+      ports:
+        - "5432:5432"
+      env_file:
+        - .env
+      volumes:
+        - pgdata:/var/lib/postgresql/data/
+
+  redis:
+    image: redis
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
