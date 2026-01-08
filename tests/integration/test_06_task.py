@@ -135,11 +135,12 @@ class TestTaskAPIInternal:
         assert resp.json()["uuid"] == str(task.uuid)
 
     @pytest.mark.parametrize("status", ODMTaskStatus.terminal_states())
-    def test_delete_terminal_task(self, odm_task_factory, status):
+    def test_delete_terminal_task(self, odm_task_factory, status, mock_task_on_task_delete):
         task = odm_task_factory(status=status)
         resp = self.client.delete(f"/{task.uuid}")
         assert resp.status_code == 204
         assert not ODMTask.objects.filter(uuid=task.uuid).exists()
+        mock_task_on_task_delete.delay.assert_called_once_with(task.uuid, task.task_dir)
 
     @pytest.mark.parametrize("status", ODMTaskStatus.non_terminal_states())
     def test_cannot_delete_non_terminal_task(self, odm_task_factory, status):
@@ -149,21 +150,23 @@ class TestTaskAPIInternal:
         assert ODMTask.objects.filter(uuid=task.pk).exists()
 
     @pytest.mark.parametrize(
-        "action, expected_status, expected_odm_status",
+        "action, expected_status, expected_odm_status, mock_fixture",
         [
-            ("pause", 200, ODMTaskStatus.PAUSING),
-            ("resume", 200, ODMTaskStatus.RESUMING),
-            ("cancel", 200, ODMTaskStatus.CANCELLING),
+            ("pause", 200, ODMTaskStatus.PAUSING, "mock_task_on_task_pause"),
+            ("resume", 200, ODMTaskStatus.RESUMING, "mock_task_on_task_resume"),
+            ("cancel", 200, ODMTaskStatus.CANCELLING, "mock_task_on_task_cancel"),
         ],
     )
     def test_custom_actions_change_status(
-        self, odm_task_factory, action, expected_status, expected_odm_status
+        self, odm_task_factory, action, expected_status, expected_odm_status, mock_fixture, request
     ):
+        mock = request.getfixturevalue(mock_fixture)
         task = odm_task_factory()
         resp = self.client.post(f"/{task.uuid}/{action}")
         assert resp.status_code == expected_status
         task.refresh_from_db()
         assert task.odm_status == expected_odm_status
+        mock.delay.assert_called_once_with(task.uuid)
 
 
 @pytest.mark.django_db
@@ -252,12 +255,13 @@ class TestTaskAPIPublic:
         assert resp.status_code in (403, 404)
 
     @pytest.mark.parametrize("status", ODMTaskStatus.terminal_states())
-    def test_delete_own_terminal_task(self, user_task, status):
+    def test_delete_own_terminal_task(self, user_task, status, mock_task_on_task_delete):
         user_task.status = status
         user_task.save(update_fields=["status"])
         resp = self.client.delete(f"/{user_task.uuid}")
         assert resp.status_code == 204
         assert not ODMTask.objects.filter(uuid=user_task.uuid).exists()
+        mock_task_on_task_delete.delay.assert_called_once_with(user_task.uuid, user_task.task_dir)
 
     @pytest.mark.parametrize("status", ODMTaskStatus.non_terminal_states())
     def test_cannot_delete_own_non_terminal_task(self, user_task, status):
@@ -268,20 +272,22 @@ class TestTaskAPIPublic:
         assert ODMTask.objects.filter(uuid=user_task.uuid).exists()
 
     @pytest.mark.parametrize(
-        "action, expected_status, expected_odm_status",
+        "action, expected_status, expected_odm_status, mock_fixture",
         [
-            ("pause", 200, ODMTaskStatus.PAUSING),
-            ("resume", 200, ODMTaskStatus.RESUMING),
-            ("cancel", 200, ODMTaskStatus.CANCELLING),
+            ("pause", 200, ODMTaskStatus.PAUSING, "mock_task_on_task_pause"),
+            ("resume", 200, ODMTaskStatus.RESUMING, "mock_task_on_task_resume"),
+            ("cancel", 200, ODMTaskStatus.CANCELLING, "mock_task_on_task_cancel"),
         ],
     )
     def test_custom_actions_on_own_task(
-        self, user_task, action, expected_status, expected_odm_status
+        self, user_task, action, expected_status, expected_odm_status, mock_fixture, request
     ):
+        mock = request.getfixturevalue(mock_fixture)
         resp = self.client.post(f"/{user_task.uuid}/{action}")
         assert resp.status_code == expected_status
         user_task.refresh_from_db()
         assert user_task.odm_status == expected_odm_status
+        mock.delay.assert_called_once_with(user_task.uuid)
 
     @pytest.mark.parametrize("action", ["pause", "resume", "cancel"])
     def test_action_other_task_denied(self, other_task, action):
