@@ -4,6 +4,7 @@ from django.utils import timezone
 from ninja_extra.testing import TestClient
 
 from app.api.models.workspace import Workspace
+from app.api.models.image import Image
 from app.api.controllers.workspace import (
     WorkspaceControllerInternal,
     WorkspaceControllerPublic,
@@ -176,7 +177,7 @@ class TestWorkspaceAPIPublic:
         resp = self.client.delete(f"/{other_workspace.uuid}")
         assert resp.status_code in (403, 404)
 
-    def test_upload_image_own_workspace(self, user_workspace, temp_image_file):
+    def test_upload_image_own_workspace(self, user_workspace, temp_image_file, mock_task_on_workspace_images_uploaded):
         resp = self.client.post(
             f"/{user_workspace.uuid}/upload-image",
             **{"FILES": {"image_file": temp_image_file}},
@@ -185,6 +186,8 @@ class TestWorkspaceAPIPublic:
         data = resp.json()
         assert data["uuid"] is not None
         assert data["workspace_uuid"] == str(user_workspace.uuid)
+        uploaded_image = Image.objects.get(uuid=data["uuid"])
+        mock_task_on_workspace_images_uploaded.delay.assert_called_once_with([uploaded_image.uuid])
 
     def test_upload_image_other_workspace_denied(
         self, other_workspace, temp_image_file
