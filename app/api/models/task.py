@@ -39,14 +39,7 @@ class ODMTask(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):
 
     @property
     def task_dir(self) -> Path:
-        """
-        /<TASKS_DIR>/{workspace_uuid}/{task_uuid} under the workspace.
-        """
-        return (
-            Path(getattr(settings, "TASKS_DIR"))
-            / str(self.workspace.uuid)
-            / str(self.uuid)
-        )
+        return Path(settings.TASKS_DIR) / str(self.uuid)
 
     def get_current_step_options(self) -> dict:
         return self.options.get(self.step, {})
