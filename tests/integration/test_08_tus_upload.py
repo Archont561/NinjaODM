@@ -5,7 +5,7 @@ from django_tus.signals import tus_upload_finished_signal
 
 
 @pytest.fixture
-def use_test_cache(settings, temp_media):
+def use_test_cache(settings):
     settings.CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
