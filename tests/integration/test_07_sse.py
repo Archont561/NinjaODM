@@ -8,6 +8,7 @@ from app.api.controllers.workspace import WorkspaceControllerPublic
 from app.api.controllers.task import TaskControllerPublic
 from app.api.controllers.gcp import GCPControllerPublic
 from app.api.controllers.image import ImageControllerPublic
+from app.api.models.image import Image
 from app.api.controllers.result import ResultControllerPublic
 from app.api.constants.odm import ODMTaskStatus
 from ..auth_clients import AuthenticatedTestClient, AuthStrategyEnum
@@ -155,6 +156,7 @@ class TestSSEAPIPublic:
         payload,
         event_type,
         expected_status,
+        mock_task_on_workspace_images_uploaded,
     ):
         workspace = None
         if action_key != "create":
@@ -174,12 +176,12 @@ class TestSSEAPIPublic:
         )
 
     @pytest.mark.parametrize(
-        "action_key, payload, event_type, expected_status",
+        "action_key, payload, event_type, expected_status, mock_fixture",
         [
-            ("pause", None, "task:updated", 200),
-            ("resume", None, "task:updated", 200),
-            ("cancel", None, "task:updated", 200),
-            ("delete", None, "task:deleted", 204),
+            ("pause", None, "task:updated", 200, "mock_task_on_task_pause"),
+            ("resume", None, "task:updated", 200, "mock_task_on_task_resume"),
+            ("cancel", None, "task:updated", 200, "mock_task_on_task_cancel"),
+            ("delete", None, "task:deleted", 204, "mock_task_on_task_delete"),
         ],
     )
     async def test_odm_task_lifecycle(
@@ -192,7 +194,10 @@ class TestSSEAPIPublic:
         payload,
         event_type,
         expected_status,
+        mock_fixture,
+        request,
     ):
+        mock = request.getfixturevalue(mock_fixture)
         user_workspace = await sync_to_async(workspace_factory)(user_id=999)
         odm_task = await sync_to_async(odm_task_factory)(
             workspace=user_workspace, status=ODMTaskStatus.COMPLETED
