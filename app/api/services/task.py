@@ -3,7 +3,7 @@ from django.db import transaction
 
 from app.api.constants.odm import ODMTaskStatus
 from app.api.sse import emit_event
-from app.api.tasks import on_odm_task_creation
+from app.api.tasks.task import on_odm_task_creation
 
 
 class TaskModelService(ModelService):

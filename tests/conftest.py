@@ -76,6 +76,6 @@ def mock_redis():
 
 @pytest.fixture
 def mock_on_odm_task_creation_task():
-    with patch("app.api.services.task.on_odm_task_creation") as mock:
+    with patch("app.api.services.tasks.task.on_odm_task_creation") as mock:
         yield mock
     
