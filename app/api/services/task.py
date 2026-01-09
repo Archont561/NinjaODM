@@ -8,6 +8,8 @@ from app.api.tasks.task import (
     on_task_pause,
     on_task_resume,
     on_task_cancel,
+    on_task_nodeodm_webhook,
+    on_task_finish,
 )
 
 
@@ -81,3 +83,21 @@ class TaskModelService(ModelService):
         
         return updated_instance
  
+    def proceed_next_task_step(self, instance, update_schema):
+        odm_processing_stage = instance.odm_step.next_stage
+        if not odm_processing_stage:
+            updated_instance = self.update(
+                instance,
+                update_schema,
+                status=ODMTaskStatus.FINISHING,
+            )
+            on_task_finish.delay(updated_instance.uuid)
+            return
+
+        updated_instance = self.update(
+            instance, 
+            update_schema, 
+            status=ODMTaskStatus.QUEUED,
+            step=odm_processing_stage
+        )
+        on_task_nodeodm_webhook.delay(updated_instance.uuid)

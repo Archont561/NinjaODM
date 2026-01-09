@@ -8,9 +8,9 @@ from ninja_extra import (
     http_post,
     http_get,
 )
-
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
+from app.api.auth.nodeodm import NodeODMServiceAuth
 from app.api.models.task import ODMTask
 from app.api.permissions.task import IsTaskOwner, IsTaskStateTerminal, CanCreateTask
 from app.api.schemas.task import (
@@ -20,6 +20,7 @@ from app.api.schemas.task import (
     TaskResponse,
     TaskFilterSchema,
 )
+from app.api.schemas.core import MessageSchema
 from app.api.services.task import TaskModelService
 
 
@@ -95,9 +96,16 @@ class TaskControllerInternal(ModelControllerBase):
         queryset = self.model_config.model.objects.all()
         return filters.filter(queryset)
 
+    @http_post("/{uuid}/odmwebhook", response=MessageSchema, auth=NodeODMServiceAuth())
+    def nodeodm_webhook(self, request, uuid: UUID, signature: str):
+        task = self.get_object_or_exception(ODMTask, uuid=uuid)
+        self.service.proceed_next_task_step(task, self.model_config.update_schema())
+        return { "message": "ok" }
+
     @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
     def task_action(
         self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]
     ):
         task = self.get_object_or_exception(ODMTask, uuid=uuid)
         return self.service.action(action, task, self.model_config.update_schema())
+    
