@@ -18,10 +18,12 @@ class TaskModelService(ModelService):
     def create(self, schema, **kwargs):
         data = schema.model_dump()
         workspace = kwargs.get("workspace")
+        quality = data.pop("quality")
         
         with transaction.atomic():
             instance = self.model.objects.create(
                 workspace=workspace,
+                options=quality.options,
                 **data,
             )
 

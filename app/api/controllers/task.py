@@ -15,8 +15,7 @@ from app.api.auth.nodeodm import NodeODMServiceAuth
 from app.api.models.task import ODMTask
 from app.api.permissions.task import IsTaskOwner, IsTaskStateTerminal, CanCreateTask
 from app.api.schemas.task import (
-    CreateTaskInternal,
-    CreateTaskPublic,
+    CreateTask,
     UpdateTaskInternal,
     ODMTaskWebhookInternal,
     TaskResponse,
@@ -36,7 +35,7 @@ class TaskControllerPublic(ModelControllerBase):
     service_type = TaskModelService
     model_config = ModelConfig(
         model=ODMTask,
-        create_schema=CreateTaskPublic,
+        create_schema=CreateTask,
         retrieve_schema=TaskResponse,
         update_schema=UpdateTaskInternal,
         allowed_routes=["find_one", "create", "delete"],
@@ -77,7 +76,7 @@ class TaskControllerInternal(ModelControllerBase):
     service_type = TaskModelService
     model_config = ModelConfig(
         model=ODMTask,
-        create_schema=CreateTaskInternal,
+        create_schema=CreateTask,
         update_schema=UpdateTaskInternal,
         retrieve_schema=TaskResponse,
         allowed_routes=["find_one", "create", "delete"],

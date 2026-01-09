@@ -5,22 +5,20 @@ from pydantic import Field, field_validator, BaseModel
 from datetime import datetime
 
 from app.api.models.task import ODMTask
-from app.api.schemas.odm_option import ODMOptionsInternal, ODMOptionsPublic
-from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, NodeODMTaskStatus
+from app.api.constants.odm import (
+    ODMTaskStatus, 
+    ODMProcessingStage, 
+    NodeODMTaskStatus,
+    ODMQualityOption
+)
 
 
-class CreateTaskInternal(Schema):
+class CreateTask(Schema):
     name: str
-    options: ODMOptionsInternal
-
-
-class CreateTaskPublic(Schema):
-    name: str
-    options: ODMOptionsPublic
+    quality: ODMQualityOption = ODMQualityOption.ULTRA_LOW
 
 
 class UpdateTaskInternal(Schema):
-    options: Optional[ODMOptionsPublic] = None
     status: Optional[ODMTaskStatus] = None
     step: Optional[ODMProcessingStage] = None
 
