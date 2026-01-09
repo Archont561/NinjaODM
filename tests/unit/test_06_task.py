@@ -13,6 +13,7 @@ class TestODMTask:
         assert task.odm_status == ODMTaskStatus.RUNNING
         assert task.odm_step == ODMProcessingStage.MVS
         assert task.uuid is not None
+        assert task.name is not None
         assert isinstance(task.created_at, datetime.datetime)
         assert task.workspace.uuid is not None
 
