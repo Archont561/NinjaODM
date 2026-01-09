@@ -109,6 +109,11 @@ def mock_task_on_task_finish():
         yield mock
 
 @pytest.fixture
+def mock_task_on_task_failure():
+    with patch("app.api.services.task.on_task_failure") as mock:
+        yield mock
+
+@pytest.fixture
 def mock_task_on_workspace_images_uploaded():
     with patch("app.api.services.workspace.on_workspace_images_uploaded") as mock:
         yield mock
