@@ -4,6 +4,7 @@ import time
 import pytest
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
+from app.api.auth.nodeodm import NodeODMServiceAuth
 from app.api.constants.user import ServiceUser
 
 
@@ -110,3 +111,23 @@ class TestServiceUserJWTAuth:
         assert user.pk == 123
         assert user.id == 123
         assert user.scopes == ["a", "b"]
+
+
+class TestNodeODMServiceAuth:
+
+    def test_authenticate_nodeodm_webhook(self, rf, settings):
+        signature = NodeODMServiceAuth.generate_hmac_signature(NodeODMServiceAuth.HMAC_MESSAGE)
+        auth = NodeODMServiceAuth()
+        request = rf.post(f"/webhook?signature={signature}")
+        assert auth(request) is True
+    
+    def test_deny_nodeodm_webhook_authentication_no_signature(self, rf):
+        auth = NodeODMServiceAuth()
+        request = rf.post(f"/webhook")
+        assert auth(request) is False
+    
+    def test_authenticate_nodeodm_webhook_wrong_message(self, rf, settings):
+        invalid_signature = NodeODMServiceAuth.generate_hmac_signature("INVALID_HMAC_MESSAGE")
+        auth = NodeODMServiceAuth()
+        request = rf.post(f"/webhook?signature={invalid_signature}")
+        assert auth(request) is False
