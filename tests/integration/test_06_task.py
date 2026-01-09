@@ -281,13 +281,11 @@ class TestTaskAPIPublic:
         mock_task_on_task_create.delay.assert_called_once_with(task.uuid)
 
     def test_create_task_in_other_workspace_denied(self, other_workspace):
-        resp = self.client.post(
-            f"/?workspace_uuid={other_workspace.uuid}", json=payload
-        )
+        resp = self.client.post(f"/?workspace_uuid={other_workspace.uuid}")
         assert resp.status_code in (403, 404)
 
     def test_create_task_without_workspace_uuid_denied(self):
-        resp = self.client.post("/", json=payload)
+        resp = self.client.post("/")
         assert resp.status_code in (403, 404)
 
     def test_get_own_task(self, user_task):
