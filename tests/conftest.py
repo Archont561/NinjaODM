@@ -42,6 +42,8 @@ def test_settings(tmp_path_factory, settings):
     settings.STATIC_ROOT = tmp_path_factory.mktemp("STATIC_ROOT")
     settings.TASKS_DIR = settings.DATA_DIR / "tasks"
     settings.TUS_UPLOAD_DIR = settings.MEDIA_ROOT / "uploads"
+    settings.TUS_DESTINATION_DIR = settings.TUS_UPLOAD_DIR
+    settings.TUS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     settings.CELERY_TASK_ALWAYS_EAGER = True
     settings.CELERY_TASK_EAGER_PROPAGATES = True
     yield
