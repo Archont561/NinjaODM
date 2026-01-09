@@ -1,3 +1,14 @@
+networks:
+  backend:
+    driver: bridge
+    internal: true
+  public:
+    driver: bridge
+
+volumes:
+  pgdata:
+  nodeodm_data:
+
 services:
   django:
     build:
@@ -7,37 +18,60 @@ services:
     depends_on:
       - db
       - redis
+      - nodeodm
     ports:
       - "8000:8000"
     env_file:
       - .env
     environment:
+      - ENVIRONMENT=prod
       - GUNICORN_WORKERS=4
-      - DATABASE_URL=postgis://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+      - DATABASE_URL=postgis://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - NINJAODM_BASE_URL=http://django:8000
+      - NODEODM_URL=http://nodeodm:3000
+    volumes:
+      - nodeodm_data:/app/data/tasks
+    networks:
+      - backend
+      - public
 
+  nodeodm:
+    image: opendronemap/nodeodm
+    container_name: nodeodm
+    ports:
+      - "3000:3000"
+    volumes:
+      - nodeodm_data:/var/www/data
+    networks:
+      - backend
+        
   celery:
-      build: .
-      command: celery worker -A app -l INFO
-      env_file:
-        - .env
-      depends_on:
-        - django
-        - redis
+    build: .
+    command: celery worker -A app -l INFO
+    env_file:
+      - .env
+    depends_on:
+      - django
+      - redis
+      - nodeodm
+    networks:
+      - backend
 
   pgdb:
-      image: postgis/postgis:15-3.5
-      container_name: pgdb
-      ports:
-        - "5432:5432"
-      env_file:
-        - .env
-      volumes:
-        - pgdata:/var/lib/postgresql/data/
+    image: postgis/postgis:15-3.5
+    container_name: pgdb
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    networks:
+      - backend
 
   redis:
     image: redis
     ports:
-      - "5432:5432"
-
-volumes:
-  pgdata:
+      - "6379:6379"
+    networks:
+      - backend
