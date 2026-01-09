@@ -75,9 +75,10 @@ class ODMProcessingStage(ChoicesMixin, IntEnum):
     REPORTING = auto()
     POSTPROCESSING = auto()
 
-    def next_stage(self, stage: ODMProcessingStage) -> Optional[ODMProcessingStage]:
+    @property
+    def next_stage(self) -> Optional[ODMProcessingStage]:
         try:
-            return stage.__class__(stage.value + 1)
+            return self.__class__(self.value + 1)
         except ValueError:
             return None
 
