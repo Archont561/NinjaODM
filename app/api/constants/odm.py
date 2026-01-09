@@ -92,3 +92,25 @@ class ODMTaskResultType(ChoicesMixin, StrEnum):
     DSM = auto()
     DTM = auto()
     REPORT = auto()
+
+    _RELATIVE_PATHS: Dict[str, Path] = {
+        "POINT_CLOUD_PLY": Path("odm_georeferencing") / "odm_georeferenced_model.ply",
+        "POINT_CLOUD_LAZ": Path("odm_georeferencing") / "odm_georeferenced_model.laz",
+        "POINT_CLOUD_CSV": Path("odm_georeferencing") / "odm_georeferenced_model.csv",
+        "TEXTURED_MODEL": Path("odm_texturing") / "odm_textured_model.obj",
+        "TEXTURED_MODEL_GEO": Path("odm_texturing") / "odm_textured_model_geo.obj",
+        "ORTHOPHOTO_GEOTIFF": Path("odm_orthophoto") / "odm_orthophoto.tif",
+        "ORTHOPHOTO_WEBP": Path("odm_orthophoto") / "odm_orthophoto.webp",
+        "DSM": Path("odm_dem") / "dsm.tif",
+        "DTM": Path("odm_dem") / "dtm.tif",
+        "REPORT": Path("odm_georeferencing") / "odm_georeferencing_log.txt",
+    }
+
+    @property
+    def relative_path(self) -> Path:
+        try:
+            return self._RELATIVE_PATHS[self.name]
+        except KeyError as exc:
+            raise NotImplementedError(
+                f"No relative path defined for {self}"
+            ) from exc
