@@ -12,8 +12,9 @@ jobs:
       DATABASE_URL: spatialite://./app/test-db.sqlite
       DJANGO_SECRET_KEY: "test-secret-key-min-30-characters-long-for-ci"
       ENVIRONMENT: "test"
-      ODM_CONTAINER_URL: "test_odm_url"
-      ODM_CONTAINER_VOLUME: "test_odm_volume"
+      NINJAODM_BASE_URL: "my_app_base_url"
+      NODEODM_URL: "some simple url"
+      NODEODM_WEBHOOK_SECRET: "test-secret-dummy-key-for-nodeodm-webhook"
       CACHE_BACKEND: "django_redis.cache.RedisCache"
       CACHE_LOCATION: "redis://redis:6379/0"
       CACHE_OPTIONS: '{"CLIENT_CLASS": "django_redis.client.DefaultClient"}'
