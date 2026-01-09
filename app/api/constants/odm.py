@@ -136,6 +136,14 @@ class ODMProcessingStage(ChoicesMixin, StrEnum):
             return None
 
     @property
+    def previous_stage(self) -> Optional[ODMProcessingStage]:
+        stages = list(type(self))
+        try:
+            return stages[stages.index(self) - 1]
+        except IndexError:
+            return None
+
+    @property
     def stage_results(self) -> List[ODMTaskResultType]:
         try:
             return ODM_PROCESSING_STAGE_RESULTS_MAPPING[self.name]
