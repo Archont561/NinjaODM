@@ -12,7 +12,7 @@ def result_file_upload_path(instance, filename):
 
 
 class ODMTaskResult(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):
-    result_type = models.IntegerField(
+    result_type = models.CharField(
         choices=ODMTaskResultType.choices(),
     )
     workspace = models.ForeignKey(

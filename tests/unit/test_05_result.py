@@ -9,7 +9,7 @@ from app.api.constants.odm import ODMTaskResultType
 @pytest.mark.django_db
 class TestODMTaskResult:
     def test_task_result_creation(self, odm_task_result_factory):
-        task_result = odm_task_result_factory(result_type=ODMTaskResultType.DTM.value)
+        task_result = odm_task_result_factory(result_type=ODMTaskResultType.DTM)
         assert task_result.odm_result_type == ODMTaskResultType.DTM
         assert task_result.uuid is not None
         assert isinstance(task_result.created_at, datetime.datetime)
@@ -21,7 +21,7 @@ class TestODMTaskResult:
 
         with open(temp_file, "rb") as f:
             task_result = odm_task_result_factory(
-                result_type=ODMTaskResultType.MESH.value,
+                result_type=ODMTaskResultType.REPORT,
                 file=File(f, name=temp_file.name),
             )
 

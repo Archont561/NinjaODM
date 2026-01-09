@@ -10,15 +10,11 @@ from app.api.constants.odm import ODMTaskResultType
 
 class ResultResponse(ModelSchema):
     workspace_uuid: UUID = Field(..., alias="workspace.uuid")
-    result_type: str
+    result_type: ODMTaskResult
 
     class Meta:
         model = ODMTaskResult
         fields = ["uuid", "created_at"]
-
-    @staticmethod
-    def resolve_result_type(obj: ODMTaskResult):
-        return obj.odm_result_type.label
 
 
 class ResultFilterSchema(FilterSchema):

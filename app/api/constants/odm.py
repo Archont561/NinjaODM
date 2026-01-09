@@ -1,5 +1,5 @@
 from __future__ import annotations
-from enum import auto, unique, Enum, StrEnum, IntEnum
+from enum import auto, unique, Enum, StrEnum
 from typing import (
     Optional,
     FrozenSet,
@@ -79,11 +79,14 @@ class ODMProcessingStage(ChoicesMixin, StrEnum):
 
 
 @unique
-class ODMTaskResultType(ChoicesMixin, IntEnum):
-    DEM = auto()
+class ODMTaskResultType(ChoicesMixin, StrEnum):
+    POINT_CLOUD_PLY = auto()
+    POINT_CLOUD_LAZ = auto()
+    POINT_CLOUD_CSV = auto()
+    TEXTURED_MODEL = auto()
+    TEXTURED_MODEL_GEO = auto()
+    ORTHOPHOTO_GEOTIFF = auto()
+    ORTHOPHOTO_WEBP = auto()
     DSM = auto()
     DTM = auto()
-    POINT_CLOUD = auto()
-    MESH = auto()
-    ORTHOMOSAIC = auto()
     REPORT = auto()
