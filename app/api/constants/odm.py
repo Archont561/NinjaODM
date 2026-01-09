@@ -31,6 +31,7 @@ class ODMTaskStatus(ChoicesMixin, IntEnum):
     PAUSED = auto()
     RESUMING = auto()
     CANCELLING = auto()
+    FINISHING = auto()
 
     # Terminal States - Success
     COMPLETED = auto()
