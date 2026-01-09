@@ -10,6 +10,7 @@ from app.api.tasks.task import (
     on_task_cancel,
     on_task_nodeodm_webhook,
     on_task_finish,
+    on_task_failure,
 )
 from app.api.models.task import ODMTask
 from app.api.models.result import ODMTaskResult
@@ -285,4 +286,32 @@ class TestOnTaskFinish:
 
     def test_task_not_found(self, mock_nodeodm):
         on_task_finish.apply(args=[uuid4()]).get()
+        mock_nodeodm["task"].remove.assert_not_called()
+
+
+@pytest.mark.django_db
+@pytest.mark.usefixtures("mock_redis")
+class TestOnTaskFailure:
+
+    def test_success(self, mock_nodeodm, odm_task):
+        on_task_failure.apply(args=[odm_task.uuid]).get()
+        mock_nodeodm["node"].get_task.assert_called_once_with(str(odm_task.uuid))
+        mock_nodeodm["task"].remove.assert_called_once()
+        odm_task.refresh_from_db()
+        assert odm_task.status == ODMTaskStatus.FAILED
+
+    def test_cleanup_fails(self, mock_nodeodm, odm_task):
+        mock_nodeodm["task"].remove.return_value = False
+        on_task_failure.apply(args=[odm_task.uuid]).get()
+        odm_task.refresh_from_db()
+        assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_odm_error_fails_task(self, mock_nodeodm, odm_task):
+        mock_nodeodm["node"].get_task.side_effect = OdmError("Node down")
+        on_task_failure.apply(args=[odm_task.uuid]).get()
+        odm_task.refresh_from_db()
+        assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_task_not_found(self, mock_nodeodm):
+        on_task_failure.apply(args=[uuid4()]).get()
         mock_nodeodm["task"].remove.assert_not_called()
