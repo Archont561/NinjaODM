@@ -158,3 +158,164 @@ class ODMProcessingStage(ChoicesMixin, StrEnum):
             return ODM_PROCESSING_STAGE_RESULTS_MAPPING[self.name]
         except KeyError:
             return []
+
+
+ODM_QUALITY_OPTION_MAPPING: Dict[str, Dict[str, Dict[str, str | int | float | bool]]] = {
+    "ULTRA_HIGH": {
+        "dataset": {
+            "gps-accuracy": 1.0,
+        },
+        "sfm": {
+            "feature-quality": "ultra",
+            "feature-type": "sift",
+            "matcher-type": "flann",
+            "pc-quality": "ultra",
+            "min-num-features": 40000,
+            "use-hybrid-bundle-adjustment": False,
+        },
+        "filterpoints": {
+            "auto-boundary": True,
+            "pc-sample": 0.0,
+        },
+        "meshing": {
+            "mesh-octree-depth": 13,
+            "mesh-size": 2_000_000,
+        },
+        "texturing": {
+            "texturing-skip-global-seam-leveling": False,
+        },
+        "dem": {
+            "dem-resolution": 2.0,
+            "dem-decimation": 1,
+        },
+        "orthophoto": {
+            "orthophoto-resolution": 2.0,
+            "orthophoto-compression": "deflate",
+        },
+    },
+
+    "HIGH": {
+        "dataset": {
+            "gps-accuracy": 3.0,
+        },
+        "sfm": {
+            "feature-quality": "high",
+            "feature-type": "dspsift",
+            "matcher-type": "flann",
+            "pc-quality": "high",
+            "min-num-features": 20000,
+            "use-hybrid-bundle-adjustment": True,
+        },
+        "meshing": {
+            "mesh-octree-depth": 11,
+            "mesh-size": 1_000_000,
+        },
+        "dem": {
+            "dem-resolution": 5.0,
+            "dem-decimation": 1,
+        },
+        "orthophoto": {
+            "orthophoto-resolution": 5.0,
+        },
+    },
+
+    "MEDIUM": {
+        "dataset": {
+            "gps-accuracy": 5.0,
+        },
+        "sfm": {
+            "feature-quality": "medium",
+            "feature-type": "dspsift",
+            "matcher-type": "flann",
+            "pc-quality": "medium",
+            "min-num-features": 10000,
+        },
+        "meshing": {
+            "mesh-octree-depth": 10,
+            "mesh-size": 400_000,
+        },
+        "dem": {
+            "dem-resolution": 10.0,
+            "dem-decimation": 2,
+        },
+        "orthophoto": {
+            "orthophoto-resolution": 10.0,
+        },
+    },
+
+    "LOW": {
+        "dataset": {
+            "gps-accuracy": 10.0,
+        },
+        "sfm": {
+            "feature-quality": "low",
+            "feature-type": "orb",
+            "matcher-type": "bruteforce",
+            "pc-quality": "low",
+            "min-num-features": 5000,
+        },
+        "filterpoints": {
+            "fast-orthophoto": True,
+        },
+        "meshing": {
+            "mesh-octree-depth": 9,
+            "mesh-size": 200_000,
+        },
+        "dem": {
+            "dem-resolution": 20.0,
+            "dem-decimation": 4,
+        },
+        "orthophoto": {
+            "orthophoto-resolution": 20.0,
+        },
+    },
+
+    "ULTRA_LOW": {
+        "dataset": {
+            "gps-accuracy": 20.0,
+        },
+        "sfm": {
+            "feature-quality": "lowest",
+            "feature-type": "orb",
+            "matcher-type": "bruteforce",
+            "pc-quality": "lowest",
+            "min-num-features": 2000,
+            "use-hybrid-bundle-adjustment": True,
+        },
+        "filterpoints": {
+            "fast-orthophoto": True,
+            "pc-sample": 0.5,
+        },
+        "meshing": {
+            "mesh-octree-depth": 8,
+            "mesh-size": 100_000,
+        },
+        "dem": {
+            "dem-resolution": 30.0,
+            "dem-decimation": 6,
+        },
+        "orthophoto": {
+            "orthophoto-resolution": 30.0,
+            "orthophoto-png": True,
+        },
+        "report": {
+            "skip-report": True,
+        },
+    },
+}
+
+@unique
+class ODMQualityOption(StrEnum):
+    ULTRA_HIGH = auto()
+    HIGH = auto()
+    MEDIUM = auto()
+    LOW = auto()
+    ULTRA_LOW = auto()
+
+    @property
+    def options(self) -> Dict[str, Dict[str, str]]:
+        try:
+            return ODM_QUALITY_OPTION_MAPPING[self.name]
+        except KeyError:
+            return []
+    
