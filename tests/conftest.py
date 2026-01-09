@@ -36,8 +36,12 @@ def valid_token():
 
 
 @pytest.fixture(autouse=True)
-def test_settings(tmp_path, settings):
-    settings.MEDIA_ROOT = tmp_path
+def test_settings(tmp_path_factory, settings):
+    settings.MEDIA_ROOT = tmp_path_factory.mktemp("MEDIA_ROOT")
+    settings.DATA_DIR = tmp_path_factory.mktemp("DATA_DIR")
+    settings.STATIC_ROOT = tmp_path_factory.mktemp("STATIC_ROOT")
+    settings.TASKS_DIR = settings.DATA_DIR / "tasks"
+    settings.TUS_UPLOAD_DIR = settings.MEDIA_ROOT / "uploads"
     settings.CELERY_TASK_ALWAYS_EAGER = True
     settings.CELERY_TASK_EAGER_PROPAGATES = True
     yield
