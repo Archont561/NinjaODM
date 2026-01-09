@@ -10,7 +10,7 @@ from app.api.constants.odm import ODMTaskResultType
 
 class ResultResponse(ModelSchema):
     workspace_uuid: UUID = Field(..., alias="workspace.uuid")
-    result_type: ODMTaskResult
+    result_type: ODMTaskResultType
 
     class Meta:
         model = ODMTaskResult
