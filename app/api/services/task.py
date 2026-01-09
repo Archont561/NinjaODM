@@ -105,16 +105,5 @@ class TaskModelService(ModelService):
         )
         on_task_nodeodm_webhook.delay(updated_instance.uuid)
 
-    def handle_failure(self, instance, update_schema):
-        with transaction.atomic():
-            updated_instance = super().update(instance, update_schema, status=ODMTaskStatus.FAILED)
-
+    def handle_failure(self, instance):
         on_task_failure.delay(updated_instance.uuid)
-        emit_event(
-            updated_instance.workspace.user_id,
-            "task:failed",
-            {
-                "uuid": str(updated_instance.uuid),
-                "error": f"Task failed during stage {updated_instance.step} execution"
-            },
-        )

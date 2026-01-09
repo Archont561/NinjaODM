@@ -102,7 +102,7 @@ class TaskControllerInternal(ModelControllerBase):
         task = self.get_object_or_exception(ODMTask, uuid=uuid)
         match data.status.code:
             case NodeODMTaskStatus.FAILED:
-                self.service.handle_failure(task, self.model_config.update_schema())
+                self.service.handle_failure(task)
             case NodeODMTaskStatus.COMPLETED:
                 self.service.proceed_next_task_step(task, self.model_config.update_schema())
             case _: # QUEUED, CANCELED, RUNNING (server already handles that)
