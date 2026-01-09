@@ -10,10 +10,12 @@ from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
 
 
 class CreateTaskInternal(Schema):
+    name: str
     options: ODMOptionsInternal
 
 
 class CreateTaskPublic(Schema):
+    name: str
     options: ODMOptionsPublic
 
 
