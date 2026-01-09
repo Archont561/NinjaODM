@@ -10,6 +10,7 @@ from app.api.tasks.task import (
     on_task_cancel,
     on_task_nodeodm_webhook,
     on_task_finish,
+    on_task_failure,
 )
 
 
@@ -101,3 +102,17 @@ class TaskModelService(ModelService):
             step=odm_processing_stage
         )
         on_task_nodeodm_webhook.delay(updated_instance.uuid)
+
+    def handle_failure(self, instance, update_schema):
+        with transaction.atomic():
+            updated_instance = super().update(instance, update_schema, status=ODMTaskStatus.FAILED)
+
+        on_task_failure.delay(updated_instance.uuid)
+        emit_event(
+            updated_instance.workspace.user_id,
+            "task:failed",
+            {
+                "uuid": str(updated_instance.uuid),
+                "error": f"Task failed during stage {updated_instance.step} execution"
+            },
+        )

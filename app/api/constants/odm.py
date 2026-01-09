@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from enum import auto, unique, Enum, StrEnum
+from enum import auto, unique, Enum, StrEnum, IntEnum
 from typing import (
     Optional,
     FrozenSet,
@@ -54,6 +54,15 @@ class ODMTaskStatus(ChoicesMixin, StrEnum):
 
     def is_terminal(self) -> bool:
         return self in self.terminal_states()
+
+
+@unique
+class NodeODMTaskStatus(IntEnum):
+    QUEUED = 10
+    RUNNING = 20
+    FAILED = 30
+    COMPLETED = 40
+    CANCELED = 50
 
 
 ODM_TASK_RESULT_RELATIVE_PATHS_MAPPING: Dict[str, Path] = {

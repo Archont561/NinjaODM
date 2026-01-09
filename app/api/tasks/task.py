@@ -218,3 +218,8 @@ def on_task_finish(odm_task_uuid: UUID):
         ODMTaskStatus.COMPLETED,
         "task:completed",
     )
+
+
+@shared_task
+def on_task_failure(odm_task_uuid: UUID):
+    ...

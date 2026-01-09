@@ -1,12 +1,12 @@
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 from uuid import UUID
 from ninja import ModelSchema, Schema, FilterSchema
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, BaseModel
 from datetime import datetime
 
 from app.api.models.task import ODMTask
 from app.api.schemas.odm_option import ODMOptionsInternal, ODMOptionsPublic
-from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
+from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, NodeODMTaskStatus
 
 
 class CreateTaskInternal(Schema):
@@ -23,6 +23,20 @@ class UpdateTaskInternal(Schema):
     options: Optional[ODMOptionsPublic] = None
     status: Optional[ODMTaskStatus] = None
     step: Optional[ODMProcessingStage] = None
+
+
+class ODMTaskWebhookStatus(BaseModel):
+    code: NodeODMTaskStatus
+
+class ODMTaskWebhookInternal(Schema):
+    uuid: UUID
+    name: str
+    dateCreated: int
+    processingTime: float
+    status: ODMTaskWebhookStatus
+    options: Dict[str, Any]
+    imagesCount: int
+    progress: int
 
 
 class TaskResponse(ModelSchema):

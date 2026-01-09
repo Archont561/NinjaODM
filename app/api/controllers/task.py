@@ -8,6 +8,7 @@ from ninja_extra import (
     http_post,
     http_get,
 )
+from app.api.constants.odm import NodeODMTaskStatus
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.auth.nodeodm import NodeODMServiceAuth
@@ -17,6 +18,7 @@ from app.api.schemas.task import (
     CreateTaskInternal,
     CreateTaskPublic,
     UpdateTaskInternal,
+    ODMTaskWebhookInternal,
     TaskResponse,
     TaskFilterSchema,
 )
@@ -97,9 +99,15 @@ class TaskControllerInternal(ModelControllerBase):
         return filters.filter(queryset)
 
     @http_post("/{uuid}/odmwebhook", response=MessageSchema, auth=NodeODMServiceAuth())
-    def nodeodm_webhook(self, request, uuid: UUID, signature: str):
+    def nodeodm_webhook(self, request, uuid: UUID, signature: str, data: ODMTaskWebhookInternal):
         task = self.get_object_or_exception(ODMTask, uuid=uuid)
-        self.service.proceed_next_task_step(task, self.model_config.update_schema())
+        match data.status.code:
+            case NodeODMTaskStatus.FAILED:
+                self.service.handle_failure(task, self.model_config.update_schema())
+            case NodeODMTaskStatus.COMPLETED:
+                self.service.proceed_next_task_step(task, self.model_config.update_schema())
+            case _: # QUEUED, CANCELED, RUNNING (server already handles that)
+                pass
         return { "message": "ok" }
 
     @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
