@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pathlib import Path
 from enum import auto, unique, Enum, StrEnum
 from typing import (
     Optional,
@@ -6,6 +7,7 @@ from typing import (
     List,
     Tuple,
     Union,
+    Dict,
 )
 
 
