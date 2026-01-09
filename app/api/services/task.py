@@ -106,4 +106,4 @@ class TaskModelService(ModelService):
         on_task_nodeodm_webhook.delay(updated_instance.uuid)
 
     def handle_failure(self, instance):
-        on_task_failure.delay(updated_instance.uuid)
+        on_task_failure.delay(instance.uuid)
