@@ -19,7 +19,7 @@ class TestODMTask:
     def test_task_dir_property(self, odm_task_factory, tmp_path, settings):
         setattr(settings, "TASKS_DIR", tmp_path)
         task = odm_task_factory()
-        expected_path = tmp_path / str(task.workspace.uuid) / str(task.uuid)
+        expected_path = tmp_path / str(task.uuid)
         assert task.task_dir == expected_path
 
     def test_get_current_step_options_returns_dict(self, odm_task_factory):
