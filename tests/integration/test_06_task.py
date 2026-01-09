@@ -1,11 +1,12 @@
 import pytest
+from uuid import uuid4
 from datetime import timedelta
 from django.utils import timezone
 from ninja_extra.testing import TestClient
 
 from app.api.models.task import ODMTask
 from app.api.auth.nodeodm import NodeODMServiceAuth
-from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
+from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, NodeODMTaskStatus
 from app.api.controllers.task import TaskControllerInternal, TaskControllerPublic
 from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 
@@ -75,6 +76,25 @@ def tasks_list(workspace_factory, odm_task_factory):
             days_ago=14,
         ),
     ]
+
+@pytest.fixture
+def nodeodm_webhook_payload():
+    return {
+        "uuid": str(uuid4()),
+        "name": "test-task",
+        "dateCreated": 1700000000,
+        "processingTime": 123.45,
+        "status": {
+            "code": NodeODMTaskStatus.COMPLETED,
+        },
+        "options": {
+            "orthophoto-resolution": 5,
+            "dsm": True,
+            "dem": False,
+        },
+        "imagesCount": 42,
+        "progress": 100,
+    }
 
 
 @pytest.mark.django_db
@@ -172,17 +192,21 @@ class TestTaskAPIInternal:
         mock.delay.assert_called_once_with(task.uuid)
 
     @pytest.mark.parametrize(
-        "odm_stage, mock_fixture",
+        "odm_stage, nodeodm_status, mock_fixture",
         [
-            (ODMProcessingStage.ODM_MESHING, "mock_task_on_task_nodeodm_webhook"),
-            (ODMProcessingStage.ODM_POSTPROCESS, "mock_task_on_task_finish"),
+            (ODMProcessingStage.ODM_MESHING, NodeODMTaskStatus.COMPLETED, "mock_task_on_task_nodeodm_webhook"),
+            (ODMProcessingStage.ODM_POSTPROCESS, NodeODMTaskStatus.COMPLETED,"mock_task_on_task_finish"),
+            (ODMProcessingStage.ODM_POSTPROCESS, NodeODMTaskStatus.FAILED,"mock_task_on_task_failure"),
         ],
     )
-    def test_nodeodm_webhook_call(self, odm_task_factory, odm_stage, mock_fixture, request):
+    def test_nodeodm_webhook_call(
+        self, odm_task_factory, odm_stage, mock_fixture, request, nodeodm_status, nodeodm_webhook_payload
+    ):
+        nodeodm_webhook_payload["status"]["code"] = nodeodm_status
         task = odm_task_factory(step=odm_stage)
         mock = request.getfixturevalue(mock_fixture)
         signature = NodeODMServiceAuth.generate_hmac_signature(NodeODMServiceAuth.HMAC_MESSAGE)
-        resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}")
+        resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}", json=nodeodm_webhook_payload)
         assert resp.status_code == 200
         mock.delay.assert_called_once_with(task.uuid)
 
