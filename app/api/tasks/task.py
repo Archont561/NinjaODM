@@ -4,7 +4,7 @@ from celery import shared_task
 from pathlib import Path
 from django.core.files import File
 from django.db import transaction
-from pyodm.exceptions import OdmError
+from pyodm.exceptions import OdmError, NodeResponseError
 from loguru import logger
 from datetime import datetime
 
