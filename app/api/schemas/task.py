@@ -27,8 +27,8 @@ class UpdateTaskInternal(Schema):
 
 class TaskResponse(ModelSchema):
     workspace_uuid: UUID = Field(..., alias="workspace.uuid")
-    status: str
-    step: str
+    status: ODMTaskStatus
+    step: ODMProcessingStage
 
     class Meta:
         model = ODMTask
@@ -36,15 +36,9 @@ class TaskResponse(ModelSchema):
             "uuid",
             "options",
             "created_at",
+            "step",
+            "status",
         ]
-
-    @staticmethod
-    def resolve_status(obj: ODMTask):
-        return obj.odm_status.label
-
-    @staticmethod
-    def resolve_step(obj: ODMTask):
-        return obj.odm_step.label
 
 
 class TaskFilterSchema(FilterSchema):

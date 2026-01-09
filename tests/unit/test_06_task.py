@@ -8,10 +8,10 @@ from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
 class TestODMTask:
     def test_task_creation(self, odm_task_factory):
         task = odm_task_factory(
-            status=ODMTaskStatus.RUNNING.value, step=ODMProcessingStage.MVS.value
+            status=ODMTaskStatus.RUNNING, step=ODMProcessingStage.OPENSFM
         )
         assert task.odm_status == ODMTaskStatus.RUNNING
-        assert task.odm_step == ODMProcessingStage.MVS
+        assert task.odm_step == ODMProcessingStage.OPENSFM
         assert task.uuid is not None
         assert task.name is not None
         assert isinstance(task.created_at, datetime.datetime)
@@ -25,7 +25,7 @@ class TestODMTask:
 
     def test_get_current_step_options_returns_dict(self, odm_task_factory):
         task = odm_task_factory(
-            options={ODMProcessingStage.DATASET.value: {"param": 123}}
+            options={ODMProcessingStage.DATASET: {"param": 123}}
         )
         options = task.get_current_step_options()
         assert isinstance(options, dict)

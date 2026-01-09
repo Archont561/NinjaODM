@@ -1,5 +1,5 @@
 from __future__ import annotations
-from enum import IntEnum, auto, unique, Enum
+from enum import auto, unique, Enum, StrEnum, IntEnum
 from typing import (
     Optional,
     FrozenSet,
@@ -19,36 +19,30 @@ class ChoicesMixin(Enum):
     def choices(cls) -> List[Tuple[Union[int, str], str]]:
         return [(member.value, member.label) for member in cls]
 
+    def __str__(self) -> str:
+        return self.name.lower()
+
 
 @unique
-class ODMTaskStatus(ChoicesMixin, IntEnum):
-    # Initial States
+class ODMTaskStatus(ChoicesMixin, StrEnum):
     QUEUED = auto()
-
-    # Active States
     RUNNING = auto()
     PAUSING = auto()
     PAUSED = auto()
     RESUMING = auto()
     CANCELLING = auto()
     FINISHING = auto()
-
-    # Terminal States - Success
     COMPLETED = auto()
-
-    # Terminal States - Failure
     FAILED = auto()
     CANCELLED = auto()
-    TIMEOUT = auto()
 
     @classmethod
     def terminal_states(cls) -> FrozenSet[ODMTaskStatus]:
         return frozenset(
             {
-                cls.COMPLETED,
                 cls.FAILED,
+                cls.COMPLETED,
                 cls.CANCELLED,
-                cls.TIMEOUT,
             }
         )
 
@@ -60,26 +54,27 @@ class ODMTaskStatus(ChoicesMixin, IntEnum):
         return self in self.terminal_states()
 
 
-class ODMProcessingStage(ChoicesMixin, IntEnum):
+class ODMProcessingStage(ChoicesMixin, StrEnum):
     DATASET = auto()
-    SPLITTING = auto()
-    MERGING = auto()
-    SFM = auto()
-    MVS = auto()
-    FILTER_POINTS = auto()
-    MESHING = auto()
-    TEXTURING = auto()
-    GEOREFERENCING = auto()
-    DEM_PROCESSING = auto()
-    ORTHOPHOTO_PROCESSING = auto()
-    REPORTING = auto()
-    POSTPROCESSING = auto()
+    SPLIT = auto()
+    MERGE = auto()
+    OPENSFM = auto()
+    OPENMVS = auto()
+    ODM_FILTERPOINTS = auto()
+    ODM_MESHING = auto()
+    MVS_TEXTURING = auto()
+    ODM_GEOREFERENCING = auto()
+    ODM_DEM = auto()
+    ODM_ORTHOPHOTO = auto()
+    ODM_REPORT = auto()
+    ODM_POSTPROCESS = auto()
 
     @property
     def next_stage(self) -> Optional[ODMProcessingStage]:
+        stages = list(type(self))
         try:
-            return self.__class__(self.value + 1)
-        except ValueError:
+            return stages[stages.index(self) + 1]
+        except IndexError:
             return None
 
 

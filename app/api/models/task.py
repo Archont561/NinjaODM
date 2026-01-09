@@ -30,11 +30,11 @@ class ODMTask(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):
         max_length=50,
         default=generate_task_name,
     )
-    status = models.IntegerField(
+    status = models.CharField(
         choices=ODMTaskStatus.choices(),
         default=ODMTaskStatus.QUEUED.value,
     )
-    step = models.IntegerField(
+    step = models.CharField(
         choices=ODMProcessingStage.choices(),
         default=ODMProcessingStage.DATASET.value,
     )
