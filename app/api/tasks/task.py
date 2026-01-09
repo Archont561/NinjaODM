@@ -221,5 +221,17 @@ def on_task_finish(odm_task_uuid: UUID):
 
 
 @shared_task
-def on_task_failure(odm_task_uuid: UUID):
-    ...
+def on_task_failure(odm_task_uuid: UUID): 
+    def _failed(odm_task: ODMTask):
+        node = NodeODMClient.for_task(odm_task.uuid)
+        task = node.get_task(str(odm_task.uuid))
+                        
+        if not task.remove():
+            raise NodeResponseError("Failed to cleanup task artifacts on nodeodm")
+    
+    execute_task_operation(
+        odm_task_uuid,
+        _failed,
+        ODMTaskStatus.FAILED,
+        "task:failed",
+    )
