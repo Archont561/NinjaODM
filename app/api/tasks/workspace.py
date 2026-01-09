@@ -1,10 +1,7 @@
-import shutil
 from typing import List
 from uuid import UUID
 from celery import shared_task
-from pathlib import Path
 
-from app.api.models.workspace import Workspace
 from app.api.models.image import Image
 
 

@@ -17,7 +17,6 @@ class JWTAlgorithm(StrEnum):
 
 
 class JWTSettingsMixin(BaseSettingsMixin):
-
     # Token lifetimes
     JWT_ACCESS_TOKEN_LIFETIME_MINUTES: int = Field(default=5, ge=1)
     JWT_REFRESH_TOKEN_LIFETIME_DAYS: int = Field(default=7, ge=1)

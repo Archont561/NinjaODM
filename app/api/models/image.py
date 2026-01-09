@@ -9,15 +9,17 @@ from app.api.models.mixins import UUIDPrimaryKeyModelMixin, TimeStampedModelMixi
 
 
 def dynamic_upload_path(instance, filename):
-    base_dir = settings.THUMBNAILS_DIR_NAME if instance.is_thumbnail else settings.IMAGES_DIR_NAME
+    base_dir = (
+        settings.THUMBNAILS_DIR_NAME
+        if instance.is_thumbnail
+        else settings.IMAGES_DIR_NAME
+    )
     return str(Path(base_dir) / str(instance.workspace.uuid) / filename)
 
 
 class Image(UUIDPrimaryKeyModelMixin, TimeStampedModelMixin, models.Model):
     workspace = models.ForeignKey(
-        Workspace,
-        on_delete=models.CASCADE,
-        related_name="images"
+        Workspace, on_delete=models.CASCADE, related_name="images"
     )
     name = models.CharField(max_length=50)
     image_file = models.ImageField(upload_to=dynamic_upload_path)

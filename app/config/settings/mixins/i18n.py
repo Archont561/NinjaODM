@@ -5,7 +5,6 @@ from .base import BaseSettingsMixin
 
 
 class I18nSettingsMixin(BaseSettingsMixin):
-
     LANGUAGE_CODE: str = Field(default="en-us", alias="I18N_LANGUAGE_CODE")
     TIME_ZONE: str = Field(default="UTC", alias="I18N_TIME_ZONE")
     USE_I18N: bool = Field(default=True, alias="I18N_USE_I18N")

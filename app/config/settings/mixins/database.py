@@ -6,7 +6,6 @@ import dj_database_url
 
 
 class DatabaseSettingsMixin(BaseSettingsMixin):
-
     DATABASE_URL: str = Field(...)
 
     @computed_field

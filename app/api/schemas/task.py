@@ -6,10 +6,10 @@ from datetime import datetime
 
 from app.api.models.task import ODMTask
 from app.api.constants.odm import (
-    ODMTaskStatus, 
-    ODMProcessingStage, 
+    ODMTaskStatus,
+    ODMProcessingStage,
     NodeODMTaskStatus,
-    ODMQualityOption
+    ODMQualityOption,
 )
 
 
@@ -25,6 +25,7 @@ class UpdateTaskInternal(Schema):
 
 class ODMTaskWebhookStatus(BaseModel):
     code: NodeODMTaskStatus
+
 
 class ODMTaskWebhookInternal(Schema):
     uuid: UUID

@@ -77,6 +77,7 @@ def tasks_list(workspace_factory, odm_task_factory):
         ),
     ]
 
+
 @pytest.fixture
 def nodeodm_webhook_payload():
     return {
@@ -139,7 +140,7 @@ class TestTaskAPIInternal:
 
     def test_create_task(self, mock_task_on_task_create, workspace_factory):
         ws = workspace_factory(user_id=1234)
-        payload = { "name": "Task name" }
+        payload = {"name": "Task name"}
         resp = self.client.post(f"/?workspace_uuid={ws.uuid}", json=payload)
         assert resp.status_code == 201
 
@@ -178,7 +179,13 @@ class TestTaskAPIInternal:
         ],
     )
     def test_custom_actions_change_status(
-        self, odm_task_factory, action, expected_status, expected_odm_status, mock_fixture, request
+        self,
+        odm_task_factory,
+        action,
+        expected_status,
+        expected_odm_status,
+        mock_fixture,
+        request,
     ):
         mock = request.getfixturevalue(mock_fixture)
         task = odm_task_factory()
@@ -191,19 +198,42 @@ class TestTaskAPIInternal:
     @pytest.mark.parametrize(
         "odm_stage, nodeodm_status, mock_fixture",
         [
-            (ODMProcessingStage.ODM_MESHING, NodeODMTaskStatus.COMPLETED, "mock_task_on_task_nodeodm_webhook"),
-            (ODMProcessingStage.ODM_POSTPROCESS, NodeODMTaskStatus.COMPLETED,"mock_task_on_task_finish"),
-            (ODMProcessingStage.ODM_POSTPROCESS, NodeODMTaskStatus.FAILED,"mock_task_on_task_failure"),
+            (
+                ODMProcessingStage.ODM_MESHING,
+                NodeODMTaskStatus.COMPLETED,
+                "mock_task_on_task_nodeodm_webhook",
+            ),
+            (
+                ODMProcessingStage.ODM_POSTPROCESS,
+                NodeODMTaskStatus.COMPLETED,
+                "mock_task_on_task_finish",
+            ),
+            (
+                ODMProcessingStage.ODM_POSTPROCESS,
+                NodeODMTaskStatus.FAILED,
+                "mock_task_on_task_failure",
+            ),
         ],
     )
     def test_nodeodm_webhook_call(
-        self, odm_task_factory, odm_stage, mock_fixture, request, nodeodm_status, nodeodm_webhook_payload
+        self,
+        odm_task_factory,
+        odm_stage,
+        mock_fixture,
+        request,
+        nodeodm_status,
+        nodeodm_webhook_payload,
     ):
         nodeodm_webhook_payload["status"]["code"] = nodeodm_status
         task = odm_task_factory(step=odm_stage)
         mock = request.getfixturevalue(mock_fixture)
-        signature = NodeODMServiceAuth.generate_hmac_signature(NodeODMServiceAuth.HMAC_MESSAGE)
-        resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}", json=nodeodm_webhook_payload)
+        signature = NodeODMServiceAuth.generate_hmac_signature(
+            NodeODMServiceAuth.HMAC_MESSAGE
+        )
+        resp = self.client.post(
+            f"/{task.uuid}/odmwebhook?signature={signature}",
+            json=nodeodm_webhook_payload,
+        )
         assert resp.status_code == 200
         mock.delay.assert_called_once_with(task.uuid)
 
@@ -271,8 +301,12 @@ class TestTaskAPIPublic:
         data = resp.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
 
-    def test_create_task_in_own_workspace(self, mock_task_on_task_create, user_workspace):
-        payload = {  "name": "Task name", }
+    def test_create_task_in_own_workspace(
+        self, mock_task_on_task_create, user_workspace
+    ):
+        payload = {
+            "name": "Task name",
+        }
         resp = self.client.post(f"/?workspace_uuid={user_workspace.uuid}", json=payload)
         assert resp.status_code == 201
         task = ODMTask.objects.get(uuid=resp.json()["uuid"])
@@ -322,7 +356,13 @@ class TestTaskAPIPublic:
         ],
     )
     def test_custom_actions_on_own_task(
-        self, user_task, action, expected_status, expected_odm_status, mock_fixture, request
+        self,
+        user_task,
+        action,
+        expected_status,
+        expected_odm_status,
+        mock_fixture,
+        request,
     ):
         mock = request.getfixturevalue(mock_fixture)
         resp = self.client.post(f"/{user_task.uuid}/{action}")
@@ -338,10 +378,12 @@ class TestTaskAPIPublic:
         assert resp.status_code in (403, 404)
         other_task.refresh_from_db()
         assert other_task.status == original_status
-    
+
     def test_nodeodm_webhook_call_denied(self, odm_task_factory):
         task = odm_task_factory()
-        signature = NodeODMServiceAuth.generate_hmac_signature(NodeODMServiceAuth.HMAC_MESSAGE)
+        signature = NodeODMServiceAuth.generate_hmac_signature(
+            NodeODMServiceAuth.HMAC_MESSAGE
+        )
         resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}")
         assert resp.status_code != 200
 

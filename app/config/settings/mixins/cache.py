@@ -6,7 +6,6 @@ from .base import BaseSettingsMixin
 
 
 class CacheSettingsMixin(BaseSettingsMixin):
-
     CACHE_BACKEND: str = Field(
         default="django.core.cache.backends.locmem.LocMemCache",
     )

@@ -12,7 +12,6 @@ from app.api.tasks.task import (
     on_task_finish,
     on_task_failure,
 )
-from app.api.models.task import ODMTask
 from app.api.models.result import ODMTaskResult
 from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, ODMTaskResultType
 
@@ -103,7 +102,6 @@ def create_task_result_files(settings, tmp_path):
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskCreate:
-
     def test_success(self, mock_nodeodm, odm_task):
         on_task_create.apply(args=[odm_task.uuid]).get()
 
@@ -138,7 +136,6 @@ class TestOnTaskCreate:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskPause:
-
     def test_success(self, mock_nodeodm, odm_task):
         odm_task.status = ODMTaskStatus.RUNNING
         odm_task.save()
@@ -164,7 +161,6 @@ class TestOnTaskPause:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskResume:
-
     def test_success(self, mock_nodeodm, odm_task):
         odm_task.status = ODMTaskStatus.PAUSED
         odm_task.save()
@@ -189,7 +185,6 @@ class TestOnTaskResume:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskCancel:
-
     def test_success(self, mock_nodeodm, odm_task):
         on_task_cancel.apply(args=[odm_task.uuid]).get()
         mock_nodeodm["task"].remove.assert_called_once()
@@ -203,11 +198,9 @@ class TestOnTaskCancel:
         assert odm_task.odm_status == ODMTaskStatus.FAILED
 
 
-
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskNodeodmWebhook:
-
     def test_success_creates_previous_stage_results(
         self, mock_nodeodm, odm_task, create_task_result_files
     ):
@@ -216,7 +209,9 @@ class TestOnTaskNodeodmWebhook:
         odm_task.step = stage
         odm_task.save()
 
-        expected_types = create_task_result_files(odm_task, stage.previous_stage.stage_results)
+        expected_types = create_task_result_files(
+            odm_task, stage.previous_stage.stage_results
+        )
         on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
         mock_nodeodm["task"].restart.assert_called_once()
         odm_task.refresh_from_db()
@@ -263,7 +258,6 @@ class TestOnTaskNodeodmWebhook:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskFinish:
-
     def test_success(self, mock_nodeodm, odm_task):
         on_task_finish.apply(args=[odm_task.uuid]).get()
 
@@ -292,7 +286,6 @@ class TestOnTaskFinish:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskFailure:
-
     def test_success(self, mock_nodeodm, odm_task):
         on_task_failure.apply(args=[odm_task.uuid]).get()
         mock_nodeodm["node"].get_task.assert_called_once_with(str(odm_task.uuid))

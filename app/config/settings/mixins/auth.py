@@ -5,7 +5,6 @@ from .base import BaseSettingsMixin
 
 
 class AuthSettingsMixin(BaseSettingsMixin):
-
     # Password validation
     AUTH_MIN_PASSWORD_LENGTH: int = Field(default=8)
     AUTH_REQUIRE_UPPERCASE: bool = Field(default=True)

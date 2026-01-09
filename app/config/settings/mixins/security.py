@@ -5,7 +5,6 @@ from .base import BaseSettingsMixin
 
 
 class SecuritySettingsMixin(BaseSettingsMixin):
-
     # CSRF Protection
     CSRF_COOKIE_SECURE: bool = Field(default=False)
     CSRF_COOKIE_HTTPONLY: bool = Field(default=True)

@@ -44,7 +44,7 @@ services:
       - nodeodm_data:/var/www/data
     networks:
       - backend
-        
+
   celery:
     build: .
     command: celery worker -A app -l INFO

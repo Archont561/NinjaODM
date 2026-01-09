@@ -5,7 +5,6 @@ from .base import BaseSettingsMixin
 
 
 class MiddlewareSettingsMixin(BaseSettingsMixin):
-
     # Custom middleware to add
     CUSTOM_MIDDLEWARE: List[str] = Field(default_factory=list)
 

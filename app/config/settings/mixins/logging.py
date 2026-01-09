@@ -5,7 +5,6 @@ from enum import StrEnum, auto
 
 
 class LogLevels(StrEnum):
-
     @staticmethod
     def _generate_next_value_(name, start, count, last_values):
         """Generate uppercase string values for enum members"""

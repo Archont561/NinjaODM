@@ -8,7 +8,6 @@ from app.api.controllers.workspace import WorkspaceControllerPublic
 from app.api.controllers.task import TaskControllerPublic
 from app.api.controllers.gcp import GCPControllerPublic
 from app.api.controllers.image import ImageControllerPublic
-from app.api.models.image import Image
 from app.api.controllers.result import ResultControllerPublic
 from app.api.constants.odm import ODMTaskStatus
 from ..auth_clients import AuthenticatedTestClient, AuthStrategyEnum
@@ -198,7 +197,7 @@ class TestSSEAPIPublic:
         request,
     ):
         if mock_fixture:
-            mock = request.getfixturevalue(mock_fixture)
+            request.getfixturevalue(mock_fixture)
         user_workspace = await sync_to_async(workspace_factory)(user_id=999)
         odm_task = await sync_to_async(odm_task_factory)(
             workspace=user_workspace, status=ODMTaskStatus.COMPLETED

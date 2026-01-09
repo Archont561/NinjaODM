@@ -19,7 +19,7 @@ class TaskModelService(ModelService):
         data = schema.model_dump()
         workspace = kwargs.get("workspace")
         quality = data.pop("quality")
-        
+
         with transaction.atomic():
             instance = self.model.objects.create(
                 workspace=workspace,
@@ -83,9 +83,9 @@ class TaskModelService(ModelService):
                 on_task_cancel.delay(updated_instance.uuid)
             case _:
                 raise ValueError(f"{self.__class__.__name__} has no '{action}' action!")
-        
+
         return updated_instance
- 
+
     def proceed_next_task_step(self, instance, update_schema):
         odm_processing_stage = instance.odm_step.next_stage
         if not odm_processing_stage:
@@ -98,10 +98,10 @@ class TaskModelService(ModelService):
             return
 
         updated_instance = self.update(
-            instance, 
-            update_schema, 
+            instance,
+            update_schema,
             status=ODMTaskStatus.QUEUED,
-            step=odm_processing_stage
+            step=odm_processing_stage,
         )
         on_task_nodeodm_webhook.delay(updated_instance.uuid)
 

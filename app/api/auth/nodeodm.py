@@ -10,14 +10,13 @@ class NodeODMServiceAuth:
     @staticmethod
     def generate_hmac_signature(message: str) -> hmac.HMAC:
         return hmac.new(
-            settings.NODEODM_WEBHOOK_SECRET.encode(),
-            message.encode(),
-            hashlib.sha256
+            settings.NODEODM_WEBHOOK_SECRET.encode(), message.encode(), hashlib.sha256
         ).hexdigest()
 
     def __call__(self, request: HttpRequest):
         signature = request.GET.get("signature")
-        if not signature: return False
+        if not signature:
+            return False
 
         expected = self.generate_hmac_signature(self.HMAC_MESSAGE)
         return hmac.compare_digest(signature, expected)

@@ -24,9 +24,7 @@ class TestODMTask:
         assert task.task_dir == expected_path
 
     def test_get_current_step_options_returns_dict(self, odm_task_factory):
-        task = odm_task_factory(
-            options={ODMProcessingStage.DATASET: {"param": 123}}
-        )
+        task = odm_task_factory(options={ODMProcessingStage.DATASET: {"param": 123}})
         options = task.get_current_step_options()
         assert isinstance(options, dict)
         if task.odm_step == ODMProcessingStage.DATASET:

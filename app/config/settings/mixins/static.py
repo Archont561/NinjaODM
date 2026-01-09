@@ -5,7 +5,6 @@ from .base import BaseSettingsMixin
 
 
 class StaticFilesSettingsMixin(BaseSettingsMixin):
-
     STATIC_URL: str = Field(default="/static/")
     MEDIA_URL: str = Field(default="/media/")
 

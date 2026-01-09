@@ -5,7 +5,6 @@ from .base import BaseSettingsMixin
 
 
 class EmailSettingsMixin(BaseSettingsMixin):
-
     # Email backend
     EMAIL_BACKEND: str = Field(default="django.core.mail.backends.console.EmailBackend")
 

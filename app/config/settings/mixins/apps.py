@@ -5,7 +5,6 @@ from .base import BaseSettingsMixin
 
 
 class AppsSettingsMixin(BaseSettingsMixin):
-
     @computed_field
     @property
     def INSTALLED_APPS(self) -> List[str]:

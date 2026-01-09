@@ -6,7 +6,6 @@ from .base import BaseSettingsMixin
 
 
 class CoreSettingsMixin(BaseSettingsMixin):
-
     ALLOWED_HOSTS: List[str] = Field(default=["localhost", "127.0.0.1"])
 
     @field_validator("ALLOWED_HOSTS", mode="before")

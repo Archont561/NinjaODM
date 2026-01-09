@@ -66,17 +66,17 @@ class NodeODMTaskStatus(IntEnum):
 
 
 ODM_TASK_RESULT_RELATIVE_PATHS_MAPPING: Dict[str, Path] = {
-        "POINT_CLOUD_PLY": Path("odm_georeferencing") / "odm_georeferenced_model.ply",
-        "POINT_CLOUD_LAZ": Path("odm_georeferencing") / "odm_georeferenced_model.laz",
-        "POINT_CLOUD_CSV": Path("odm_georeferencing") / "odm_georeferenced_model.csv",
-        "TEXTURED_MODEL": Path("odm_texturing") / "odm_textured_model.obj",
-        "TEXTURED_MODEL_GEO": Path("odm_texturing") / "odm_textured_model_geo.obj",
-        "ORTHOPHOTO_GEOTIFF": Path("odm_orthophoto") / "odm_orthophoto.tif",
-        "ORTHOPHOTO_WEBP": Path("odm_orthophoto") / "odm_orthophoto.webp",
-        "DSM": Path("odm_dem") / "dsm.tif",
-        "DTM": Path("odm_dem") / "dtm.tif",
-        "REPORT": Path("odm_georeferencing") / "odm_georeferencing_log.txt",
-    }
+    "POINT_CLOUD_PLY": Path("odm_georeferencing") / "odm_georeferenced_model.ply",
+    "POINT_CLOUD_LAZ": Path("odm_georeferencing") / "odm_georeferenced_model.laz",
+    "POINT_CLOUD_CSV": Path("odm_georeferencing") / "odm_georeferenced_model.csv",
+    "TEXTURED_MODEL": Path("odm_texturing") / "odm_textured_model.obj",
+    "TEXTURED_MODEL_GEO": Path("odm_texturing") / "odm_textured_model_geo.obj",
+    "ORTHOPHOTO_GEOTIFF": Path("odm_orthophoto") / "odm_orthophoto.tif",
+    "ORTHOPHOTO_WEBP": Path("odm_orthophoto") / "odm_orthophoto.webp",
+    "DSM": Path("odm_dem") / "dsm.tif",
+    "DTM": Path("odm_dem") / "dtm.tif",
+    "REPORT": Path("odm_georeferencing") / "odm_georeferencing_log.txt",
+}
 
 
 @unique
@@ -97,29 +97,28 @@ class ODMTaskResultType(ChoicesMixin, StrEnum):
         try:
             return ODM_TASK_RESULT_RELATIVE_PATHS_MAPPING[self.name]
         except KeyError as exc:
-            raise NotImplementedError(
-                f"No relative path defined for {self}"
-            ) from exc
+            raise NotImplementedError(f"No relative path defined for {self}") from exc
 
 
 ODM_PROCESSING_STAGE_RESULTS_MAPPING: Dict[str, List[ODMTaskResultType]] = {
-        "MVS_TEXTURING": [ODMTaskResultType.TEXTURED_MODEL],
-        "ODM_GEOREFERENCING": [
-            ODMTaskResultType.TEXTURED_MODEL_GEO,
-            ODMTaskResultType.POINT_CLOUD_PLY,
-            ODMTaskResultType.POINT_CLOUD_LAZ,
-            ODMTaskResultType.POINT_CLOUD_CSV,
-        ],
-        "ODM_DEM": [
-            ODMTaskResultType.DSM,
-            ODMTaskResultType.DTM,
-        ],
-        "ODM_ORTHOPHOTO": [
-            ODMTaskResultType.ORTHOPHOTO_GEOTIFF,
-            ODMTaskResultType.ORTHOPHOTO_WEBP,
-        ],
-        "ODM_REPORT": [ODMTaskResultType.REPORT],
-    }
+    "MVS_TEXTURING": [ODMTaskResultType.TEXTURED_MODEL],
+    "ODM_GEOREFERENCING": [
+        ODMTaskResultType.TEXTURED_MODEL_GEO,
+        ODMTaskResultType.POINT_CLOUD_PLY,
+        ODMTaskResultType.POINT_CLOUD_LAZ,
+        ODMTaskResultType.POINT_CLOUD_CSV,
+    ],
+    "ODM_DEM": [
+        ODMTaskResultType.DSM,
+        ODMTaskResultType.DTM,
+    ],
+    "ODM_ORTHOPHOTO": [
+        ODMTaskResultType.ORTHOPHOTO_GEOTIFF,
+        ODMTaskResultType.ORTHOPHOTO_WEBP,
+    ],
+    "ODM_REPORT": [ODMTaskResultType.REPORT],
+}
+
 
 class ODMProcessingStage(ChoicesMixin, StrEnum):
     DATASET = auto()
@@ -160,7 +159,9 @@ class ODMProcessingStage(ChoicesMixin, StrEnum):
             return []
 
 
-ODM_QUALITY_OPTION_MAPPING: Dict[str, Dict[str, Dict[str, str | int | float | bool]]] = {
+ODM_QUALITY_OPTION_MAPPING: Dict[
+    str, Dict[str, Dict[str, str | int | float | bool]]
+] = {
     "ULTRA_HIGH": {
         "dataset": {
             "gps-accuracy": 1.0,
@@ -193,7 +194,6 @@ ODM_QUALITY_OPTION_MAPPING: Dict[str, Dict[str, Dict[str, str | int | float | bo
             "orthophoto-compression": "deflate",
         },
     },
-
     "HIGH": {
         "dataset": {
             "gps-accuracy": 3.0,
@@ -218,7 +218,6 @@ ODM_QUALITY_OPTION_MAPPING: Dict[str, Dict[str, Dict[str, str | int | float | bo
             "orthophoto-resolution": 5.0,
         },
     },
-
     "MEDIUM": {
         "dataset": {
             "gps-accuracy": 5.0,
@@ -242,7 +241,6 @@ ODM_QUALITY_OPTION_MAPPING: Dict[str, Dict[str, Dict[str, str | int | float | bo
             "orthophoto-resolution": 10.0,
         },
     },
-
     "LOW": {
         "dataset": {
             "gps-accuracy": 10.0,
@@ -269,7 +267,6 @@ ODM_QUALITY_OPTION_MAPPING: Dict[str, Dict[str, Dict[str, str | int | float | bo
             "orthophoto-resolution": 20.0,
         },
     },
-
     "ULTRA_LOW": {
         "dataset": {
             "gps-accuracy": 20.0,
@@ -304,6 +301,7 @@ ODM_QUALITY_OPTION_MAPPING: Dict[str, Dict[str, Dict[str, str | int | float | bo
     },
 }
 
+
 @unique
 class ODMQualityOption(StrEnum):
     ULTRA_HIGH = auto()
@@ -318,4 +316,3 @@ class ODMQualityOption(StrEnum):
             return ODM_QUALITY_OPTION_MAPPING[self.name]
         except KeyError:
             return []
-    

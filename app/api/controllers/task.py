@@ -98,16 +98,20 @@ class TaskControllerInternal(ModelControllerBase):
         return filters.filter(queryset)
 
     @http_post("/{uuid}/odmwebhook", response=MessageSchema, auth=NodeODMServiceAuth())
-    def nodeodm_webhook(self, request, uuid: UUID, signature: str, data: ODMTaskWebhookInternal):
+    def nodeodm_webhook(
+        self, request, uuid: UUID, signature: str, data: ODMTaskWebhookInternal
+    ):
         task = self.get_object_or_exception(ODMTask, uuid=uuid)
         match data.status.code:
             case NodeODMTaskStatus.FAILED:
                 self.service.handle_failure(task)
             case NodeODMTaskStatus.COMPLETED:
-                self.service.proceed_next_task_step(task, self.model_config.update_schema())
-            case _: # QUEUED, CANCELED, RUNNING (server already handles that)
+                self.service.proceed_next_task_step(
+                    task, self.model_config.update_schema()
+                )
+            case _:  # QUEUED, CANCELED, RUNNING (server already handles that)
                 pass
-        return { "message": "ok" }
+        return {"message": "ok"}
 
     @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
     def task_action(
@@ -115,4 +119,3 @@ class TaskControllerInternal(ModelControllerBase):
     ):
         task = self.get_object_or_exception(ODMTask, uuid=uuid)
         return self.service.action(action, task, self.model_config.update_schema())
-    
