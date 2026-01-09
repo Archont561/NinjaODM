@@ -79,6 +79,32 @@ class ODMProcessingStage(ChoicesMixin, StrEnum):
         except IndexError:
             return None
 
+    _STAGE_RESULTS: Dict[str, List[ODMTaskResultType]] = {
+        "MVS_TEXTURING": [ODMTaskResultType.TEXTURED_MODEL],
+        "ODM_GEOREFERENCING": [
+            ODMTaskResultType.TEXTURED_MODEL_GEO,
+            ODMTaskResultType.POINT_CLOUD_PLY,
+            ODMTaskResultType.POINT_CLOUD_LAZ,
+            ODMTaskResultType.POINT_CLOUD_CSV,
+        ],
+        "ODM_DEM": [
+            ODMTaskResultType.DSM,
+            ODMTaskResultType.DTM,
+        ],
+        "ODM_ORTHOPHOTO": [
+            ODMTaskResultType.ORTHOPHOTO_GEOTIFF,
+            ODMTaskResultType.ORTHOPHOTO_WEBP,
+        ],
+        "ODM_REPORT": [ODMTaskResultType.REPORT],
+    }
+
+    @property
+    def stage_results(self) -> List[ODMTaskResultType]:
+        try:
+            return self._STAGE_RESULTS[self.name]
+        except KeyError:
+            return []
+
 
 @unique
 class ODMTaskResultType(ChoicesMixin, StrEnum):
