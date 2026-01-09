@@ -4,6 +4,7 @@ from django.utils import timezone
 from ninja_extra.testing import TestClient
 
 from app.api.models.task import ODMTask
+from app.api.auth.nodeodm import NodeODMServiceAuth
 from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage
 from app.api.controllers.task import TaskControllerInternal, TaskControllerPublic
 from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
@@ -170,6 +171,27 @@ class TestTaskAPIInternal:
         assert task.odm_status == expected_odm_status
         mock.delay.assert_called_once_with(task.uuid)
 
+    @pytest.mark.parametrize(
+        "odm_stage, mock_fixture",
+        [
+            (ODMProcessingStage.MESHING, "mock_task_on_task_nodeodm_webhook"),
+            (ODMProcessingStage.POSTPROCESSING, "mock_task_on_task_finish"),
+        ],
+    )
+    def test_nodeodm_webhook_call(self, odm_task_factory, odm_stage, mock_fixture, request):
+        task = odm_task_factory(step=odm_stage)
+        mock = request.getfixturevalue(mock_fixture)
+        signature = NodeODMServiceAuth.generate_hmac_signature(NodeODMServiceAuth.HMAC_MESSAGE)
+        resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}")
+        assert resp.status_code == 200
+        mock.delay.assert_called_once_with(task.uuid)
+
+    def test_nodeodm_webhook_call_denied(self, odm_task_factory):
+        task = odm_task_factory()
+        signature = NodeODMServiceAuth.generate_hmac_signature("INVALID_HMAC_MESSAGE")
+        resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}")
+        assert resp.status_code in (401, 403)
+
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
@@ -302,6 +324,12 @@ class TestTaskAPIPublic:
         assert resp.status_code in (403, 404)
         other_task.refresh_from_db()
         assert other_task.status == original_status
+    
+    def test_nodeodm_webhook_call_denied(self, odm_task_factory):
+        task = odm_task_factory()
+        signature = NodeODMServiceAuth.generate_hmac_signature(NodeODMServiceAuth.HMAC_MESSAGE)
+        resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}")
+        assert resp.status_code != 200
 
 
 @pytest.mark.django_db
