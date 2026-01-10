@@ -5,6 +5,7 @@ from ninja_extra.testing import TestClient
 
 from app.api.models.result import ODMTaskResult
 from app.api.constants.odm import ODMTaskResultType
+from app.api.constants.token import ShareToken
 from app.api.controllers.result import ResultControllerInternal, ResultControllerPublic
 from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 
@@ -96,6 +97,7 @@ class TestTaskResultAPIPublic:
         cls.client = AuthenticatedTestClient(
             ResultControllerPublic, auth=AuthStrategyEnum.jwt
         )
+        cls.anon_client = TestClient(ResultControllerPublic)
 
     @pytest.mark.skip(reason="Sometimes different number of features are filtered")
     @pytest.mark.parametrize(
@@ -177,6 +179,39 @@ class TestTaskResultAPIPublic:
             workspace=other_workspace, file=temp_image_file
         )
         response = self.client.get(f"/{result.uuid}/download")
+        assert response.status_code in (403, 404)
+
+    def test_get_share_api_key(self, workspace_factory, odm_task_result_factory):
+        user_workspace = workspace_factory(user_id=999)
+        result = odm_task_result_factory(workspace=user_workspace)
+        response = self.client.get(f"/{result.uuid}/share")
+        assert response.status_code == 200
+        assert response.json()["share_api_key"] == ShareToken.for_result(result)
+
+    def test_download_shared_result(
+        self, workspace_factory, odm_task_result_factory, temp_image_file
+    ):
+        user_workspace = workspace_factory(user_id=999)
+        result = odm_task_result_factory(workspace=user_workspace, file=temp_image_file)
+        share_token = ShareToken.for_result(result)
+        response = self.anon_client.get(f"/{result.uuid}/shared?api_key={share_token}")
+        assert response.status_code == 200
+        assert response["Content-Type"] == "image/jpeg"
+        assert "attachment" in response["Content-Disposition"]
+        assert 'filename="test.jpg"' in response["Content-Disposition"]
+        temp_image_file.seek(0)
+        assert response.content == temp_image_file.read()
+
+    def test_cannot_download_non_shared_result_file(
+        self, workspace_factory, odm_task_result_factory, temp_image_file
+    ):
+        user_workspace = workspace_factory(user_id=999)
+        result = odm_task_result_factory(workspace=user_workspace)
+        other_result = odm_task_result_factory(workspace=user_workspace)
+        other_result_share_token = ShareToken.for_result(other_result)
+        response = self.anon_client.get(
+            f"/{result.uuid}/shared?api_key={other_result_share_token}"
+        )
         assert response.status_code in (403, 404)
 
 
