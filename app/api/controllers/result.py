@@ -11,8 +11,10 @@ from ninja_extra import (
 
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
+from app.api.auth.share import ShareResultsApiKeyAuth
+from app.api.constants.token import ShareToken
 from app.api.models.result import ODMTaskResult
-from app.api.permissions.result import IsResultOwner
+from app.api.permissions.result import IsResultOwner, IsRefererResultOwner
 from app.api.schemas.result import ResultResponse, ResultFilterSchema
 from app.api.services.result import ResultModelService
 
@@ -41,6 +43,24 @@ class ResultControllerPublic(ModelControllerBase):
 
     @http_get("/{uuid}/download")
     def download_result_file(self, request, uuid: UUID):
+        result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
+        return FileResponse(
+            result.file.open("rb"), as_attachment=True, filename=result.file.name
+        )
+
+    @http_get("/{uuid}/share")
+    def get_share_api_key(self, request, uuid: UUID):
+        result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
+        return {
+            "share_api_key": ShareToken.for_resut(result)
+        }
+
+    @http_get(
+        "/{uuid}/shared", 
+        auth=ShareResultsApiKeyAuth(), 
+        permissions=[IsRefererResultOwner]
+    )
+    def download_shared_result_file(self, request, uuid: UUID, api_key: str):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         return FileResponse(
             result.file.open("rb"), as_attachment=True, filename=result.file.name
