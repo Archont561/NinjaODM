@@ -51,7 +51,7 @@ class ResultControllerPublic(ModelControllerBase):
     @http_get("/{uuid}/share")
     def get_share_api_key(self, request, uuid: UUID):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
-        return {"share_api_key": ShareToken.for_result(result)}
+        return {"share_api_key": str(ShareToken.for_result(result))}
 
     @http_get(
         "/{uuid}/shared",
