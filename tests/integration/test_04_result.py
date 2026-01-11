@@ -186,7 +186,10 @@ class TestTaskResultAPIPublic:
         result = odm_task_result_factory(workspace=user_workspace)
         response = self.client.get(f"/{result.uuid}/share")
         assert response.status_code == 200
-        assert response.json()["share_api_key"] == ShareToken.for_result(result)
+        token = ShareToken(response.json()["share_api_key"], verify=False)
+        assert token["token_type"] == "share"
+        assert token["result_uuid"] == str(result.uuid)
+        assert token["shared_by_user_id"] == 999
 
     def test_download_shared_result(
         self, workspace_factory, odm_task_result_factory, temp_image_file
