@@ -16,6 +16,7 @@ class IsRefererResultOwner(permissions.BasePermission):
         return request.referer.id is not None
 
     def has_object_permission(self, request, controller, obj: ODMTaskResult):
-        return obj.workspace.user_id == request.referer.id \
+        return (
+            obj.workspace.user_id == request.referer.id
             and obj.uuid == request.referer.result_uuid
-    
+        )

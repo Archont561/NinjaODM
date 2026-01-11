@@ -1,7 +1,6 @@
 from uuid import UUID
 from ninja.security import APIKeyQuery
-from ninja_jwt.authentication import JWTBaseAuthentication
-from ninja_jwt.exceptions import InvalidToken, TokenError
+from ninja_jwt.exceptions import TokenError
 from django.http import HttpRequest
 
 from app.api.constants.token import ShareToken
@@ -16,7 +15,7 @@ class ShareResultsApiKeyAuth(APIKeyQuery):
             validated_share_token = ShareToken(token)
         except TokenError:
             return False
-        
+
         user_id = validated_share_token.get("shared_by_user_id")
         result_uuid = validated_share_token.get("result_uuid")
 
