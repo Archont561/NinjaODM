@@ -105,7 +105,7 @@ def save_task_stage_result(
 @shared_task
 def on_task_create(odm_task_uuid: UUID):
     def _create(odm_task: ODMTask):
-        images = Image.objects.filter(workspace=odm_task.workspace)
+        images = Image.objects.filter(workspace=odm_task.workspace, is_thumbnail=False)
         image_paths = [str(img.image_file.path) for img in images]
         node = NodeODMClient.for_task(odm_task.uuid)
         options = {

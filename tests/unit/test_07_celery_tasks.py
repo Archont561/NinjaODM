@@ -67,6 +67,7 @@ def workspace_with_images(workspace_factory, image_factory, temp_image_file_fact
     for i in range(3):
         image_file = temp_image_file_factory(name=f"test_{i}.jpg")
         image_factory(workspace=workspace, image_file=image_file)
+    image_factory(workspace=workspace, image_file=image_file, is_thumbnail=True)
     return workspace
 
 
