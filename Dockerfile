@@ -1,6 +1,7 @@
 FROM ghcr.io/prefix-dev/pixi:0.40.0
 
 COPY . /app
+WORKDIR /app
 
 RUN pixi install -e prod
 
