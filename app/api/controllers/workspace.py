@@ -24,7 +24,8 @@ from app.api.schemas.workspace import (
     UpdateWorkspacePublic,
     WorkspaceResponseInternal,
     WorkspaceResponsePublic,
-    WorkspaceFilterSchema,
+    WorkspaceFilterSchemaPublic,
+    WorkspaceFilterSchemaInternal,
 )
 from app.api.schemas.image import ImageResponse
 from app.api.services.workspace import WorkspaceModelService
@@ -59,7 +60,7 @@ class WorkspaceControllerPublic(ModelControllerBase):
     )
 
     @http_get("/", response=List[model_config.retrieve_schema])
-    def list_workspaces(self, filters: WorkspaceFilterSchema = Query(...)):
+    def list_workspaces(self, filters: WorkspaceFilterSchemaPublic = Query(...)):
         user_id = self.context.request.user.id
         queryset = self.model_config.model.objects.filter(user_id=user_id)
         return filters.filter(queryset)
@@ -113,7 +114,6 @@ class WorkspaceControllerInternal(ModelControllerBase):
     service_type = WorkspaceModelService
     model_config = ModelConfig(
         model=Workspace,
-        list_filter_schema=WorkspaceFilterSchema,
         create_schema=CreateWorkspaceInternal,
         retrieve_schema=WorkspaceResponseInternal,
         update_schema=UpdateWorkspaceInternal,
@@ -121,5 +121,5 @@ class WorkspaceControllerInternal(ModelControllerBase):
     )
 
     @http_get("/", response=List[model_config.retrieve_schema])
-    def list_workspaces(self, filters: WorkspaceFilterSchema = Query(...)):
+    def list_workspaces(self, filters: WorkspaceFilterSchemaInternal = Query(...)):
         return filters.filter(self.model_config.model.objects.all())

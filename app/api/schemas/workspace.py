@@ -36,7 +36,10 @@ class WorkspaceResponsePublic(ModelSchema):
         fields = ["uuid", "name", "created_at"]
 
 
-class WorkspaceFilterSchema(FilterSchema):
+class WorkspaceFilterSchemaPublic(FilterSchema):
     name: Optional[str] = Field(None, q="name__icontains")
     created_after: Optional[datetime] = Field(None, q="created_at__gte")
     created_before: Optional[datetime] = Field(None, q="created_at__lte")
+
+class WorkspaceFilterSchemaInternal(WorkspaceFilterSchemaPublic):
+    user_id: Optional[str] = Field(None, q="user_id__icontains")
