@@ -28,7 +28,7 @@ register(AuthorizedServiceFactory)
 @pytest.fixture
 def valid_token():
     token = AccessToken()
-    token["user_id"] = 999
+    token["user_id"] = "user_999"
     token["scopes"] = ["read:profile", "admin"]
     token["exp"] = 9999999999
     token["iat"] = 1600000000

@@ -22,10 +22,10 @@ def workspace_list(workspace_factory):
         )
 
     return [
-        create_workspace("ProjectA", 999, 10),
-        create_workspace("ProjectB", 999, 5),
-        create_workspace("SharedProject", 999, 3),
-        create_workspace("ProjectC", 999, 1),
+        create_workspace("ProjectA", "user_999", 10),
+        create_workspace("ProjectB", "user_999", 5),
+        create_workspace("SharedProject", "user_999", 3),
+        create_workspace("ProjectC", "user_999", 1),
         create_workspace("OtherUser1", 1, 8),
         create_workspace("OtherProject", 3, 6),
         create_workspace("OtherUser2", 2, 2),
@@ -69,28 +69,28 @@ class TestWorkspaceAPIInternal:
         assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_create_workspace(self):
-        payload = {"name": "Service WS", "user_id": 1234}
+        payload = {"name": "Service WS", "user_id": "user_1234"}
         response = self.client.post("/", json=payload)
         assert response.status_code == 201
 
     def test_get_workspace(self, workspace_factory):
-        ws = workspace_factory(user_id=1234, name="Other WS")
+        ws = workspace_factory(user_id="user_1234", name="Other WS")
         resp = self.client.get(f"/{ws.uuid}")
         assert resp.status_code == 200
 
     def test_update_workspace(self, workspace_factory):
-        ws = workspace_factory(user_id=1234, name="Other WS")
+        ws = workspace_factory(user_id="user_1234", name="Other WS")
         resp = self.client.patch(
-            f"/{ws.uuid}", json={"name": "Updated", "user_id": 333}
+            f"/{ws.uuid}", json={"name": "Updated", "user_id": "user_333"}
         )
         assert resp.status_code == 200
 
         ws.refresh_from_db()
         assert ws.name == "Updated"
-        assert ws.user_id == 333
+        assert ws.user_id == "user_333"
 
     def test_delete_workspace(self, workspace_factory):
-        ws = workspace_factory(user_id=1234, name="Other WS")
+        ws = workspace_factory(user_id="user_1234", name="Other WS")
         resp = self.client.delete(f"/{ws.uuid}")
         assert resp.status_code == 204
 
@@ -136,11 +136,11 @@ class TestWorkspaceAPIPublic:
 
     @pytest.fixture
     def user_workspace(self, workspace_factory):
-        return workspace_factory(user_id=999, name="User WS")
+        return workspace_factory(user_id="user_999", name="User WS")
 
     @pytest.fixture
     def other_workspace(self, workspace_factory):
-        return workspace_factory(user_id=1234, name="Other WS")
+        return workspace_factory(user_id="user_1234", name="Other WS")
 
     def test_create_workspace(self):
         payload = {"name": "JWT WS"}
@@ -148,7 +148,7 @@ class TestWorkspaceAPIPublic:
         assert resp.status_code == 201
         ws = Workspace.objects.get(uuid=resp.json()["uuid"])
         assert ws.name == "JWT WS"
-        assert ws.user_id == 999
+        assert ws.user_id == "user_999"
 
     def test_get_own_workspace(self, user_workspace):
         resp = self.client.get(f"/{user_workspace.uuid}")
@@ -226,7 +226,7 @@ class TestWorkspaceAPIUnauthorized:
             ("public_client", "delete", "/{uuid}", None),
             # Internal client
             ("internal_client", "get", "/", None),
-            ("internal_client", "post", "/", {"name": "Fail", "user_id": 999}),
+            ("internal_client", "post", "/", {"name": "Fail", "user_id": "user_999"}),
             ("internal_client", "get", "/{uuid}", None),
             ("internal_client", "patch", "/{uuid}", {"name": "Fail"}),
             ("internal_client", "delete", "/{uuid}", None),
@@ -241,7 +241,7 @@ class TestWorkspaceAPIUnauthorized:
     def test_access_denied(
         self, workspace_factory, client_type, method, url_template, payload
     ):
-        ws = workspace_factory(user_id=999)
+        ws = workspace_factory(user_id="user_999")
         client = getattr(self, client_type)
         url = url_template.format(uuid=ws.uuid)
         response = getattr(client, method)(url, json=payload)

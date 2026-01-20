@@ -13,4 +13,4 @@ class TestWorkspace:
             or workspace.uuid is not None
         )
         assert workspace.user_id is not None
-        assert isinstance(workspace.user_id, int)
+        assert isinstance(workspace.user_id, str)

@@ -7,7 +7,7 @@ from app.api.models.workspace import Workspace
 
 
 class CreateWorkspaceInternal(Schema):
-    user_id: int
+    user_id: str
     name: Optional[str] = None
 
 
@@ -16,7 +16,7 @@ class CreateWorkspacePublic(Schema):
 
 
 class UpdateWorkspaceInternal(Schema):
-    user_id: Optional[int] = None
+    user_id: Optional[str] = None
     name: Optional[str] = None
 
 

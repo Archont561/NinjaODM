@@ -43,7 +43,7 @@ class ServiceAuth(AuthStrategy):
 class JWTAuth(AuthStrategy):
     def __init__(self):
         self.token = AccessToken()
-        self.token["user_id"] = 999
+        self.token["user_id"] = "user_999"
         self.token["scopes"] = ["*"]
         self.token["exp"] = 9999999999
         self.token["iat"] = 1600000000

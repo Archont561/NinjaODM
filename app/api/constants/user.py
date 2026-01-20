@@ -6,7 +6,7 @@ class ServiceUser:
     Lightweight, stateless user compatible with Django auth.
     """
 
-    def __init__(self, user_id: int, scopes: List[str]):
+    def __init__(self, user_id: str, scopes: List[str]):
         self.id = user_id
         self.pk = user_id
         self.scopes = scopes

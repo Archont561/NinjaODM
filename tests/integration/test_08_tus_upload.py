@@ -18,7 +18,7 @@ def use_test_cache(settings):
 class TestWorkspaceTusUpload:
     @pytest.fixture
     def workspace(self, workspace_factory):
-        return workspace_factory(user_id=999)
+        return workspace_factory(user_id="user_999")
 
     def test_tus_full_upload_flow(
         self, live_server, workspace, temp_image_file, valid_token

@@ -22,7 +22,7 @@ class ShareResultsApiKeyAuth(APIKeyQuery):
         if user_id is None:
             return False
 
-        service_user = ServiceUser(user_id=int(user_id), scopes=[])
+        service_user = ServiceUser(user_id=user_id, scopes=[])
         setattr(service_user, "result_uuid", UUID(result_uuid))
         setattr(request, "referer", service_user)
         return True

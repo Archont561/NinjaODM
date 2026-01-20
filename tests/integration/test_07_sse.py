@@ -160,7 +160,7 @@ class TestSSEAPIPublic:
         workspace = None
         if action_key != "create":
             workspace = await sync_to_async(workspace_factory)(
-                name="Test Workspace", user_id=999
+                name="Test Workspace", user_id="user_999"
             )
 
         await self._run_lifecycle_test(
@@ -198,7 +198,7 @@ class TestSSEAPIPublic:
     ):
         if mock_fixture:
             request.getfixturevalue(mock_fixture)
-        user_workspace = await sync_to_async(workspace_factory)(user_id=999)
+        user_workspace = await sync_to_async(workspace_factory)(user_id="user_999")
         odm_task = await sync_to_async(odm_task_factory)(
             workspace=user_workspace, status=ODMTaskStatus.COMPLETED
         )
@@ -244,7 +244,7 @@ class TestSSEAPIPublic:
     ):
         gcp = None
         kwargs = {}
-        user_workspace = await sync_to_async(workspace_factory)(user_id=999)
+        user_workspace = await sync_to_async(workspace_factory)(user_id="user_999")
         image = await sync_to_async(image_factory)(workspace=user_workspace)
 
         if action_key == "create":
@@ -281,7 +281,7 @@ class TestSSEAPIPublic:
         event_type,
         expected_status,
     ):
-        user_workspace = await sync_to_async(workspace_factory)(user_id=999)
+        user_workspace = await sync_to_async(workspace_factory)(user_id="user_999")
         image = await sync_to_async(image_factory)(
             workspace=user_workspace, image_file=temp_image_file
         )
@@ -314,7 +314,7 @@ class TestSSEAPIPublic:
         event_type,
         expected_status,
     ):
-        user_workspace = await sync_to_async(workspace_factory)(user_id=999)
+        user_workspace = await sync_to_async(workspace_factory)(user_id="user_999")
         task_result = await sync_to_async(odm_task_result_factory)(
             workspace=user_workspace, file=temp_image_file
         )

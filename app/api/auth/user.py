@@ -23,6 +23,6 @@ class ServiceUserJWTAuth(JWTAuth):
         if user_id is None:
             return None
 
-        service_user = ServiceUser(user_id=int(user_id), scopes=scopes)
+        service_user = ServiceUser(user_id=user_id, scopes=scopes)
         request.user = service_user
         return service_user

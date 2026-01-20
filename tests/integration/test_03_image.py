@@ -12,9 +12,9 @@ from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 @pytest.fixture
 def images_list(workspace_factory, image_factory):
     now = timezone.now()
-    user_ws = workspace_factory(user_id=999)
-    other_ws1 = workspace_factory(user_id=1)
-    other_ws2 = workspace_factory(user_id=2)
+    user_ws = workspace_factory(user_id="user_999")
+    other_ws1 = workspace_factory(user_id="user_1")
+    other_ws2 = workspace_factory(user_id="user_2")
 
     def create_image(workspace, name, is_thumbnail, days_ago):
         return image_factory(
@@ -119,7 +119,7 @@ class TestImageAPIPublic:
         assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_retrieve_own_image(self, workspace_factory, image_factory):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         image = image_factory(workspace=user_workspace)
         response = self.client.get(f"/{image.uuid}")
         assert response.status_code == 200
@@ -128,13 +128,13 @@ class TestImageAPIPublic:
         assert data["workspace_uuid"] == str(user_workspace.uuid)
 
     def test_cannot_access_others_image(self, workspace_factory, image_factory):
-        other_workspace = workspace_factory(user_id=3243)
+        other_workspace = workspace_factory(user_id="user_3243")
         other_image = image_factory(workspace=other_workspace)
         response = self.client.get(f"/{other_image.uuid}")
         assert response.status_code in (403, 404)
 
     def test_delete_own_image(self, workspace_factory, image_factory, temp_image_file):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         image = image_factory(workspace=user_workspace, image_file=temp_image_file)
         response = self.client.delete(f"/{image.uuid}")
         assert response.status_code == 204
@@ -145,7 +145,7 @@ class TestImageAPIPublic:
     def test_download_own_image_file(
         self, workspace_factory, image_factory, temp_image_file
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         image = image_factory(workspace=user_workspace, image_file=temp_image_file)
         response = self.client.get(f"/{image.uuid}/download")
         assert response.status_code == 200
@@ -158,7 +158,7 @@ class TestImageAPIPublic:
     def test_cannot_download_others_image_file(
         self, workspace_factory, image_factory, temp_image_file
     ):
-        other_workspace = workspace_factory(user_id=12345)
+        other_workspace = workspace_factory(user_id="user_12345")
         image = image_factory(workspace=other_workspace, image_file=temp_image_file)
         response = self.client.get(f"/{image.uuid}/download")
         assert response.status_code in (403, 404)

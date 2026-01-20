@@ -13,9 +13,9 @@ from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 @pytest.fixture
 def results_list(workspace_factory, odm_task_result_factory):
     now = timezone.now()
-    user_ws = workspace_factory(user_id=999)
-    other_ws1 = workspace_factory(user_id=1)
-    other_ws2 = workspace_factory(user_id=2)
+    user_ws = workspace_factory(user_id="user_999")
+    other_ws1 = workspace_factory(user_id="user_1")
+    other_ws2 = workspace_factory(user_id="user_2")
 
     def create_result(workspace, r_type, days_ago):
         return odm_task_result_factory(
@@ -133,7 +133,7 @@ class TestTaskResultAPIPublic:
         assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_retrieve_own_result(self, workspace_factory, odm_task_result_factory):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         result = odm_task_result_factory(workspace=user_workspace)
         response = self.client.get(f"/{result.uuid}")
         assert response.status_code == 200
@@ -144,7 +144,7 @@ class TestTaskResultAPIPublic:
     def test_cannot_access_others_result(
         self, workspace_factory, odm_task_result_factory
     ):
-        other_workspace = workspace_factory(user_id=3243)
+        other_workspace = workspace_factory(user_id="user_3243")
         other_result = odm_task_result_factory(workspace=other_workspace)
         response = self.client.get(f"/{other_result.uuid}")
         assert response.status_code in (403, 404)
@@ -152,7 +152,7 @@ class TestTaskResultAPIPublic:
     def test_delete_own_result(
         self, workspace_factory, odm_task_result_factory, temp_image_file
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         result = odm_task_result_factory(workspace=user_workspace, file=temp_image_file)
         response = self.client.delete(f"/{result.uuid}")
         assert response.status_code == 204
@@ -161,7 +161,7 @@ class TestTaskResultAPIPublic:
     def test_download_own_result(
         self, workspace_factory, odm_task_result_factory, temp_image_file
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         result = odm_task_result_factory(workspace=user_workspace, file=temp_image_file)
         response = self.client.get(f"/{result.uuid}/download")
         assert response.status_code == 200
@@ -174,7 +174,7 @@ class TestTaskResultAPIPublic:
     def test_cannot_download_others_result_file(
         self, workspace_factory, odm_task_result_factory, temp_image_file
     ):
-        other_workspace = workspace_factory(user_id=12345)
+        other_workspace = workspace_factory(user_id="user_12345")
         result = odm_task_result_factory(
             workspace=other_workspace, file=temp_image_file
         )
@@ -182,19 +182,19 @@ class TestTaskResultAPIPublic:
         assert response.status_code in (403, 404)
 
     def test_get_share_api_key(self, workspace_factory, odm_task_result_factory):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         result = odm_task_result_factory(workspace=user_workspace)
         response = self.client.get(f"/{result.uuid}/share")
         assert response.status_code == 200
         token = ShareToken(response.json()["share_api_key"], verify=False)
         assert token["token_type"] == "share"
         assert token["result_uuid"] == str(result.uuid)
-        assert token["shared_by_user_id"] == 999
+        assert token["shared_by_user_id"] == "user_999"
 
     def test_download_shared_result(
         self, workspace_factory, odm_task_result_factory, temp_image_file
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         result = odm_task_result_factory(workspace=user_workspace, file=temp_image_file)
         share_token = ShareToken.for_result(result)
         response = self.anon_client.get(f"/{result.uuid}/shared?api_key={share_token}")
@@ -208,7 +208,7 @@ class TestTaskResultAPIPublic:
     def test_cannot_download_non_shared_result_file(
         self, workspace_factory, odm_task_result_factory, temp_image_file
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         result = odm_task_result_factory(workspace=user_workspace)
         other_result = odm_task_result_factory(workspace=user_workspace)
         other_result_share_token = ShareToken.for_result(other_result)

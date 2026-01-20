@@ -12,9 +12,9 @@ from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 @pytest.fixture
 def gcps_list(workspace_factory, image_factory, ground_control_point_factory):
     now = timezone.now()
-    user_ws = workspace_factory(user_id=999)
-    other_ws1 = workspace_factory(user_id=1)
-    other_ws2 = workspace_factory(user_id=2)
+    user_ws = workspace_factory(user_id="user_999")
+    other_ws1 = workspace_factory(user_id="user_1")
+    other_ws2 = workspace_factory(user_id="user_2")
 
     def create_gcp(workspace, label, days_ago):
         return ground_control_point_factory(
@@ -230,7 +230,7 @@ class TestGCPAPIPublic:
     def test_list_as_geojson(
         self, workspace_factory, image_factory, ground_control_point_factory
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         user_image = image_factory(workspace=user_workspace)
         ground_control_point_factory(image=user_image, label="GeoJSON-Test")
 
@@ -250,7 +250,7 @@ class TestGCPAPIPublic:
     def test_retrieve_own_gcp(
         self, workspace_factory, image_factory, ground_control_point_factory
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         user_image = image_factory(workspace=user_workspace)
         gcp = ground_control_point_factory(image=user_image)
 
@@ -264,7 +264,7 @@ class TestGCPAPIPublic:
     def test_cannot_access_others_gcp(
         self, workspace_factory, image_factory, ground_control_point_factory
     ):
-        other_workspace = workspace_factory(user_id=456)
+        other_workspace = workspace_factory(user_id="user_456")
         other_image = image_factory(workspace=other_workspace)
         other_gcp = ground_control_point_factory(image=other_image)
 
@@ -272,7 +272,7 @@ class TestGCPAPIPublic:
         assert response.status_code in (403, 404)
 
     def test_create_gcp_for_own_image(self, workspace_factory, image_factory):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         user_image = image_factory(workspace=user_workspace)
 
         payload = {
@@ -287,7 +287,7 @@ class TestGCPAPIPublic:
         assert data["image_uuid"] == str(user_image.uuid)
 
     def test_cannot_create_gcp_for_others_image(self, workspace_factory, image_factory):
-        other_workspace = workspace_factory(user_id=456)
+        other_workspace = workspace_factory(user_id="user_456")
         other_image = image_factory(workspace=other_workspace)
 
         payload = {
@@ -301,7 +301,7 @@ class TestGCPAPIPublic:
     def test_update_own_gcp(
         self, workspace_factory, image_factory, ground_control_point_factory
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         user_image = image_factory(workspace=user_workspace)
         gcp = ground_control_point_factory(image=user_image, label="old-label")
 
@@ -314,7 +314,7 @@ class TestGCPAPIPublic:
     def test_cannot_update_others_gcp(
         self, workspace_factory, image_factory, ground_control_point_factory
     ):
-        other_workspace = workspace_factory(user_id=456)
+        other_workspace = workspace_factory(user_id="user_456")
         other_image = image_factory(workspace=other_workspace)
         other_gcp = ground_control_point_factory(image=other_image)
 
@@ -325,7 +325,7 @@ class TestGCPAPIPublic:
     def test_delete_own_gcp(
         self, workspace_factory, image_factory, ground_control_point_factory
     ):
-        user_workspace = workspace_factory(user_id=999)
+        user_workspace = workspace_factory(user_id="user_999")
         user_image = image_factory(workspace=user_workspace)
         gcp = ground_control_point_factory(image=user_image)
 
@@ -336,7 +336,7 @@ class TestGCPAPIPublic:
     def test_cannot_delete_others_gcp(
         self, workspace_factory, image_factory, ground_control_point_factory
     ):
-        other_workspace = workspace_factory(user_id=456)
+        other_workspace = workspace_factory(user_id="user_456")
         other_image = image_factory(workspace=other_workspace)
         other_gcp = ground_control_point_factory(image=other_image)
 

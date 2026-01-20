@@ -14,9 +14,9 @@ from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 @pytest.fixture
 def tasks_list(workspace_factory, odm_task_factory):
     now = timezone.now()
-    user_ws = workspace_factory(user_id=999)
-    other_ws1 = workspace_factory(user_id=1)
-    other_ws2 = workspace_factory(user_id=2)
+    user_ws = workspace_factory(user_id="user_999")
+    other_ws1 = workspace_factory(user_id="user_1")
+    other_ws2 = workspace_factory(user_id="user_2")
 
     def create_odm_task(workspace, status, step, days_ago):
         return odm_task_factory(
@@ -139,7 +139,7 @@ class TestTaskAPIInternal:
         assert len(data) == expected_count, f"Failed for query: {query}"
 
     def test_create_task(self, mock_task_on_task_create, workspace_factory):
-        ws = workspace_factory(user_id=1234)
+        ws = workspace_factory(user_id="user_1234")
         payload = {"name": "Task name"}
         resp = self.client.post(f"/?workspace_uuid={ws.uuid}", json=payload)
         assert resp.status_code == 201
@@ -255,11 +255,11 @@ class TestTaskAPIPublic:
 
     @pytest.fixture
     def user_workspace(self, workspace_factory):
-        return workspace_factory(user_id=999, name="User WS")
+        return workspace_factory(user_id="user_999", name="User WS")
 
     @pytest.fixture
     def other_workspace(self, workspace_factory):
-        return workspace_factory(user_id=1234, name="Other WS")
+        return workspace_factory(user_id="user_1234", name="Other WS")
 
     @pytest.fixture
     def user_task(self, odm_task_factory, user_workspace):
@@ -310,7 +310,7 @@ class TestTaskAPIPublic:
         resp = self.client.post(f"/?workspace_uuid={user_workspace.uuid}", json=payload)
         assert resp.status_code == 201
         task = ODMTask.objects.get(uuid=resp.json()["uuid"])
-        assert task.workspace.user_id == 999
+        assert task.workspace.user_id == "user_999"
         assert task.name == payload["name"]
         mock_task_on_task_create.delay.assert_called_once_with(task.uuid)
 
