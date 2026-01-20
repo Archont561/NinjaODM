@@ -63,7 +63,6 @@ class TestWorkspaceAPIInternal:
         self, workspace_list, query_format, expected_count
     ):
         now = timezone.now()
-        print(now)
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
         query = query_format.format(after=after_date, before=before_date)
