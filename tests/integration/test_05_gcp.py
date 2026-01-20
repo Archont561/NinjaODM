@@ -46,25 +46,46 @@ class TestGCPAPIInternal:
             GCPControllerInternal, auth=AuthStrategyEnum.service
         )
 
-    @pytest.mark.skip(reason="Sometimes different number of features are filtered")
+    @pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
             ("", 10),
             ("label=GCP_A", 1),
             ("label=GCP", 10),
-            ("created_after={after}&created_before={before}", 3),
-            ("created_after={after}", 5),
+            ("created_after={after}&created_before={before}", 4),
+            ("created_after={after}", 6),
             ("created_before={before}", 8),
+            ("workspace_uuid={ws1_uuid}", 5),
+            ("workspace_uuid={ws2_uuid}", 2),
+            ("workspace_uuid={ws3_uuid}", 3),
+            ("image_uuid={image_a_uuid}", 1),
+            ("workspace_uuid={ws1_uuid}&label=GCP_A", 1),
         ],
     )
     def test_list_gcps_filtering(self, gcps_list, query_format, expected_count):
         now = timezone.now()
+        
+        ws1_uuid = gcps_list[0].image.workspace.uuid
+        ws2_uuid = gcps_list[5].image.workspace.uuid
+        ws3_uuid = gcps_list[7].image.workspace.uuid
+        image_a_uuid = gcps_list[0].image.uuid
+        
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        query = query_format.format(after=after_date, before=before_date)
+        
+        query = query_format.format(
+            after=after_date, 
+            before=before_date,
+            ws1_uuid=ws1_uuid,
+            ws2_uuid=ws2_uuid,
+            ws3_uuid=ws3_uuid,
+            image_a_uuid=image_a_uuid
+        )
+        
         url = "/" + f"?{query}" if query else ""
         response = self.client.get(url)
+        
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
@@ -203,7 +224,7 @@ class TestGCPAPIPublic:
             GCPControllerPublic, auth=AuthStrategyEnum.jwt
         )
 
-    @pytest.mark.skip(reason="Sometimes different number of features are filtered")
+    @pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
@@ -211,18 +232,35 @@ class TestGCPAPIPublic:
             ("label=GCP_C", 1),
             ("label=GCP", 5),
             ("label=GCP_INVALID", 0),
-            ("created_after={after}&created_before={before}", 1),
-            ("created_after={after}", 3),
+            ("created_after={after}", 4),
             ("created_before={before}", 3),
+            ("created_after={after}&created_before={before}", 2),
+            ("workspace_uuid={ws_own_uuid}", 5),
+            ("workspace_uuid={ws_other_uuid}", 0),
+            ("image_uuid={image_own_uuid}", 1),
         ],
     )
     def test_list_own_gcps_filtering(self, gcps_list, query_format, expected_count):
         now = timezone.now()
+        
+        ws_own_uuid = gcps_list[0].image.workspace.uuid
+        ws_other_uuid = gcps_list[5].image.workspace.uuid
+        image_own_uuid = gcps_list[0].image.uuid
+        
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        query = query_format.format(after=after_date, before=before_date)
+        
+        query = query_format.format(
+            after=after_date, 
+            before=before_date,
+            ws_own_uuid=ws_own_uuid,
+            ws_other_uuid=ws_other_uuid,
+            image_own_uuid=image_own_uuid
+        )
+        
         url = "/" + f"?{query}" if query else ""
         response = self.client.get(url)
+        
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
