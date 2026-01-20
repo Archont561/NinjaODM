@@ -43,7 +43,7 @@ class TestImageAPIInternal:
             ImageControllerInternal, auth=AuthStrategyEnum.service
         )
 
-    @pytest.mark.skip(reason="Sometimes different number of features are filtered")
+    pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
@@ -55,15 +55,30 @@ class TestImageAPIInternal:
             ("created_before={before}", 5),
             ("created_after={after}&created_before={before}", 2),
             ("name=Image&is_thumbnail=True", 3),
+            ("workspace_uuid={ws1_uuid}", 2),
+            ("workspace_uuid={ws2_uuid}", 2),
+            ("workspace_uuid={ws1_uuid}&is_thumbnail=True", 1),
         ],
     )
     def test_list_images_filtering(self, images_list, query_format, expected_count):
         now = timezone.now()
+        
+        ws1_uuid = images_list[0].workspace.uuid
+        ws2_uuid = images_list[2].workspace.uuid
+        
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        query = query_format.format(after=after_date, before=before_date)
+        
+        query = query_format.format(
+            after=after_date, 
+            before=before_date,
+            ws1_uuid=ws1_uuid,
+            ws2_uuid=ws2_uuid
+        )
+        
         url = "/" + f"?{query}" if query else ""
         response = self.client.get(url)
+        
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
@@ -93,7 +108,7 @@ class TestImageAPIPublic:
             ImageControllerPublic, auth=AuthStrategyEnum.jwt
         )
 
-    @pytest.mark.skip(reason="Sometimes different number of features are filtered")
+    @pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
@@ -105,15 +120,29 @@ class TestImageAPIPublic:
             ("created_before={before}", 1),
             ("created_after={after}&created_before={before}", 1),
             ("name=Image&is_thumbnail=True", 1),
+            ("workspace_uuid={ws_own_uuid}", 2),
+            ("workspace_uuid={ws_other_uuid}", 0),
         ],
     )
     def test_list_own_images_filtering(self, images_list, query_format, expected_count):
         now = timezone.now()
+        
+        ws_own_uuid = images_list[0].workspace.uuid
+        ws_other_uuid = images_list[2].workspace.uuid
+        
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        query = query_format.format(after=after_date, before=before_date)
+        
+        query = query_format.format(
+            after=after_date, 
+            before=before_date,
+            ws_own_uuid=ws_own_uuid,
+            ws_other_uuid=ws_other_uuid
+        )
+        
         url = "/" + f"?{query}" if query else ""
         response = self.client.get(url)
+        
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
