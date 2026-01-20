@@ -20,3 +20,4 @@ class ImageFilterSchema(FilterSchema):
     is_thumbnail: Optional[bool] = Field(None, q="is_thumbnail")
     created_after: Optional[datetime] = Field(None, q="created_at__gte")
     created_before: Optional[datetime] = Field(None, q="created_at__lte")
+    workspace_uuid: Optional[UUID] = Field(None, q="workspace__uuid")
