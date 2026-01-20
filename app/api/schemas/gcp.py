@@ -67,3 +67,5 @@ class GCPFilterSchema(FilterSchema):
     label: Optional[str] = Field(None, q="label__icontains")
     created_after: Optional[datetime] = Field(None, q="created_at__gte")
     created_before: Optional[datetime] = Field(None, q="created_at__lte")
+    image_uuid: Optional[UUID] = Field(None, q="image__uuid")
+    workspace_uuid: Optional[UUID] = Field(None, q="image__workspace__uuid")
