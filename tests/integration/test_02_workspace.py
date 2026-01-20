@@ -41,7 +41,7 @@ class TestWorkspaceAPIInternal:
             WorkspaceControllerInternal, auth=AuthStrategyEnum.service
         )
 
-    @pytest.mark.skip(reason="Sometimes different number of features are filtered")
+    @pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
@@ -49,16 +49,21 @@ class TestWorkspaceAPIInternal:
             ("name=ProjectA", 1),
             ("name=Project", 5),
             ("name=NonExistent", 0),
-            ("created_after={after}", 4),
+            ("created_after={after}", 5),
             ("created_before={before}", 6),
-            ("name=Project&created_after={after}", 3),
+            ("name=Project&created_after={after}", 4),
             ("name=ProjectC&created_after={after}", 1),
+            ("user_id=999", 4),
+            ("user_id=user", 4),
+            ("user_id=1", 1),
+            ("user_id=999&name=Project", 4),
         ],
     )
     def test_list_workspaces_filtering(
         self, workspace_list, query_format, expected_count
     ):
         now = timezone.now()
+        print(now)
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
         query = query_format.format(after=after_date, before=before_date)
@@ -107,7 +112,7 @@ class TestWorkspaceAPIPublic:
             WorkspaceControllerPublic, auth=AuthStrategyEnum.jwt
         )
 
-    @pytest.mark.skip(reason="Sometimes different number of features are filtered")
+    @pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
@@ -119,6 +124,7 @@ class TestWorkspaceAPIPublic:
             ("created_before={before}", 3),
             ("name=Project&created_after={after}", 3),
             ("name=ProjectC&created_after={after}", 1),
+            ("user_id=1", 4),
         ],
     )
     def test_list_workspaces_filtering(
