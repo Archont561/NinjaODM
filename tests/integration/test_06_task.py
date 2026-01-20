@@ -71,7 +71,7 @@ def tasks_list(workspace_factory, odm_task_factory):
         ),
         create_odm_task(
             workspace=other_ws2,
-            status=ODMTaskStatus.TIMEOUT,
+            status=ODMTaskStatus.PAUSING,
             step=ODMProcessingStage.ODM_ORTHOPHOTO,
             days_ago=14,
         ),
@@ -107,7 +107,7 @@ class TestTaskAPIInternal:
             TaskControllerInternal, auth=AuthStrategyEnum.service
         )
 
-    @pytest.mark.skip(reason="Sometimes different number of features are filtered")
+    @pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
@@ -125,15 +125,33 @@ class TestTaskAPIInternal:
             (f"status={ODMTaskStatus.RUNNING}&created_after={{after}}", 2),
             (f"step={ODMProcessingStage.OPENSFM}&created_after={{after}}", 1),
             (f"step={ODMProcessingStage.DATASET}&created_before={{before}}", 0),
+            ("workspace_uuid={ws1_uuid}", 4),
+            ("workspace_uuid={ws2_uuid}", 2),
+            ("workspace_uuid={ws3_uuid}", 2),
+            (f"workspace_uuid={{ws1_uuid}}&status={ODMTaskStatus.RUNNING}", 1),
         ],
     )
     def test_list_tasks_filtering(self, tasks_list, query_format, expected_count):
         now = timezone.now()
+        
+        ws1_uuid = tasks_list[0].workspace.uuid
+        ws2_uuid = tasks_list[4].workspace.uuid
+        ws3_uuid = tasks_list[6].workspace.uuid
+
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        query = query_format.format(after=after_date, before=before_date)
+        
+        query = query_format.format(
+            after=after_date, 
+            before=before_date,
+            ws1_uuid=ws1_uuid,
+            ws2_uuid=ws2_uuid,
+            ws3_uuid=ws3_uuid
+        )
+        
         url = "/" + f"?{query}" if query else ""
         resp = self.client.get(url)
+        
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
@@ -268,8 +286,8 @@ class TestTaskAPIPublic:
     @pytest.fixture
     def other_task(self, odm_task_factory, other_workspace):
         return odm_task_factory(workspace=other_workspace)
-
-    @pytest.mark.skip(reason="Sometimes different number of features are filtered")
+    
+    @pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
@@ -288,15 +306,29 @@ class TestTaskAPIPublic:
             (f"status={ODMTaskStatus.RUNNING}&created_after={{after}}", 1),
             (f"step={ODMProcessingStage.OPENSFM}&created_after={{after}}", 1),
             (f"status={ODMTaskStatus.FAILED}&created_after={{after}}", 0),
+            ("workspace_uuid={ws_own_uuid}", 4),
+            ("workspace_uuid={ws_other_uuid}", 0),
         ],
     )
     def test_list_own_tasks_filtering(self, tasks_list, query_format, expected_count):
         now = timezone.now()
+        
+        ws_own_uuid = tasks_list[0].workspace.uuid
+        ws_other_uuid = tasks_list[4].workspace.uuid
+        
         after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        query = query_format.format(after=after_date, before=before_date)
+        
+        query = query_format.format(
+            after=after_date, 
+            before=before_date,
+            ws_own_uuid=ws_own_uuid,
+            ws_other_uuid=ws_other_uuid
+        )
+        
         url = "/" + f"?{query}" if query else ""
         resp = self.client.get(url)
+        
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
