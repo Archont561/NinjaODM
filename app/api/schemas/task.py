@@ -1,6 +1,6 @@
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, Annotated
 from uuid import UUID
-from ninja import ModelSchema, Schema, FilterSchema
+from ninja import ModelSchema, Schema, FilterSchema, FilterLookup
 from pydantic import Field, field_validator, BaseModel
 from datetime import datetime
 
@@ -55,8 +55,8 @@ class TaskResponse(ModelSchema):
 
 
 class TaskFilterSchema(FilterSchema):
-    status: Optional[ODMTaskStatus] = Field(None, q="status")
-    step: Optional[ODMProcessingStage] = Field(None, q="step")
-    created_after: Optional[datetime] = Field(None, q="created_at__gte")
-    created_before: Optional[datetime] = Field(None, q="created_at__lte")
-    workspace_uuid: Optional[UUID] = Field(None, q="workspace__uuid")
+    status: Annotated[Optional[ODMTaskStatus], FilterLookup("status")] = None
+    step: Annotated[Optional[ODMProcessingStage], FilterLookup("step")] = None
+    created_after: Annotated[Optional[datetime], FilterLookup("created_at__gte")] = None
+    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = None
+    workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None

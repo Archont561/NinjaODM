@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, Annotated
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field
-from ninja import ModelSchema, FilterSchema
+from ninja import ModelSchema, FilterSchema, FilterLookup
 
 from app.api.models.image import Image
 
@@ -16,8 +16,8 @@ class ImageResponse(ModelSchema):
 
 
 class ImageFilterSchema(FilterSchema):
-    name: Optional[str] = Field(None, q="name__icontains")
-    is_thumbnail: Optional[bool] = Field(None, q="is_thumbnail")
-    created_after: Optional[datetime] = Field(None, q="created_at__gte")
-    created_before: Optional[datetime] = Field(None, q="created_at__lte")
-    workspace_uuid: Optional[UUID] = Field(None, q="workspace__uuid")
+    name: Annotated[Optional[str], FilterLookup("name__icontains")] = None
+    is_thumbnail: Annotated[Optional[bool], FilterLookup("is_thumbnail")] = None
+    created_after: Annotated[Optional[datetime], FilterLookup("created_at__gte")] = None
+    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = None
+    workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None
