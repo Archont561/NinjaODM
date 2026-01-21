@@ -1,5 +1,6 @@
 import pytest
 from uuid import uuid4
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 from pyodm.exceptions import OdmError
 
@@ -112,9 +113,21 @@ class TestOnTaskCreate:
         mock_nodeodm["node"].create_task.assert_called_once()
 
         call_kwargs = mock_nodeodm["node"].create_task.call_args.kwargs
+
         assert "files" in call_kwargs
         assert "options" in call_kwargs
-        assert len(call_kwargs["files"]) == 3
+
+        files = call_kwargs["files"]
+        assert len(files) == 4
+
+        # ✅ assert exactly one GCP file
+        gcp_files = [f for f in files if str(f).endswith(".txt")]
+        assert len(gcp_files) == 1
+        assert not Path(gcp_files[0]).exists()
+
+        # ✅ assert remaining files are images
+        image_files = [f for f in files if f not in gcp_files]
+        assert all(str(f).lower().endswith((".jpg", ".jpeg", ".png")) for f in image_files)
 
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.RUNNING
