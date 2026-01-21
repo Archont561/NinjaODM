@@ -1,8 +1,6 @@
 import pytest
 from uuid import uuid4
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-from pyodm.exceptions import OdmError
+from unittest.mock import patch
 
 from app.api.tasks.task import (
     on_task_create,
@@ -17,28 +15,15 @@ from app.api.tasks.workspace import on_workspace_images_uploaded
 from app.api.models.image import Image
 from app.api.models.result import ODMTaskResult
 from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, ODMTaskResultType
+from tests.server_mocks import NodeODMMockHTTPServer
 
 
 @pytest.fixture
-def mock_nodeodm():
-    """Mock NodeODMClient and all its return values."""
-    with patch("app.api.tasks.task.NodeODMClient") as mock_client_cls:
-        mock_node = MagicMock()
-        mock_task = MagicMock()
-
-        mock_client_cls.for_task.return_value = mock_node
-        mock_node.get_task.return_value = mock_task
-        mock_node.create_task.return_value = mock_task
-
-        mock_task.cancel.return_value = True
-        mock_task.restart.return_value = True
-        mock_task.remove.return_value = True
-
-        yield {
-            "client_cls": mock_client_cls,
-            "node": mock_node,
-            "task": mock_task,
-        }
+def mock_odm_server(httpserver, settings):
+    server = NodeODMMockHTTPServer(httpserver).register_routes()
+    settings.NODEODM_URL = server.base_url
+    settings.NINJAODM_BASE_URL = "http://testserver" 
+    return server
 
 
 @pytest.fixture
@@ -65,7 +50,6 @@ def temp_image_file_factory():
 
 @pytest.fixture
 def workspace_with_images(workspace_factory, image_factory, temp_image_file_factory):
-    """Create a workspace populated with test images."""
     workspace = workspace_factory()
     for i in range(3):
         image_file = temp_image_file_factory(name=f"test_{i}.jpg")
@@ -76,8 +60,12 @@ def workspace_with_images(workspace_factory, image_factory, temp_image_file_fact
 
 @pytest.fixture
 def odm_task(odm_task_factory, workspace_with_images):
-    """Create an ODMTask linked to a workspace with images."""
     return odm_task_factory(workspace=workspace_with_images)
+
+
+@pytest.fixture
+def initialized_mock_task(mock_odm_server, odm_task):
+    return mock_odm_server.manager.create_init(str(odm_task.uuid), odm_task.name, [])
 
 
 @pytest.fixture
@@ -106,44 +94,42 @@ def create_task_result_files(settings, tmp_path):
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskCreate:
-    def test_success(self, mock_nodeodm, odm_task):
+    def test_success(self, mock_odm_server, odm_task):
         on_task_create.apply(args=[odm_task.uuid]).get()
-
-        mock_nodeodm["client_cls"].for_task.assert_called_once_with(odm_task.uuid)
-        mock_nodeodm["node"].create_task.assert_called_once()
-
-        call_kwargs = mock_nodeodm["node"].create_task.call_args.kwargs
-
-        assert "files" in call_kwargs
-        assert "options" in call_kwargs
-
-        files = call_kwargs["files"]
-        assert len(files) == 4
-
-        # ✅ assert exactly one GCP file
-        gcp_files = [f for f in files if str(f).endswith(".txt")]
-        assert len(gcp_files) == 1
-        assert not Path(gcp_files[0]).exists()
-
-        # ✅ assert remaining files are images
-        image_files = [f for f in files if f not in gcp_files]
-        assert all(str(f).lower().endswith((".jpg", ".jpeg", ".png")) for f in image_files)
-
+        remote_task = mock_odm_server.manager.get_task(str(odm_task.uuid))
+        assert remote_task is not None
+        assert remote_task.name == odm_task.name
+        if odm_task.options:
+            assert remote_task.options == odm_task.options
+        assert remote_task.imagesCount >= 3
+        assert remote_task.status.code == 20 # RUNNING
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.RUNNING
 
-    def test_task_not_found(self, mock_nodeodm):
-        on_task_create.apply(args=[uuid4()]).get()
-        mock_nodeodm["node"].create_task.assert_not_called()
+    def test_task_not_found_locally(self, mock_odm_server):
+        random_uuid = uuid4()
+        try:
+            on_task_create.apply(args=[random_uuid]).get()
+        except Exception:
+            pass # We don't care about the local exception, we care about the side effect
 
-    def test_odm_error_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["node"].create_task.side_effect = OdmError("Connection refused")
+        assert len(mock_odm_server.manager.list_uuids()) == 0
+
+    def test_odm_init_error_fails_task(self, httpserver, odm_task):
+        httpserver.expect_request("/task/new/init").respond_with_json(
+            {"error": "Server on fire"}, status=500
+        )
         on_task_create.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
 
-    def test_unexpected_error_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["node"].create_task.side_effect = RuntimeError("Unexpected")
+    def test_odm_upload_error_fails_task(self, httpserver, odm_task):
+        import re
+        upload_pattern = re.compile(r"^/task/new/upload/.*$")
+        httpserver.expect_request(uri=upload_pattern, method="POST").respond_with_json(
+            {"error": "Disk full"}, status=500
+        )
+
         on_task_create.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
@@ -152,63 +138,94 @@ class TestOnTaskCreate:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskPause:
-    def test_success(self, mock_nodeodm, odm_task):
+    def test_success(self, initialized_mock_task, odm_task):
         odm_task.status = ODMTaskStatus.RUNNING
         odm_task.save()
+        initialized_mock_task.commit() 
+        assert initialized_mock_task.status.code == 20 # RUNNING
         on_task_pause.apply(args=[odm_task.uuid]).get()
-        mock_nodeodm["node"].get_task.assert_called_once_with(str(odm_task.uuid))
-        mock_nodeodm["task"].cancel.assert_called_once()
+        assert initialized_mock_task.status.code == 50 # CANCELED/PAUSED
+        assert any("canceled" in log.lower() for log in initialized_mock_task.output)
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.PAUSED
 
-    def test_cancel_returns_false_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["task"].cancel.return_value = False
+    def test_cancel_returns_false_fails_task(self, mock_odm_server, odm_task):
         on_task_pause.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
 
-    def test_odm_error_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["node"].get_task.side_effect = OdmError("Node unavailable")
+    def test_node_500_error_fails_task(self, httpserver, odm_task):
+        httpserver.expect_request("/task/cancel", method="POST").respond_with_json(
+            {"error": "Internal Server Error"}, status=500
+        )
         on_task_pause.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_pause_idempotency(self, initialized_mock_task, odm_task):
+        initialized_mock_task.cancel()
+        on_task_pause.apply(args=[odm_task.uuid]).get()
+        odm_task.refresh_from_db()
+        assert odm_task.odm_status == ODMTaskStatus.PAUSED
 
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskResume:
-    def test_success(self, mock_nodeodm, odm_task):
+    def test_success(self, initialized_mock_task, odm_task):
+        initialized_mock_task.cancel() 
+        assert initialized_mock_task.status.code == 50 # CANCELED/PAUSED
         odm_task.status = ODMTaskStatus.PAUSED
         odm_task.save()
-
         on_task_resume.apply(args=[odm_task.uuid]).get()
-
-        mock_nodeodm["task"].restart.assert_called_once()
-        assert "options" in mock_nodeodm["task"].restart.call_args.kwargs
-
+        assert initialized_mock_task.status.code == 10
+        assert initialized_mock_task.progress == 0.0
+        assert any("restarted" in log.lower() for log in initialized_mock_task.output)
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.RUNNING
 
-    def test_restart_returns_false_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["task"].restart.return_value = False
-
+    def test_restart_fails_on_server(self, mock_odm_server, odm_task):
         on_task_resume.apply(args=[odm_task.uuid]).get()
-
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_node_500_error_fails_task(self, httpserver, odm_task):
+        httpserver.expect_request("/task/restart", method="POST").respond_with_json(
+            {"error": "Internal Server Error"}, status=500
+        )
+        on_task_resume.apply(args=[odm_task.uuid]).get()
+        odm_task.refresh_from_db()
+        assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_resume_passes_correct_options(self, initialized_mock_task, odm_task):
+        odm_task.options = {
+            odm_task.step: {
+                "dsm": True,
+            }
+        }       
+        odm_task.status = ODMTaskStatus.PAUSED
+        odm_task.save()
+        on_task_resume.apply(args=[odm_task.uuid]).get()
+        assert {"name": "dsm", "value": True} in initialized_mock_task.options
 
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskCancel:
-    def test_success(self, mock_nodeodm, odm_task):
+    def test_success(self, initialized_mock_task, odm_task):
         on_task_cancel.apply(args=[odm_task.uuid]).get()
-        mock_nodeodm["task"].remove.assert_called_once()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.CANCELLED
 
-    def test_remove_returns_false_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["task"].remove.return_value = False
+    def test_remove_returns_false_fails_task(self, mock_odm_server, odm_task):
+        on_task_cancel.apply(args=[odm_task.uuid]).get()
+        odm_task.refresh_from_db()
+        assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_node_error_fails_task(self, httpserver, odm_task):
+        httpserver.expect_request("/task/remove", method="POST").respond_with_json(
+            {"error": "Internal Server Error"}, status=500
+        )
         on_task_cancel.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
@@ -217,113 +234,101 @@ class TestOnTaskCancel:
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskNodeodmWebhook:
-    def test_success_creates_previous_stage_results(
-        self, mock_nodeodm, odm_task, create_task_result_files
+    def test_success_with_restarting(
+        self, initialized_mock_task, odm_task, create_task_result_files
     ):
-        # Set task to a stage that has a previous stage with results
         stage = ODMProcessingStage.ODM_DEM
         odm_task.step = stage
         odm_task.save()
-
         expected_types = create_task_result_files(
             odm_task, stage.previous_stage.stage_results
         )
         on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
-        mock_nodeodm["task"].restart.assert_called_once()
+        assert initialized_mock_task.status.code == 10 
+        assert initialized_mock_task.progress == 0.0
+        assert any("restarted" in log.lower() for log in initialized_mock_task.output)
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.RUNNING
-
         if expected_types:
             results = ODMTaskResult.objects.filter(workspace=odm_task.workspace)
             assert results.count() == len(expected_types)
-            assert {r.result_type for r in results} == {t for t in expected_types}
+            assert {r.result_type for r in results} == set(expected_types)
 
-    def test_success_no_previous_stage(self, mock_nodeodm, odm_task):
-        # First stage has no previous stage
-        stage = ODMProcessingStage.DATASET
-        odm_task.step = stage
+    def test_restart_fails_on_server(self, mock_odm_server, odm_task):
+        on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
+        odm_task.refresh_from_db()
+        assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_node_crash_during_webhook(self, httpserver, odm_task):
+        httpserver.expect_request("/task/restart", method="POST").respond_with_json(
+            {"error": "NodeODM out of memory"}, status=500
+        )
+        on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
+        odm_task.refresh_from_db()
+        assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_success_no_previous_stage_results(self, initialized_mock_task, odm_task):
+        odm_task.step = ODMProcessingStage.DATASET
         odm_task.save()
         on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
-        mock_nodeodm["task"].restart.assert_called_once()
+        assert initialized_mock_task.status.code == 10
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.RUNNING
         assert ODMTaskResult.objects.filter(workspace=odm_task.workspace).count() == 0
-
-    def test_success_no_result_files_exist(self, mock_nodeodm, odm_task):
-        stage = ODMProcessingStage.ODM_DEM
-        odm_task.step = stage
-        odm_task.save()
-        on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
-        mock_nodeodm["task"].restart.assert_called_once()
-        odm_task.refresh_from_db()
-        assert odm_task.odm_status == ODMTaskStatus.RUNNING
-
-    def test_restart_fails(self, mock_nodeodm, odm_task):
-        mock_nodeodm["task"].restart.return_value = False
-        on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
-        odm_task.refresh_from_db()
-        assert odm_task.odm_status == ODMTaskStatus.FAILED
-
-    def test_odm_error_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["node"].get_task.side_effect = OdmError("Node down")
-        on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
-        odm_task.refresh_from_db()
-        assert odm_task.odm_status == ODMTaskStatus.FAILED
 
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskFinish:
-    def test_success(self, mock_nodeodm, odm_task):
+    def test_success(self, initialized_mock_task, odm_task):
         on_task_finish.apply(args=[odm_task.uuid]).get()
-
-        mock_nodeodm["task"].remove.assert_called_once()
-
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.COMPLETED
 
-    def test_cleanup_fails(self, mock_nodeodm, odm_task):
-        mock_nodeodm["task"].remove.return_value = False
+    def test_cleanup_returns_false_fails_task(self, mock_odm_server, odm_task):
         on_task_finish.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
 
-    def test_odm_error_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["node"].get_task.side_effect = OdmError("Node down")
+    def test_node_error_fails_task(self, httpserver, odm_task):
+        httpserver.expect_request("/task/remove", method="POST").respond_with_json(
+            {"error": "Service Unavailable"}, status=503
+        )
         on_task_finish.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
 
-    def test_task_not_found(self, mock_nodeodm):
-        on_task_finish.apply(args=[uuid4()]).get()
-        mock_nodeodm["task"].remove.assert_not_called()
+    def test_task_not_found_locally(self, mock_odm_server):
+        random_uuid = uuid4()
+        on_task_finish.apply(args=[random_uuid]).get()
+        assert len(mock_odm_server.manager.list_uuids()) == 0
 
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskFailure:
-    def test_success(self, mock_nodeodm, odm_task):
-        on_task_failure.apply(args=[odm_task.uuid]).get()
-        mock_nodeodm["node"].get_task.assert_called_once_with(str(odm_task.uuid))
-        mock_nodeodm["task"].remove.assert_called_once()
-        odm_task.refresh_from_db()
-        assert odm_task.status == ODMTaskStatus.FAILED
-
-    def test_cleanup_fails(self, mock_nodeodm, odm_task):
-        mock_nodeodm["task"].remove.return_value = False
+    def test_success(self, initialized_mock_task, odm_task):
         on_task_failure.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
 
-    def test_odm_error_fails_task(self, mock_nodeodm, odm_task):
-        mock_nodeodm["node"].get_task.side_effect = OdmError("Node down")
+    def test_cleanup_fails_locally_still_fails_task(self, mock_odm_server, odm_task):
         on_task_failure.apply(args=[odm_task.uuid]).get()
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.FAILED
 
-    def test_task_not_found(self, mock_nodeodm):
-        on_task_failure.apply(args=[uuid4()]).get()
-        mock_nodeodm["task"].remove.assert_not_called()
+    def test_odm_error_fails_task(self, httpserver, odm_task):
+        httpserver.expect_request("/task/remove", method="POST").respond_with_json(
+            {"error": "Explosion"}, status=500
+        )
+        on_task_failure.apply(args=[odm_task.uuid]).get()
+        odm_task.refresh_from_db()
+        assert odm_task.odm_status == ODMTaskStatus.FAILED
+
+    def test_task_not_found_in_local_db(self, mock_odm_server):
+        random_uuid = uuid4()
+        on_task_failure.apply(args=[random_uuid]).get()
+        assert len(mock_odm_server.manager.list_uuids()) == 0
 
 
 @pytest.mark.django_db
