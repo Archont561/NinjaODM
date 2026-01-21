@@ -6,12 +6,8 @@ from app.api.health_checks import HEALTH_CHECKS
 from app.api.schemas.core import MessageSchema, HealthSchema
 
 
-@api_controller("/", tags=["public"])
+@api_controller("", tags=["public"])
 class CoreController(ControllerBase):
-    @http_get("/", response=MessageSchema)
-    def root(self):
-        return {"message": "Microservice API v1.0 - NinjaODM"}
-
     @http_get("/version")
     def version(self):
         return {
