@@ -145,7 +145,11 @@ def on_task_create(odm_task_uuid: UUID):
         }
         try:
             gcp_path = make_temp_gcp_file(odm_task)
-            node.create_task(files=[*image_paths, str(gcp_path)], options=options)
+            node.create_task(
+                files=[*image_paths, str(gcp_path)],
+                options=options,
+                name=odm_task.name,
+            )
         finally:
             gcp_path.unlink(missing_ok=True)
 
