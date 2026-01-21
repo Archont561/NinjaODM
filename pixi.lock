@@ -98,7 +98,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/dj-database-url-2.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/factory_boy-3.3.3-pyhd8ed1ab_0.conda
@@ -271,9 +270,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zope.interface-8.0.1-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
       - pypi: https://files.pythonhosted.org/packages/76/56/6d6872f79d14c0cb02f1646cbb4592eef935857c0951a105874b7b62a0c3/contextlib2-21.6.0-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/62/9e/f3a899991e4aaae4b69c1aa187ba4a32e34742475c91eb13010ee7fbe9db/django_appconf-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/71/54/c295b61448d7af9c095dd3bf646a7167633e4ab23baeed8382c13ff3839c/django_easy_logging-0.70-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/91/13/3fab25e603bc5d5f8fabe17ff455bcd03cb0583023713262a62b35333d41/django_ninja_extra-0.30.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/0a/fc/124c3f999fbc77680777ff331ac9552227d7a6753639ef66dbba780fc6b4/django_ninja-1.5.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8d/ed/98d84f78246abfc33b48db479b00649cfc5d779ab5e931cbc5a66fa470fd/django_ninja_extra-0.30.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/07/45fb81e54dd47956e3329f0c2a57037ac4c5f0737b5de5601dd1083fb041/django_ninja_jwt-5.3.9-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/02/cdbf7652ef2c9a7a1fed7c279484b7f3806f15b1bb34aec9fef8e8cfacbf/django_stubs-5.2.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/fe/a85a105fddffadb4a8d50e500caeee87d836b679d51a19d52dfa0cc6c660/django_stubs_ext-5.2.5-py3-none-any.whl
@@ -333,7 +333,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/dj-database-url-2.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/factory_boy-3.3.3-pyhd8ed1ab_0.conda
@@ -498,9 +497,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zope.interface-8.0.1-py312he5662c2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-hbeecb71_2.conda
       - pypi: https://files.pythonhosted.org/packages/76/56/6d6872f79d14c0cb02f1646cbb4592eef935857c0951a105874b7b62a0c3/contextlib2-21.6.0-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/62/9e/f3a899991e4aaae4b69c1aa187ba4a32e34742475c91eb13010ee7fbe9db/django_appconf-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/71/54/c295b61448d7af9c095dd3bf646a7167633e4ab23baeed8382c13ff3839c/django_easy_logging-0.70-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/91/13/3fab25e603bc5d5f8fabe17ff455bcd03cb0583023713262a62b35333d41/django_ninja_extra-0.30.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/0a/fc/124c3f999fbc77680777ff331ac9552227d7a6753639ef66dbba780fc6b4/django_ninja-1.5.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8d/ed/98d84f78246abfc33b48db479b00649cfc5d779ab5e931cbc5a66fa470fd/django_ninja_extra-0.30.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/07/45fb81e54dd47956e3329f0c2a57037ac4c5f0737b5de5601dd1083fb041/django_ninja_jwt-5.3.9-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/02/cdbf7652ef2c9a7a1fed7c279484b7f3806f15b1bb34aec9fef8e8cfacbf/django_stubs-5.2.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/fe/a85a105fddffadb4a8d50e500caeee87d836b679d51a19d52dfa0cc6c660/django_stubs_ext-5.2.5-py3-none-any.whl
@@ -549,7 +549,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/dj-database-url-2.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/freexl-2.0.0-h9dce30a_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gdal-3.12.1-py312hf50df08_0.conda
@@ -675,9 +674,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/c0/10/d20b513afe03acc89ec33948320a5544d31f21b05368436d580dec4e234d/charset_normalizer-3.4.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/76/56/6d6872f79d14c0cb02f1646cbb4592eef935857c0951a105874b7b62a0c3/contextlib2-21.6.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/c1/53/0f51e926799025e31746d454ab2e36f8c3f0d41592bc65cb9840368d3275/cryptography-46.0.2-cp311-abi3-manylinux_2_28_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/62/9e/f3a899991e4aaae4b69c1aa187ba4a32e34742475c91eb13010ee7fbe9db/django_appconf-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/71/54/c295b61448d7af9c095dd3bf646a7167633e4ab23baeed8382c13ff3839c/django_easy_logging-0.70-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/91/13/3fab25e603bc5d5f8fabe17ff455bcd03cb0583023713262a62b35333d41/django_ninja_extra-0.30.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/0a/fc/124c3f999fbc77680777ff331ac9552227d7a6753639ef66dbba780fc6b4/django_ninja-1.5.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8d/ed/98d84f78246abfc33b48db479b00649cfc5d779ab5e931cbc5a66fa470fd/django_ninja_extra-0.30.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/07/45fb81e54dd47956e3329f0c2a57037ac4c5f0737b5de5601dd1083fb041/django_ninja_jwt-5.3.9-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d4/9d/1176601b35b8dc7a4c4144f08b58245ac25b8e80ed844f1a819fb83af990/django_tus-0.5.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0e/61/66938bbb5fc52dbdf84594873d5b51fb1f7c7794e9c0f5bd885f30bc507b/idna-3.11-py3-none-any.whl
@@ -712,7 +712,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/dj-database-url-2.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/freexl-2.0.0-hf297d47_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/gdal-3.12.1-py312h07de9ea_0.conda
@@ -827,9 +826,10 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/3d/2d/1e5ed9dd3b3803994c155cd9aacb60c82c331bad84daf75bcb9c91b3295e/charset_normalizer-3.4.4-cp312-cp312-win_amd64.whl
       - pypi: https://files.pythonhosted.org/packages/76/56/6d6872f79d14c0cb02f1646cbb4592eef935857c0951a105874b7b62a0c3/contextlib2-21.6.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/a8/cd/2f83cafd47ed2dc5a3a9c783ff5d764e9e70d3a160e0df9a9dcd639414ce/cryptography-46.0.2-cp311-abi3-win_amd64.whl
-      - pypi: https://files.pythonhosted.org/packages/62/9e/f3a899991e4aaae4b69c1aa187ba4a32e34742475c91eb13010ee7fbe9db/django_appconf-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/71/54/c295b61448d7af9c095dd3bf646a7167633e4ab23baeed8382c13ff3839c/django_easy_logging-0.70-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/91/13/3fab25e603bc5d5f8fabe17ff455bcd03cb0583023713262a62b35333d41/django_ninja_extra-0.30.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/0a/fc/124c3f999fbc77680777ff331ac9552227d7a6753639ef66dbba780fc6b4/django_ninja-1.5.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8d/ed/98d84f78246abfc33b48db479b00649cfc5d779ab5e931cbc5a66fa470fd/django_ninja_extra-0.30.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/07/45fb81e54dd47956e3329f0c2a57037ac4c5f0737b5de5601dd1083fb041/django_ninja_jwt-5.3.9-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d4/9d/1176601b35b8dc7a4c4144f08b58245ac25b8e80ed844f1a819fb83af990/django_tus-0.5.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/0e/61/66938bbb5fc52dbdf84594873d5b51fb1f7c7794e9c0f5bd885f30bc507b/idna-3.11-py3-none-any.whl
@@ -890,7 +890,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/dj-database-url-2.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/factory_boy-3.3.3-pyhd8ed1ab_0.conda
@@ -1054,9 +1053,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zope.interface-8.0.1-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
       - pypi: https://files.pythonhosted.org/packages/76/56/6d6872f79d14c0cb02f1646cbb4592eef935857c0951a105874b7b62a0c3/contextlib2-21.6.0-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/62/9e/f3a899991e4aaae4b69c1aa187ba4a32e34742475c91eb13010ee7fbe9db/django_appconf-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/71/54/c295b61448d7af9c095dd3bf646a7167633e4ab23baeed8382c13ff3839c/django_easy_logging-0.70-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/91/13/3fab25e603bc5d5f8fabe17ff455bcd03cb0583023713262a62b35333d41/django_ninja_extra-0.30.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/0a/fc/124c3f999fbc77680777ff331ac9552227d7a6753639ef66dbba780fc6b4/django_ninja-1.5.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8d/ed/98d84f78246abfc33b48db479b00649cfc5d779ab5e931cbc5a66fa470fd/django_ninja_extra-0.30.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/07/45fb81e54dd47956e3329f0c2a57037ac4c5f0737b5de5601dd1083fb041/django_ninja_jwt-5.3.9-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/02/cdbf7652ef2c9a7a1fed7c279484b7f3806f15b1bb34aec9fef8e8cfacbf/django_stubs-5.2.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/fe/a85a105fddffadb4a8d50e500caeee87d836b679d51a19d52dfa0cc6c660/django_stubs_ext-5.2.5-py3-none-any.whl
@@ -1114,7 +1114,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/dj-database-url-2.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-5.2.7-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-cors-headers-4.9.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/django-redis-6.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.3.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/factory_boy-3.3.3-pyhd8ed1ab_0.conda
@@ -1270,9 +1269,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/zope.interface-8.0.1-py312he5662c2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/zstd-1.5.7-hbeecb71_2.conda
       - pypi: https://files.pythonhosted.org/packages/76/56/6d6872f79d14c0cb02f1646cbb4592eef935857c0951a105874b7b62a0c3/contextlib2-21.6.0-py2.py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/62/9e/f3a899991e4aaae4b69c1aa187ba4a32e34742475c91eb13010ee7fbe9db/django_appconf-1.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/71/54/c295b61448d7af9c095dd3bf646a7167633e4ab23baeed8382c13ff3839c/django_easy_logging-0.70-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/91/13/3fab25e603bc5d5f8fabe17ff455bcd03cb0583023713262a62b35333d41/django_ninja_extra-0.30.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/0a/fc/124c3f999fbc77680777ff331ac9552227d7a6753639ef66dbba780fc6b4/django_ninja-1.5.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/8d/ed/98d84f78246abfc33b48db479b00649cfc5d779ab5e931cbc5a66fa470fd/django_ninja_extra-0.30.8-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/bb/07/45fb81e54dd47956e3329f0c2a57037ac4c5f0737b5de5601dd1083fb041/django_ninja_jwt-5.3.9-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/2f/02/cdbf7652ef2c9a7a1fed7c279484b7f3806f15b1bb34aec9fef8e8cfacbf/django_stubs-5.2.5-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/e0/fe/a85a105fddffadb4a8d50e500caeee87d836b679d51a19d52dfa0cc6c660/django_stubs_ext-5.2.5-py3-none-any.whl
@@ -2236,10 +2236,10 @@ packages:
   - pkg:pypi/django?source=hash-mapping
   size: 3844184
   timestamp: 1759338416408
-- pypi: https://files.pythonhosted.org/packages/62/9e/f3a899991e4aaae4b69c1aa187ba4a32e34742475c91eb13010ee7fbe9db/django_appconf-1.1.0-py3-none-any.whl
+- pypi: https://files.pythonhosted.org/packages/e8/e6/4c34d94dfb74bbcbc489606e61f1924933de30d22c593dd1f429f35fbd7f/django_appconf-1.2.0-py3-none-any.whl
   name: django-appconf
-  version: 1.1.0
-  sha256: 7abd5a163ff57557f216e84d3ce9dac36c37ffce1ab9a044d3d53b7c943dd10f
+  version: 1.2.0
+  sha256: b81bce5ef0ceb9d84df48dfb623a32235d941c78cc5e45dbb6947f154ea277f4
   requires_dist:
   - django
   requires_python: '>=3.9'
@@ -2263,27 +2263,34 @@ packages:
   requires_dist:
   - loguru>=0.7.0
   requires_python: '>=3.7'
-- conda: https://conda.anaconda.org/conda-forge/noarch/django-ninja-1.4.3-pyhe01879c_0.conda
-  sha256: e12a1db85199f2e7adb8c5c9e013656b87a56cf24999b3676adebf65d5b91382
-  md5: 1c9e15596b277e17293ddad2653f6292
-  depends:
-  - django >=3.1
-  - pydantic >=2.0,<3.0.0
-  - python >=3.9
-  - python
-  license: MIT
-  license_family: MIT
-  purls:
-  - pkg:pypi/django-ninja?source=hash-mapping
-  size: 2144636
-  timestamp: 1749599333983
-- pypi: https://files.pythonhosted.org/packages/91/13/3fab25e603bc5d5f8fabe17ff455bcd03cb0583023713262a62b35333d41/django_ninja_extra-0.30.1-py3-none-any.whl
+- pypi: https://files.pythonhosted.org/packages/0a/fc/124c3f999fbc77680777ff331ac9552227d7a6753639ef66dbba780fc6b4/django_ninja-1.5.1-py3-none-any.whl
+  name: django-ninja
+  version: 1.5.1
+  sha256: 135aaa1117dce8dfd7a1e80b4487a8cccee3a4182c3c8b562d08ea94e4d2cbdf
+  requires_dist:
+  - django>=3.1,<6.1
+  - pydantic>=2.0,<3.0.0
+  - pre-commit ; extra == 'dev'
+  - mkdocs ; extra == 'doc'
+  - mkdocs-material ; extra == 'doc'
+  - markdown-include ; extra == 'doc'
+  - mkdocstrings ; extra == 'doc'
+  - pytest ; extra == 'test'
+  - pytest-cov ; extra == 'test'
+  - pytest-django ; extra == 'test'
+  - pytest-asyncio ; extra == 'test'
+  - psycopg2-binary ; extra == 'test'
+  - mypy==1.7.1 ; extra == 'test'
+  - ruff==0.5.7 ; extra == 'test'
+  - django-stubs ; extra == 'test'
+  requires_python: '>=3.7'
+- pypi: https://files.pythonhosted.org/packages/8d/ed/98d84f78246abfc33b48db479b00649cfc5d779ab5e931cbc5a66fa470fd/django_ninja_extra-0.30.8-py3-none-any.whl
   name: django-ninja-extra
-  version: 0.30.1
-  sha256: 286241bd1a14b3257114014ec349f2a992f42dab76bfdf678d55029130ad7fbd
+  version: 0.30.8
+  sha256: ac0de87aae3d21f4ed7f120c41334c9277346efc393d4891fa0ba99c9ffdd8d5
   requires_dist:
   - django>=2.2
-  - django-ninja==1.4.3
+  - django-ninja==1.5.1
   - injector>=0.19.0
   - asgiref
   - contextlib2
