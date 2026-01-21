@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import List
-from ninja import Query, File
+from ninja import Query, File, Header
 from ninja.files import UploadedFile
 from ninja_extra import (
     ModelControllerBase,
@@ -8,6 +8,7 @@ from ninja_extra import (
     api_controller,
     http_get,
     http_post,
+    http_patch,
     http_generic,
 )
 from django_tus.views import TusUpload
@@ -27,6 +28,7 @@ from app.api.schemas.workspace import (
     WorkspaceFilterSchemaPublic,
     WorkspaceFilterSchemaInternal,
 )
+from app.api.schemas.tus import TusBaseHeaders, TusPostHeaders, TusPatchHeaders
 from app.api.schemas.image import ImageResponse
 from app.api.services.workspace import WorkspaceModelService
 
@@ -77,32 +79,56 @@ class WorkspaceControllerPublic(ModelControllerBase):
         images = self.service.save_images(workspace, image_files)
         return images
 
-    def _run_tus_logic(self, request, uuid, resource_id=None):
+    def _get_tus_handler(self, request, uuid: UUID):
         workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
-
         tus_view = WorkspaceTusUploadView()
         tus_view.request = request
         tus_view.workspace = workspace
-
-        method_map = {
-            "POST": tus_view.post,
-            "PATCH": lambda r: tus_view.patch(r, resource_id),
-            "HEAD": lambda r: tus_view.head(r, resource_id),
-            "OPTIONS": tus_view.options,
-        }
-
-        handler = method_map.get(request.method.upper())
-        return handler(request)
-
-    @http_generic("/{uuid}/upload-images-tus/", methods=["post", "options"])
-    def tus_upload(self, request, uuid: UUID):
-        return self._run_tus_logic(request, uuid)
+        return tus_view
 
     @http_generic(
-        "/{uuid}/upload-images-tus/{resource_id}", methods=["patch", "head", "options"]
+        "/{uuid}/upload-images-tus", 
+        methods=["OPTIONS"], 
+        summary="TUS Discovery", 
+        tags=["tus"]
     )
-    def tus_upload_with_resource(self, request, uuid: UUID, resource_id: UUID):
-        return self._run_tus_logic(request, uuid, resource_id)
+    def tus_options(self, request, uuid: UUID):
+        return self._get_tus_handler(request, uuid).options(request)
+
+    @http_post(
+        "/{uuid}/upload-images-tus", 
+        summary="TUS Create Upload", 
+        tags=["tus"]
+    )
+    def tus_post(self, request, uuid: UUID, headers: TusPostHeaders = Header(...)):
+        request.path += "/" # used in location header by django-tus
+        return self._get_tus_handler(request, uuid).post(request)
+
+    @http_generic(
+        "/{uuid}/upload-images-tus/{resource_id}", 
+        summary="TUS Resume Check", 
+        methods=["HEAD"], 
+        tags=["tus"]
+    )
+    def tus_head(self, request, uuid: UUID, resource_id: str, headers: TusBaseHeaders = Header(...)):
+        return self._get_tus_handler(request, uuid).head(request, resource_id)
+
+    @http_patch(
+        "/{uuid}/upload-images-tus/{resource_id}", 
+        summary="TUS Chunk Upload", 
+        tags=["tus"]
+    )
+    def tus_patch(self, request, uuid: UUID, resource_id: str, headers: TusPatchHeaders = Header(...)):
+        return self._get_tus_handler(request, uuid).patch(request, resource_id)
+
+    @http_generic(
+        "/{uuid}/upload-images-tus/{resource_id}", 
+        methods=["OPTIONS"], 
+        summary="TUS Resource Options", 
+        tags=["tus"]
+    )
+    def tus_resource_options(self, request, uuid: UUID, resource_id: str):
+        return self._get_tus_handler(request, uuid).options(request)
 
 
 @api_controller(
