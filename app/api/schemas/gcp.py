@@ -66,6 +66,10 @@ GCPFeatureCollection = FeatureCollection[GCPFeature]
 class GCPFilterSchema(FilterSchema):
     label: Annotated[Optional[str], FilterLookup("label__icontains")] = None
     created_after: Annotated[Optional[datetime], FilterLookup("created_at__gte")] = None
-    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = None
+    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = (
+        None
+    )
     image_uuid: Annotated[Optional[UUID], FilterLookup("image__uuid")] = None
-    workspace_uuid: Annotated[Optional[UUID], FilterLookup("image__workspace__uuid")] = None
+    workspace_uuid: Annotated[
+        Optional[UUID], FilterLookup("image__workspace__uuid")
+    ] = None

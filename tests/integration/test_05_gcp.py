@@ -65,27 +65,27 @@ class TestGCPAPIInternal:
     )
     def test_list_gcps_filtering(self, gcps_list, query_format, expected_count):
         now = timezone.now()
-        
+
         ws1_uuid = gcps_list[0].image.workspace.uuid
         ws2_uuid = gcps_list[5].image.workspace.uuid
         ws3_uuid = gcps_list[7].image.workspace.uuid
         image_a_uuid = gcps_list[0].image.uuid
-        
+
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        
+
         query = query_format.format(
-            after=after_date, 
+            after=after_date,
             before=before_date,
             ws1_uuid=ws1_uuid,
             ws2_uuid=ws2_uuid,
             ws3_uuid=ws3_uuid,
-            image_a_uuid=image_a_uuid
+            image_a_uuid=image_a_uuid,
         )
-        
+
         url = "/" + f"?{query}" if query else ""
         response = self.client.get(url)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
@@ -242,25 +242,25 @@ class TestGCPAPIPublic:
     )
     def test_list_own_gcps_filtering(self, gcps_list, query_format, expected_count):
         now = timezone.now()
-        
+
         ws_own_uuid = gcps_list[0].image.workspace.uuid
         ws_other_uuid = gcps_list[5].image.workspace.uuid
         image_own_uuid = gcps_list[0].image.uuid
-        
+
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        
+
         query = query_format.format(
-            after=after_date, 
+            after=after_date,
             before=before_date,
             ws_own_uuid=ws_own_uuid,
             ws_other_uuid=ws_other_uuid,
-            image_own_uuid=image_own_uuid
+            image_own_uuid=image_own_uuid,
         )
-        
+
         url = "/" + f"?{query}" if query else ""
         response = self.client.get(url)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"

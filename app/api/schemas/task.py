@@ -1,7 +1,7 @@
 from typing import Optional, Any, Dict, Annotated
 from uuid import UUID
 from ninja import ModelSchema, Schema, FilterSchema, FilterLookup
-from pydantic import Field, field_validator, BaseModel
+from pydantic import Field, BaseModel
 from datetime import datetime
 
 from app.api.models.task import ODMTask
@@ -58,5 +58,7 @@ class TaskFilterSchema(FilterSchema):
     status: Annotated[Optional[ODMTaskStatus], FilterLookup("status")] = None
     step: Annotated[Optional[ODMProcessingStage], FilterLookup("step")] = None
     created_after: Annotated[Optional[datetime], FilterLookup("created_at__gte")] = None
-    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = None
+    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = (
+        None
+    )
     workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None

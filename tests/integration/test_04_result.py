@@ -54,35 +54,44 @@ class TestTaskResultAPIInternal:
             (f"result_type={ODMTaskResultType.DTM}", 1),
             ("created_after={after}", 5),
             ("created_before={before}", 5),
-            (f"result_type={ODMTaskResultType.ORTHOPHOTO_GEOTIFF}&created_after={{after}}", 2),
-            (f"result_type={ODMTaskResultType.POINT_CLOUD_PLY}&created_before={{before}}", 1),
+            (
+                f"result_type={ODMTaskResultType.ORTHOPHOTO_GEOTIFF}&created_after={{after}}",
+                2,
+            ),
+            (
+                f"result_type={ODMTaskResultType.POINT_CLOUD_PLY}&created_before={{before}}",
+                1,
+            ),
             ("workspace_uuid={ws1_uuid}", 4),
             ("workspace_uuid={ws2_uuid}", 1),
             ("workspace_uuid={ws3_uuid}", 2),
-            (f"workspace_uuid={{ws1_uuid}}&result_type={ODMTaskResultType.POINT_CLOUD_PLY}", 2),
+            (
+                f"workspace_uuid={{ws1_uuid}}&result_type={ODMTaskResultType.POINT_CLOUD_PLY}",
+                2,
+            ),
         ],
     )
     def test_list_results_filtering(self, results_list, query_format, expected_count):
         now = timezone.now()
-        
+
         ws1_uuid = results_list[0].workspace.uuid
         ws2_uuid = results_list[4].workspace.uuid
         ws3_uuid = results_list[5].workspace.uuid
 
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        
+
         query = query_format.format(
-            after=after_date, 
-            before=before_date, 
-            ws1_uuid=ws1_uuid, 
-            ws2_uuid=ws2_uuid, 
-            ws3_uuid=ws3_uuid
+            after=after_date,
+            before=before_date,
+            ws1_uuid=ws1_uuid,
+            ws2_uuid=ws2_uuid,
+            ws3_uuid=ws3_uuid,
         )
-        
+
         url = "/" + f"?{query}" if query else ""
         response = self.client.get(url)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"
@@ -121,8 +130,14 @@ class TestTaskResultAPIPublic:
             (f"result_type={ODMTaskResultType.DTM}", 0),
             ("created_after={after}", 3),
             ("created_before={before}", 3),
-            (f"result_type={ODMTaskResultType.ORTHOPHOTO_GEOTIFF}&created_after={{after}}", 1),
-            (f"result_type={ODMTaskResultType.POINT_CLOUD_PLY}&created_before={{before}}", 1),
+            (
+                f"result_type={ODMTaskResultType.ORTHOPHOTO_GEOTIFF}&created_after={{after}}",
+                1,
+            ),
+            (
+                f"result_type={ODMTaskResultType.POINT_CLOUD_PLY}&created_before={{before}}",
+                1,
+            ),
             ("workspace_uuid={ws_own_uuid}", 4),
             ("workspace_uuid={ws_other_uuid}", 0),
         ],
@@ -131,23 +146,23 @@ class TestTaskResultAPIPublic:
         self, results_list, query_format, expected_count
     ):
         now = timezone.now()
-        
+
         ws_own_uuid = results_list[0].workspace.uuid
         ws_other_uuid = results_list[4].workspace.uuid
-        
+
         after_date = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
         before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-        
+
         query = query_format.format(
-            after=after_date, 
+            after=after_date,
             before=before_date,
             ws_own_uuid=ws_own_uuid,
-            ws_other_uuid=ws_other_uuid
+            ws_other_uuid=ws_other_uuid,
         )
-        
+
         url = "/" + f"?{query}" if query else ""
         response = self.client.get(url)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert len(data) == expected_count, f"Failed for query: {query}"

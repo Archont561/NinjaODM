@@ -97,7 +97,9 @@ class TaskControllerInternal(ModelControllerBase):
         queryset = self.model_config.model.objects.all()
         return filters.filter(queryset)
 
-    @http_post("/{uuid}/webhooks/odm", response=MessageSchema, auth=NodeODMServiceAuth())
+    @http_post(
+        "/{uuid}/webhooks/odm", response=MessageSchema, auth=NodeODMServiceAuth()
+    )
     def nodeodm_webhook(
         self, request, uuid: UUID, signature: str, data: ODMTaskWebhookInternal
     ):

@@ -1,7 +1,7 @@
-from typing import Optional, Any, Annotated
+from typing import Optional, Annotated
 from uuid import UUID
 from datetime import datetime
-from pydantic import Field, field_validator
+from pydantic import Field
 from ninja import ModelSchema, FilterSchema, FilterLookup
 
 from app.api.models.result import ODMTaskResult
@@ -18,7 +18,11 @@ class ResultResponse(ModelSchema):
 
 
 class ResultFilterSchema(FilterSchema):
-    result_type: Annotated[Optional[ODMTaskResultType], FilterLookup("result_type")] = None
+    result_type: Annotated[Optional[ODMTaskResultType], FilterLookup("result_type")] = (
+        None
+    )
     created_after: Annotated[Optional[datetime], FilterLookup("created_at__gte")] = None
-    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = None
+    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = (
+        None
+    )
     workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None

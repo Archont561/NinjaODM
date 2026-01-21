@@ -41,7 +41,7 @@ class WorkspaceFactory(DjangoModelFactory):
         model = Workspace
 
     name = factory.Sequence(lambda n: f"Workspace {n}")
-    user_id = faker.pystr(min_chars=10, max_chars=29, prefix='user_')
+    user_id = faker.pystr(min_chars=10, max_chars=29, prefix="user_")
 
 
 class ImageFactory(DjangoModelFactory):

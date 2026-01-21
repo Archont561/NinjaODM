@@ -1,6 +1,5 @@
 from typing import Optional, Annotated
 from ninja import ModelSchema, Schema, FilterSchema, FilterLookup
-from pydantic import Field
 from datetime import datetime
 
 from app.api.models.workspace import Workspace
@@ -39,7 +38,10 @@ class WorkspaceResponsePublic(ModelSchema):
 class WorkspaceFilterSchemaPublic(FilterSchema):
     name: Annotated[Optional[str], FilterLookup("name__icontains")] = None
     created_after: Annotated[Optional[datetime], FilterLookup("created_at__gte")] = None
-    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = None
+    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = (
+        None
+    )
+
 
 class WorkspaceFilterSchemaInternal(WorkspaceFilterSchemaPublic):
     user_id: Annotated[Optional[str], FilterLookup("user_id__icontains")] = None
