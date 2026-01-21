@@ -170,7 +170,7 @@ class MockODMTaskManager:
         return task
 
     def create_shortcut(self, uuid: str, name: Optional[str]) -> MockODMTask:
-        uuid = self.create_init(uuid, name, [])
+        task = self.create_init(uuid, name, [])
         self.commit(uuid)  # Start immediately
         return task
 
