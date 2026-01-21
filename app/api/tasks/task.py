@@ -1,3 +1,4 @@
+from tempfile import NamedTemporaryFile
 from typing import Optional, Callable
 from uuid import UUID
 from celery import shared_task
@@ -11,6 +12,7 @@ from datetime import datetime
 from app.api.models.task import ODMTask
 from app.api.models.image import Image
 from app.api.models.result import ODMTaskResult
+from app.api.models.gcp import GroundControlPoint
 from app.api.sse import emit_event
 from app.api.constants.odm import ODMTaskStatus, ODMTaskResultType
 from app.api.constants.odm_client import NodeODMClient
@@ -102,6 +104,34 @@ def save_task_stage_result(
     )
 
 
+def make_temp_gcp_file(odm_task: ODMTask) -> Path:
+    tmp = NamedTemporaryFile(
+        mode="w",
+        suffix=".txt",
+        encoding="utf-8",
+        delete=False,
+    )
+
+    try:
+        tmp.write("EPSG:4326\n")
+
+        gcps = (
+            GroundControlPoint.objects
+            .filter(image__workspace=odm_task.workspace)
+            .select_related("image")
+            .order_by("label")
+        )
+
+        for gcp in gcps:
+            tmp.write(gcp.to_odm_repr() + "\n")
+
+        tmp.flush()
+        return Path(tmp.name)
+
+    finally:
+        tmp.close()
+
+
 @shared_task
 def on_task_create(odm_task_uuid: UUID):
     def _create(odm_task: ODMTask):
@@ -113,7 +143,11 @@ def on_task_create(odm_task_uuid: UUID):
             "rerun-from": odm_task.step,
             "end-with": odm_task.step,
         }
-        node.create_task(files=image_paths, options=options)
+        try:
+            gcp_path = make_temp_gcp_file(odm_task)
+            node.create_task(files=[*image_paths, str(gcp_path)], options=options)
+        finally:
+            gcp_path.unlink(missing_ok=True)
 
     execute_task_operation(
         odm_task_uuid,
