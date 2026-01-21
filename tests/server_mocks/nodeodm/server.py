@@ -128,7 +128,7 @@ class NodeODMMockHTTPServer(MockedHTTPServer):
             return self._task_not_found()
 
         return Response(
-            ODMAssetFactory.create_zip(),
+            MockODMAssetFactory.create_zip(),
             mimetype="application/zip",
             headers={"Content-Disposition": f'attachment; filename="{uuid}_all.zip"'}
         )
