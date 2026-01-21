@@ -14,12 +14,12 @@ class NodeODMClient(Node):
     @staticmethod
     def for_task(uuid: UUID, timeout: int = 30) -> NodeODMClient:
         node = Node.from_url(settings.NODEODM_URL, timeout)
-        return NodeODMClient(uuid, node.hostname, node.port, node.token, node.timeout)
+        return NodeODMClient(uuid, node.host, node.port, node.token, node.timeout)
 
     def post(self, url: str, data=None, headers={}):
         if url in ["/task/new/init", "/task/new"]:
             headers["set-uuid"] = str(self.uuid)
-        super().post(url, data=data, headers=headers)
+        return super().post(url, data=data, headers=headers)
 
     def create_task(self, *args, **kwargs):
         expected_signature = NodeODMServiceAuth.generate_hmac_signature(
@@ -28,4 +28,4 @@ class NodeODMClient(Node):
         kwargs["webhook"] = (
             f"{settings.NINJAODM_BASE_URL}/api/internal/tasks/{self.uuid}/webhooks/odm?signature={expected_signature}"
         )
-        super().create_task(*args, **kwargs)
+        return super().create_task(*args, **kwargs)
