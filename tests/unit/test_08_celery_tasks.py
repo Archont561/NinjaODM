@@ -15,15 +15,6 @@ from app.api.tasks.workspace import on_workspace_images_uploaded
 from app.api.models.image import Image
 from app.api.models.result import ODMTaskResult
 from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, ODMTaskResultType
-from tests.server_mocks import NodeODMMockHTTPServer
-
-
-@pytest.fixture
-def mock_odm_server(httpserver, settings):
-    server = NodeODMMockHTTPServer(httpserver).register_routes()
-    settings.NODEODM_URL = server.base_url
-    settings.NINJAODM_BASE_URL = "http://testserver" 
-    return server
 
 
 @pytest.fixture

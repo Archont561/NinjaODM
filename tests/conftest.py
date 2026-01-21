@@ -15,6 +15,7 @@ from tests.factories import (
     ODMTaskResultFactory,
     AuthorizedServiceFactory,
 )
+from tests.server_mocks import NodeODMMockHTTPServer
 
 
 register(WorkspaceFactory)
@@ -126,3 +127,11 @@ def mock_task_on_task_failure():
 def mock_task_on_workspace_images_uploaded():
     with patch("app.api.services.workspace.on_workspace_images_uploaded") as mock:
         yield mock
+
+
+@pytest.fixture
+def mock_odm_server(httpserver, settings):
+    mock_server = NodeODMMockHTTPServer(httpserver).register_routes()
+    settings.NODEODM_URL = mock_server.base_url
+    settings.NINJAODM_BASE_URL = "https://ninjaodm.example.com"
+    return mock_server

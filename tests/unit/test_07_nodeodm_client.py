@@ -7,17 +7,8 @@ from pyodm.api import Task
 from pyodm.types import NodeInfo, NodeOption, TaskInfo
 from pyodm.exceptions import NodeConnectionError, NodeResponseError
 
-from tests.server_mocks import NodeODMMockHTTPServer
 from app.api.constants.odm_client import NodeODMClient
 from app.api.auth.nodeodm import NodeODMServiceAuth
-
-
-@pytest.fixture
-def mock_odm_server(httpserver, settings):
-    mock_server = NodeODMMockHTTPServer(httpserver).register_routes()
-    settings.NODEODM_URL = mock_server.base_url
-    settings.NINJAODM_BASE_URL = "https://ninjaodm.example.com"
-    return mock_server
 
 
 @pytest.fixture
