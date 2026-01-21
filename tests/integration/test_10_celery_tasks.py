@@ -336,7 +336,7 @@ class TestOnWorkspaceImagesUploaded:
 
     def test_ignores_images_not_in_uuid_list(self, image_factory):
         included = image_factory()
-        excluded = image_factory()
+        image_factory()
 
         with patch.object(Image, "make_thumbnail") as mock_make_thumbnail:
             on_workspace_images_uploaded.apply(args=([included.uuid],))
