@@ -87,45 +87,53 @@ class WorkspaceControllerPublic(ModelControllerBase):
         return tus_view
 
     @http_generic(
-        "/{uuid}/upload-images-tus", 
-        methods=["OPTIONS"], 
-        summary="TUS Discovery", 
-        tags=["tus"]
+        "/{uuid}/upload-images-tus",
+        methods=["OPTIONS"],
+        summary="TUS Discovery",
+        tags=["tus"],
     )
     def tus_options(self, request, uuid: UUID):
         return self._get_tus_handler(request, uuid).options(request)
 
-    @http_post(
-        "/{uuid}/upload-images-tus", 
-        summary="TUS Create Upload", 
-        tags=["tus"]
-    )
+    @http_post("/{uuid}/upload-images-tus", summary="TUS Create Upload", tags=["tus"])
     def tus_post(self, request, uuid: UUID, headers: TusPostHeaders = Header(...)):
-        request.path += "/" # used in location header by django-tus
+        request.path += "/"  # used in location header by django-tus
         return self._get_tus_handler(request, uuid).post(request)
 
     @http_generic(
-        "/{uuid}/upload-images-tus/{resource_id}", 
-        summary="TUS Resume Check", 
-        methods=["HEAD"], 
-        tags=["tus"]
+        "/{uuid}/upload-images-tus/{resource_id}",
+        summary="TUS Resume Check",
+        methods=["HEAD"],
+        tags=["tus"],
     )
-    def tus_head(self, request, uuid: UUID, resource_id: str, headers: TusBaseHeaders = Header(...)):
+    def tus_head(
+        self,
+        request,
+        uuid: UUID,
+        resource_id: str,
+        headers: TusBaseHeaders = Header(...),
+    ):
         return self._get_tus_handler(request, uuid).head(request, resource_id)
 
     @http_patch(
-        "/{uuid}/upload-images-tus/{resource_id}", 
-        summary="TUS Chunk Upload", 
-        tags=["tus"]
+        "/{uuid}/upload-images-tus/{resource_id}",
+        summary="TUS Chunk Upload",
+        tags=["tus"],
     )
-    def tus_patch(self, request, uuid: UUID, resource_id: str, headers: TusPatchHeaders = Header(...)):
+    def tus_patch(
+        self,
+        request,
+        uuid: UUID,
+        resource_id: str,
+        headers: TusPatchHeaders = Header(...),
+    ):
         return self._get_tus_handler(request, uuid).patch(request, resource_id)
 
     @http_generic(
-        "/{uuid}/upload-images-tus/{resource_id}", 
-        methods=["OPTIONS"], 
-        summary="TUS Resource Options", 
-        tags=["tus"]
+        "/{uuid}/upload-images-tus/{resource_id}",
+        methods=["OPTIONS"],
+        summary="TUS Resource Options",
+        tags=["tus"],
     )
     def tus_resource_options(self, request, uuid: UUID, resource_id: str):
         return self._get_tus_handler(request, uuid).options(request)

@@ -30,7 +30,7 @@ class ResultFilterSchema(FilterSchema):
 
 class ResultBaseSSEData(Schema):
     uuid: UUID
-    
+
 
 class ResultDeletedSSEData(ResultBaseSSEData):
     result_type: ODMTaskResultType

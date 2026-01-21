@@ -1,5 +1,5 @@
-from typing import TypeVar, Generic, Union, Type, Literal
-from ninja import Schema, Field
+from typing import TypeVar, Generic, Union, Literal
+from ninja import Schema
 from pydantic import BaseModel
 
 from .workspace import (
@@ -27,9 +27,11 @@ from .gcp import GPCCreatedSSEData, GCPUpdatedSSEData, GCPDeletedSSEData
 E = TypeVar("E", bound=str)
 T = TypeVar("T", bound=Schema)
 
+
 class SSEWrapper(BaseModel, Generic[E, T]):
     event: E
     data: T
+
 
 class HeartbeatEvent(Schema):
     event: Literal["heartbeat"] = "heartbeat"
@@ -63,5 +65,5 @@ ServerSideEvent = Union[
     *(
         SSEWrapper[Literal[event_name], payload]
         for event_name, payload in _EVENTS.items()
-    )
+    ),
 ]

@@ -29,5 +29,5 @@ class ImageBaseSSEData(Schema):
     uuid: UUID
     name: str
 
-class ImageDeletedSSEData(ImageBaseSSEData):
-    ...
+
+class ImageDeletedSSEData(ImageBaseSSEData): ...

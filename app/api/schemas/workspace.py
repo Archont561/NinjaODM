@@ -53,16 +53,13 @@ class WorkspaceBaseSSEData(Schema):
     name: str
 
 
-class WorkspaceCreatedSSEData(WorkspaceBaseSSEData):
-    ...
+class WorkspaceCreatedSSEData(WorkspaceBaseSSEData): ...
 
 
-class WorkspaceUpdatedSSEData(WorkspaceBaseSSEData):
-    ...
+class WorkspaceUpdatedSSEData(WorkspaceBaseSSEData): ...
 
 
-class WorkspaceDeletedSSEData(WorkspaceBaseSSEData):
-    ...
+class WorkspaceDeletedSSEData(WorkspaceBaseSSEData): ...
 
 
 class WorkspaceImagesUploadedSSEData(Schema):

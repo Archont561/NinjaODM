@@ -50,7 +50,7 @@ async def redis_event_stream(user_id: str):
 
 
 @sse_router.get(
-    "/events", 
+    "/events",
     auth=ServiceUserJWTAuth(),
     response=ServerSideEvent,
     tags=["public", "sse"],
