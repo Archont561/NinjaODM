@@ -24,7 +24,7 @@ class TestWorkspaceTusUpload:
         self, live_server, workspace, temp_image_file, valid_token
     ):
         init_url = (
-            f"{live_server.url}/api/workspaces/{workspace.uuid}/upload-images-tus/"
+            f"{live_server.url}/api/workspaces/{workspace.uuid}/upload-images-tus"
         )
 
         client = TusClient(init_url, headers={"Authorization": f"Bearer {valid_token}"})
