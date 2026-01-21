@@ -4,14 +4,14 @@ from faker import Faker
 
 from ..base import MockedHTTPServer
 from ..utils import jsonify, route
-from .odm_utils import MockTaskManager, ODMAssetFactory
+from .odm_utils import MockODMTaskManager, MockODMAssetFactory
 
 fake = Faker()
 
 class NodeODMMockHTTPServer(MockedHTTPServer):
     def __init__(self, httpserver):
         super().__init__(httpserver)
-        self.manager = MockTaskManager()
+        self.manager = MockODMTaskManager()
 
     def _get_params(self, request: Request) -> dict:
         if request.is_json:
