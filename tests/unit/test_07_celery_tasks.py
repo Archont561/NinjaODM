@@ -12,6 +12,8 @@ from app.api.tasks.task import (
     on_task_finish,
     on_task_failure,
 )
+from app.api.tasks.workspace import on_workspace_images_uploaded
+from app.api.models.image import Image
 from app.api.models.result import ODMTaskResult
 from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, ODMTaskResultType
 
@@ -309,3 +311,39 @@ class TestOnTaskFailure:
     def test_task_not_found(self, mock_nodeodm):
         on_task_failure.apply(args=[uuid4()]).get()
         mock_nodeodm["task"].remove.assert_not_called()
+
+
+@pytest.mark.django_db
+class TestOnWorkspaceImagesUploaded:
+    def test_makes_thumbnail_for_each_image(self, image_factory):
+        image1 = image_factory()
+        image2 = image_factory()
+
+        with patch.object(Image, "make_thumbnail") as mock_make_thumbnail:
+            on_workspace_images_uploaded.apply(args=([image1.uuid, image2.uuid],))
+
+        assert mock_make_thumbnail.call_count == 2
+
+    def test_ignores_images_not_in_uuid_list(self, image_factory):
+        included = image_factory()
+        excluded = image_factory()
+
+        with patch.object(Image, "make_thumbnail") as mock_make_thumbnail:
+            on_workspace_images_uploaded.apply(args=([included.uuid],))
+
+        mock_make_thumbnail.assert_called_once()
+
+    def test_handles_empty_uuid_list(self):
+        with patch.object(Image, "make_thumbnail") as mock_make_thumbnail:
+            on_workspace_images_uploaded.apply(args=([],))
+
+        mock_make_thumbnail.assert_not_called()
+
+    def test_nonexistent_uuids_are_safely_ignored(self, image_factory):
+        image = image_factory()
+        missing_uuid = uuid4()
+
+        with patch.object(Image, "make_thumbnail") as mock_make_thumbnail:
+            on_workspace_images_uploaded.apply(args=([image.uuid, missing_uuid],))
+
+        mock_make_thumbnail.assert_called_once()
