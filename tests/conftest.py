@@ -18,6 +18,11 @@ from tests.factories import (
 from tests.server_mocks import NodeODMMockHTTPServer
 
 
+def pytest_collection_modifyitems(session, config, items):
+    # sort items by module filename and then by function name
+    items.sort(key=lambda item: (item.module.__name__, item.name))
+
+
 register(WorkspaceFactory)
 register(ImageFactory)
 register(GroundControlPointFactory)
