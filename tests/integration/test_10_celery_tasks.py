@@ -93,7 +93,7 @@ class TestOnTaskCreate:
         if odm_task.options:
             assert remote_task.options == odm_task.options
         assert remote_task.imagesCount >= 3
-        assert remote_task.status.code == 20 # RUNNING
+        assert remote_task.status.code == 20  # RUNNING
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.RUNNING
 
@@ -102,7 +102,7 @@ class TestOnTaskCreate:
         try:
             on_task_create.apply(args=[random_uuid]).get()
         except Exception:
-            pass # We don't care about the local exception, we care about the side effect
+            pass  # We don't care about the local exception, we care about the side effect
 
         assert len(mock_odm_server.manager.list_uuids()) == 0
 
@@ -116,6 +116,7 @@ class TestOnTaskCreate:
 
     def test_odm_upload_error_fails_task(self, httpserver, odm_task):
         import re
+
         upload_pattern = re.compile(r"^/task/new/upload/.*$")
         httpserver.expect_request(uri=upload_pattern, method="POST").respond_with_json(
             {"error": "Disk full"}, status=500
@@ -132,10 +133,10 @@ class TestOnTaskPause:
     def test_success(self, initialized_mock_task, odm_task):
         odm_task.status = ODMTaskStatus.RUNNING
         odm_task.save()
-        initialized_mock_task.commit() 
-        assert initialized_mock_task.status.code == 20 # RUNNING
+        initialized_mock_task.commit()
+        assert initialized_mock_task.status.code == 20  # RUNNING
         on_task_pause.apply(args=[odm_task.uuid]).get()
-        assert initialized_mock_task.status.code == 50 # CANCELED/PAUSED
+        assert initialized_mock_task.status.code == 50  # CANCELED/PAUSED
         assert any("canceled" in log.lower() for log in initialized_mock_task.output)
         odm_task.refresh_from_db()
         assert odm_task.odm_status == ODMTaskStatus.PAUSED
@@ -164,8 +165,8 @@ class TestOnTaskPause:
 @pytest.mark.usefixtures("mock_redis")
 class TestOnTaskResume:
     def test_success(self, initialized_mock_task, odm_task):
-        initialized_mock_task.cancel() 
-        assert initialized_mock_task.status.code == 50 # CANCELED/PAUSED
+        initialized_mock_task.cancel()
+        assert initialized_mock_task.status.code == 50  # CANCELED/PAUSED
         odm_task.status = ODMTaskStatus.PAUSED
         odm_task.save()
         on_task_resume.apply(args=[odm_task.uuid]).get()
@@ -193,7 +194,7 @@ class TestOnTaskResume:
             odm_task.step: {
                 "dsm": True,
             }
-        }       
+        }
         odm_task.status = ODMTaskStatus.PAUSED
         odm_task.save()
         on_task_resume.apply(args=[odm_task.uuid]).get()
@@ -235,7 +236,7 @@ class TestOnTaskNodeodmWebhook:
             odm_task, stage.previous_stage.stage_results
         )
         on_task_nodeodm_webhook.apply(args=[odm_task.uuid]).get()
-        assert initialized_mock_task.status.code == 10 
+        assert initialized_mock_task.status.code == 10
         assert initialized_mock_task.progress == 0.0
         assert any("restarted" in log.lower() for log in initialized_mock_task.output)
         odm_task.refresh_from_db()

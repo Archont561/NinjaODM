@@ -8,6 +8,7 @@ from .odm_utils import MockODMTaskManager, MockODMAssetFactory
 
 fake = Faker()
 
+
 class NodeODMMockHTTPServer(MockedHTTPServer):
     def __init__(self, httpserver):
         super().__init__(httpserver)
@@ -38,25 +39,31 @@ class NodeODMMockHTTPServer(MockedHTTPServer):
 
     @route("/info", method="GET")
     def info(self, request: Request):
-        return jsonify({
-            "version": "2.3.2",
-            "taskQueueCount": self.manager.get_queue_count(),
-            "availableMemory": 8_000_000_000,
-            "totalMemory": 16_000_000_000,
-            "cpuCores": 4,
-            "engineVersion": "3.0.0",
-            "engine": "odm",
-        })
+        return jsonify(
+            {
+                "version": "2.3.2",
+                "taskQueueCount": self.manager.get_queue_count(),
+                "availableMemory": 8_000_000_000,
+                "totalMemory": 16_000_000_000,
+                "cpuCores": 4,
+                "engineVersion": "3.0.0",
+                "engine": "odm",
+            }
+        )
 
     @route("/options", method="GET")
     def get_options(self, request: Request):
-        return jsonify([{
-            "name": "dsm",
-            "type": "bool",
-            "value": "false",
-            "domain": "bool",
-            "help": "Generate DSM",
-        }])
+        return jsonify(
+            [
+                {
+                    "name": "dsm",
+                    "type": "bool",
+                    "value": "false",
+                    "domain": "bool",
+                    "help": "Generate DSM",
+                }
+            ]
+        )
 
     # ------------------------------
     # TASK CREATION
@@ -90,8 +97,8 @@ class NodeODMMockHTTPServer(MockedHTTPServer):
     def task_commit(self, request: Request, uuid: str):
         if not (task := self.manager.get_task(uuid)):
             return self._task_not_found()
-        
-        task.commit() # Triggered on model
+
+        task.commit()  # Triggered on model
         return jsonify({"uuid": uuid})
 
     # ------------------------------
@@ -105,7 +112,8 @@ class NodeODMMockHTTPServer(MockedHTTPServer):
     @route("/task/{uuid}/info", method="GET")
     def task_info(self, request: Request, uuid: str):
         task = self.manager.get_task(uuid)
-        if not task: return self._task_not_found()
+        if not task:
+            return self._task_not_found()
 
         with_output = int(request.args.get("with_output", 0))
         data = task.to_dict()
@@ -116,7 +124,8 @@ class NodeODMMockHTTPServer(MockedHTTPServer):
     @route("/task/{uuid}/output", method="GET")
     def task_output(self, request: Request, uuid: str):
         task = self.manager.get_task(uuid)
-        if not task: return self._task_not_found()
+        if not task:
+            return self._task_not_found()
 
         line = int(request.args.get("line", 0))
         # PyODM's output() method expects a JSON list of strings
@@ -130,7 +139,7 @@ class NodeODMMockHTTPServer(MockedHTTPServer):
         return Response(
             MockODMAssetFactory.create_zip(),
             mimetype="application/zip",
-            headers={"Content-Disposition": f'attachment; filename="{uuid}_all.zip"'}
+            headers={"Content-Disposition": f'attachment; filename="{uuid}_all.zip"'},
         )
 
     # ------------------------------
@@ -142,9 +151,9 @@ class NodeODMMockHTTPServer(MockedHTTPServer):
         params = self._get_params(request)
         task = self.manager.get_task(params.get("uuid"))
         if not task:
-            return jsonify({"success": False}) # pyodm cancel logic
-        
-        task.cancel() # Logic on model
+            return jsonify({"success": False})  # pyodm cancel logic
+
+        task.cancel()  # Logic on model
         return jsonify({"success": True})
 
     @route("/task/remove", method="POST")

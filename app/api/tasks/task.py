@@ -116,8 +116,7 @@ def make_temp_gcp_file(odm_task: ODMTask) -> Path:
         tmp.write("EPSG:4326\n")
 
         gcps = (
-            GroundControlPoint.objects
-            .filter(image__workspace=odm_task.workspace)
+            GroundControlPoint.objects.filter(image__workspace=odm_task.workspace)
             .select_related("image")
             .order_by("label")
         )

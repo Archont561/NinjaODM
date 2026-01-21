@@ -1,4 +1,3 @@
-import re
 import time
 import io
 import zipfile
@@ -8,13 +7,13 @@ from enum import IntEnum
 from uuid import uuid4
 from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional, Any
-from pytest_httpserver import URIPattern
 
 fake = Faker()
 
 # ==========================
 # Constants
 # ==========================
+
 
 class MockTaskStatus(IntEnum):
     QUEUED = 10
@@ -28,6 +27,7 @@ class MockTaskStatus(IntEnum):
 # Models
 # ==========================
 
+
 @dataclass
 class MockTaskStatusInfo:
     code: int = MockTaskStatus.QUEUED
@@ -36,6 +36,7 @@ class MockTaskStatusInfo:
 @dataclass
 class MockODMTask:
     """Data container for Task info. JSON-serializable."""
+
     uuid: str
     name: str
     dateCreated: int
@@ -99,6 +100,7 @@ class MockODMTask:
 # Factories
 # ==========================
 
+
 class MockODMTaskFactory(factory.Factory):
     class Meta:
         model = MockODMTask
@@ -110,7 +112,9 @@ class MockODMTaskFactory(factory.Factory):
     processingTime = 0
     imagesCount = 0
     progress = 0.0
-    status = factory.LazyFunction(lambda: MockTaskStatusInfo(code=MockTaskStatus.QUEUED))
+    status = factory.LazyFunction(
+        lambda: MockTaskStatusInfo(code=MockTaskStatus.QUEUED)
+    )
     options = factory.List([])
     output = factory.List([])
 
@@ -131,6 +135,7 @@ class MockODMAssetFactory:
 # Business Logic Manager
 # ==========================
 
+
 class MockODMTaskManager:
     def __init__(self):
         self.tasks: Dict[str, MockODMTask] = {}
@@ -147,11 +152,14 @@ class MockODMTaskManager:
 
     def get_queue_count(self) -> int:
         return sum(
-            1 for task in self.tasks.values()
+            1
+            for task in self.tasks.values()
             if task.status.code < MockTaskStatus.COMPLETED
         )
-    
-    def create_init(self, uuid: str, name: Optional[str], options: List[Dict[str, Any]]) -> MockODMTask:
+
+    def create_init(
+        self, uuid: str, name: Optional[str], options: List[Dict[str, Any]]
+    ) -> MockODMTask:
         task = MockODMTaskFactory(
             uuid=uuid,
             name=name or "New Task",
@@ -163,16 +171,20 @@ class MockODMTaskManager:
 
     def create_shortcut(self, uuid: str, name: Optional[str]) -> MockODMTask:
         uuid = self.create_init(uuid, name, [])
-        self.commit(uuid) # Start immediately
+        self.commit(uuid)  # Start immediately
         return task
-        
+
     def remove(self, uuid: str) -> bool:
         return self.tasks.pop(uuid, None) is not None
 
     def set_status(self, uuid: str, status_name: str) -> None:
         """Helper for tests to force a specific status."""
         if task := self.get_task(uuid):
-            if status_name == "COMPLETED": task.complete()
-            elif status_name == "CANCELED": task.cancel()
-            elif status_name == "FAILED": task.fail()
-            elif status_name == "RUNNING": task.commit()
+            if status_name == "COMPLETED":
+                task.complete()
+            elif status_name == "CANCELED":
+                task.cancel()
+            elif status_name == "FAILED":
+                task.fail()
+            elif status_name == "RUNNING":
+                task.commit()

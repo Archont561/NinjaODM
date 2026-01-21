@@ -2,6 +2,7 @@ import traceback
 from werkzeug.wrappers import Request
 from .utils import RoutePattern, jsonify
 
+
 class MockedHTTPServer:
     def __init__(self, httpserver):
         self.httpserver = httpserver
@@ -16,7 +17,7 @@ class MockedHTTPServer:
 
     def _bind_handler(self, handler_func):
         pattern = RoutePattern(handler_func._route_path)
-        
+
         def wrapper(request: Request):
             # Extract {params} from the actual request URI
             kwargs = pattern.extract_params(request.path)
@@ -28,6 +29,6 @@ class MockedHTTPServer:
                 return jsonify({"error": str(e)}, status=500)
 
         self.httpserver.expect_request(
-            uri=pattern, # Using the URIPattern class for binding
-            method=handler_func._route_method
+            uri=pattern,  # Using the URIPattern class for binding
+            method=handler_func._route_method,
         ).respond_with_handler(wrapper)
