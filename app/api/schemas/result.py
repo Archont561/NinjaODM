@@ -2,7 +2,7 @@ from typing import Optional, Annotated
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field
-from ninja import ModelSchema, FilterSchema, FilterLookup
+from ninja import ModelSchema, FilterSchema, FilterLookup, Schema
 
 from app.api.models.result import ODMTaskResult
 from app.api.constants.odm import ODMTaskResultType
@@ -26,3 +26,15 @@ class ResultFilterSchema(FilterSchema):
         None
     )
     workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None
+
+
+class ResultBaseSSEData(Schema):
+    uuid: UUID
+    
+
+class ResultDeletedSSEData(ResultBaseSSEData):
+    result_type: ODMTaskResultType
+
+
+class ResultCreatedSSEData(ResultBaseSSEData):
+    workspace_name: str

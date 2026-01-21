@@ -7,6 +7,7 @@ from redis import asyncio as aioredis
 from django_redis import get_redis_connection
 
 from app.api.auth.user import ServiceUserJWTAuth
+from app.api.schemas.sse import ServerSideEvent
 
 sse_router = Router()
 
@@ -48,7 +49,12 @@ async def redis_event_stream(user_id: str):
         await redis.aclose()
 
 
-@sse_router.get("/events", auth=ServiceUserJWTAuth())
+@sse_router.get(
+    "/events", 
+    auth=ServiceUserJWTAuth(),
+    response=ServerSideEvent,
+    tags=["public", "sse"],
+)
 async def sse_endpoint(request):
     response = StreamingHttpResponse(
         redis_event_stream(request.user.id), content_type="text/event-stream"

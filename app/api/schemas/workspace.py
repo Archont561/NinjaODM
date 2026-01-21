@@ -1,3 +1,4 @@
+from uuid import UUID
 from typing import Optional, Annotated
 from ninja import ModelSchema, Schema, FilterSchema, FilterLookup
 from datetime import datetime
@@ -45,3 +46,25 @@ class WorkspaceFilterSchemaPublic(FilterSchema):
 
 class WorkspaceFilterSchemaInternal(WorkspaceFilterSchemaPublic):
     user_id: Annotated[Optional[str], FilterLookup("user_id__icontains")] = None
+
+
+class WorkspaceBaseSSEData(Schema):
+    uuid: UUID
+    name: str
+
+
+class WorkspaceCreatedSSEData(WorkspaceBaseSSEData):
+    ...
+
+
+class WorkspaceUpdatedSSEData(WorkspaceBaseSSEData):
+    ...
+
+
+class WorkspaceDeletedSSEData(WorkspaceBaseSSEData):
+    ...
+
+
+class WorkspaceImagesUploadedSSEData(Schema):
+    uuid: UUID
+    uploaded: int

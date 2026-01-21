@@ -73,3 +73,17 @@ class GCPFilterSchema(FilterSchema):
     workspace_uuid: Annotated[
         Optional[UUID], FilterLookup("image__workspace__uuid")
     ] = None
+
+
+class GCPBaseSSEData(Schema):
+    uuid: UUID
+    label: str
+
+class GPCCreatedSSEData(GCPBaseSSEData):
+    ...
+
+class GCPUpdatedSSEData(GCPBaseSSEData):
+    ...
+
+class GCPDeletedSSEData(GCPBaseSSEData):
+    ...

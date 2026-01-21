@@ -62,3 +62,49 @@ class TaskFilterSchema(FilterSchema):
         None
     )
     workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None
+
+
+class TaskBaseSSEData(Schema):
+    uuid: UUID
+    status: str
+    step: str
+
+
+class TaskCreatedSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskUpdatedSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskDeletedSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskPausedSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskResumedSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskCancelledSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskNextStageSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskStartedSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskCompletedSSEData(TaskBaseSSEData):
+    ...
+
+
+class TaskFailedSSEData(TaskBaseSSEData):
+    error: str | None = None

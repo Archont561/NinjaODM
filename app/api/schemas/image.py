@@ -2,7 +2,7 @@ from typing import Optional, Annotated
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field
-from ninja import ModelSchema, FilterSchema, FilterLookup
+from ninja import ModelSchema, FilterSchema, FilterLookup, Schema
 
 from app.api.models.image import Image
 
@@ -23,3 +23,11 @@ class ImageFilterSchema(FilterSchema):
         None
     )
     workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None
+
+
+class ImageBaseSSEData(Schema):
+    uuid: UUID
+    name: str
+
+class ImageDeletedSSEData(ImageBaseSSEData):
+    ...
