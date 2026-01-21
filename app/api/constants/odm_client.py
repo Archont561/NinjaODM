@@ -26,6 +26,6 @@ class NodeODMClient(Node):
             NodeODMServiceAuth.HMAC_MESSAGE
         )
         kwargs["webhook"] = (
-            f"{settings.NINJAODM_BASE_URL}/api/internal/tasks/{self.uuid}/webhook?signature={expected_signature}"
+            f"{settings.NINJAODM_BASE_URL}/api/internal/tasks/{self.uuid}/webhooks/odm?signature={expected_signature}"
         )
         super().create_task(*args, **kwargs)

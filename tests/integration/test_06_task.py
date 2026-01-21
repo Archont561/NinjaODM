@@ -249,7 +249,7 @@ class TestTaskAPIInternal:
             NodeODMServiceAuth.HMAC_MESSAGE
         )
         resp = self.client.post(
-            f"/{task.uuid}/odmwebhook?signature={signature}",
+            f"/{task.uuid}/webhooks/odm?signature={signature}",
             json=nodeodm_webhook_payload,
         )
         assert resp.status_code == 200
@@ -258,7 +258,7 @@ class TestTaskAPIInternal:
     def test_nodeodm_webhook_call_denied(self, odm_task_factory):
         task = odm_task_factory()
         signature = NodeODMServiceAuth.generate_hmac_signature("INVALID_HMAC_MESSAGE")
-        resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}")
+        resp = self.client.post(f"/{task.uuid}/webhooks/odm?signature={signature}")
         assert resp.status_code in (401, 403)
 
 
