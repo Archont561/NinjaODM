@@ -29,9 +29,19 @@ class ImageControllerPublic(ModelControllerBase):
         model=Image,
         retrieve_schema=ImageResponse,
         allowed_routes=["find_one", "delete"],
+        find_one_route_info={
+            'operation_id': 'getImage',
+        },
+        delete_route_info={
+            'operation_id': 'deleteImage',
+        },
     )
 
-    @http_get("/", response=List[model_config.retrieve_schema])
+    @http_get(
+        "/", 
+        response=List[model_config.retrieve_schema],
+        operation_id="listImages",
+    )
     def list_images(self, filters: ImageFilterSchema = Query(...)):
         user_id = self.context.request.user.id
         queryset = self.model_config.model.objects.filter(
@@ -39,7 +49,10 @@ class ImageControllerPublic(ModelControllerBase):
         ).select_related("workspace")
         return filters.filter(queryset)
 
-    @http_get("/{uuid}/download")
+    @http_get(
+        "/{uuid}/download",
+        operation_id="downloadImage",
+    )
     def download_image_file(self, request, uuid: UUID):
         image = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         return FileResponse(
@@ -60,8 +73,18 @@ class ImageControllerInternal(ModelControllerBase):
         model=Image,
         retrieve_schema=ImageResponse,
         allowed_routes=["find_one", "delete"],
+        find_one_route_info={
+            'operation_id': 'getImageInternal',
+        },
+        delete_route_info={
+            'operation_id': 'deleteImageInternal',
+        },
     )
 
-    @http_get("/", response=List[model_config.retrieve_schema])
+    @http_get(
+        "/", 
+        response=List[model_config.retrieve_schema],
+        operation_id="listImagesInternal",
+    )
     def list_images(self, filters: ImageFilterSchema = Query(...)):
         return filters.filter(self.model_config.model.objects.all())

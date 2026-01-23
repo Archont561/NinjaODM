@@ -12,7 +12,11 @@ from app.api.services.token import TokenService
 from app.api.auth.service import ServiceHMACAuth
 
 
-@api_controller("internal/token", auth=ServiceHMACAuth(), tags=["token", "internal"])
+@api_controller(
+    "internal/token", 
+    auth=ServiceHMACAuth(), 
+    tags=["token", "internal"],
+)
 class TokenControllerInternal:
     @inject
     def __init__(self, token_service: TokenService):
@@ -21,6 +25,7 @@ class TokenControllerInternal:
     @http_post(
         "/pair",
         response=TokenPairResponseInternal,
+        operation_id='getUserTokenPair',
     )
     def obtain_token(self, payload: TokenRequestInternal = Body(...)):
         return self.token_service.obtain_token(payload.dict())
@@ -28,6 +33,7 @@ class TokenControllerInternal:
     @http_post(
         "/refresh",
         response=AccessTokenResponseInternal,
+        operation_id='refreshUserAccessToken',
     )
     def refresh_token(self, payload: RefreshRequestInternal = Body(...)):
         return self.token_service.refresh_token(payload.refresh)

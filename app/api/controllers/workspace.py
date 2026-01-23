@@ -58,22 +58,44 @@ class WorkspaceControllerPublic(ModelControllerBase):
             "custom_handler": lambda self, data, **kw: self.service.create(
                 data, user_id=self.context.request.user.id, **kw
             ),
+            'operation_id': 'createWorkspace',
+        },
+        find_one_route_info={
+            'operation_id': 'getWorkspace',
+        },
+        patch_route_info={
+            'operation_id': 'updateWorkspace',
+        },
+        delete_route_info={
+            'operation_id': 'deleteWorkspace',
         },
     )
 
-    @http_get("/", response=List[model_config.retrieve_schema])
+    @http_get(
+        "/", 
+        response=List[model_config.retrieve_schema],
+        operation_id='listWorkspaces',
+    )
     def list_workspaces(self, filters: WorkspaceFilterSchemaPublic = Query(...)):
         user_id = self.context.request.user.id
         queryset = self.model_config.model.objects.filter(user_id=user_id)
         return filters.filter(queryset)
 
-    @http_post("/{uuid}/upload-image", response=ImageResponse)
+    @http_post(
+        "/{uuid}/upload-image", 
+        response=ImageResponse,
+        operation_id='uploadImageToWorkspace',
+    )
     def upload_file(self, request, uuid: UUID, image_file: File[UploadedFile]):
         workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         image = self.service.save_images(workspace, [image_file])[0]
         return image
 
-    @http_post("/{uuid}/upload-images", response=List[ImageResponse])
+    @http_post(
+        "/{uuid}/upload-images", 
+        response=List[ImageResponse],
+        operation_id='uploadImagesToWorkspace',
+    )
     def upload_files(self, request, uuid: UUID, image_files: File[List[UploadedFile]]):
         workspace = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         images = self.service.save_images(workspace, image_files)
@@ -91,11 +113,17 @@ class WorkspaceControllerPublic(ModelControllerBase):
         methods=["OPTIONS"],
         summary="TUS Discovery",
         tags=["tus"],
+        operation_id='getTusWorkspaceUploadOptions',
     )
     def tus_options(self, request, uuid: UUID):
         return self._get_tus_handler(request, uuid).options(request)
 
-    @http_post("/{uuid}/upload-images-tus", summary="TUS Create Upload", tags=["tus"])
+    @http_post(
+        "/{uuid}/upload-images-tus", 
+        summary="TUS Create Upload", 
+        tags=["tus"],
+        operation_id='createTusUploadInWorkspace',
+    )
     def tus_post(self, request, uuid: UUID, headers: TusPostHeaders = Header(...)):
         request.path += "/"  # used in location header by django-tus
         return self._get_tus_handler(request, uuid).post(request)
@@ -105,6 +133,7 @@ class WorkspaceControllerPublic(ModelControllerBase):
         summary="TUS Resume Check",
         methods=["HEAD"],
         tags=["tus"],
+        operation_id='checkTusUploadResumeInWorkspace',
     )
     def tus_head(
         self,
@@ -119,6 +148,7 @@ class WorkspaceControllerPublic(ModelControllerBase):
         "/{uuid}/upload-images-tus/{resource_id}",
         summary="TUS Chunk Upload",
         tags=["tus"],
+        operation_id='uploadTusChunkToWorkspace',
     )
     def tus_patch(
         self,
@@ -134,6 +164,7 @@ class WorkspaceControllerPublic(ModelControllerBase):
         methods=["OPTIONS"],
         summary="TUS Resource Options",
         tags=["tus"],
+        operation_id='getTusResourceOptions',
     )
     def tus_resource_options(self, request, uuid: UUID, resource_id: str):
         return self._get_tus_handler(request, uuid).options(request)
@@ -151,9 +182,25 @@ class WorkspaceControllerInternal(ModelControllerBase):
         create_schema=CreateWorkspaceInternal,
         retrieve_schema=WorkspaceResponseInternal,
         update_schema=UpdateWorkspaceInternal,
-        allowed_routes=["create", "find_one", "update", "patch", "delete"],
+        allowed_routes=["create", "find_one", "patch", "delete"],
+        create_route_info={
+            'operation_id': 'createWorkspaceInternal',
+        },
+        find_one_route_info={
+            'operation_id': 'getWorkspaceInternal',
+        },
+        patch_route_info={
+            'operation_id': 'updateWorkspaceInternal',
+        },
+        delete_route_info={
+            'operation_id': 'deleteWorkspaceInternal',
+        },
     )
 
-    @http_get("/", response=List[model_config.retrieve_schema])
+    @http_get(
+        "/", 
+        response=List[model_config.retrieve_schema],
+        operation_id='listWorkspacesInternal',
+    )
     def list_workspaces(self, filters: WorkspaceFilterSchemaInternal = Query(...)):
         return filters.filter(self.model_config.model.objects.all())

@@ -8,7 +8,10 @@ from app.api.schemas.core import MessageSchema, HealthSchema
 
 @api_controller("", tags=["public"])
 class CoreController(ControllerBase):
-    @http_get("/version")
+    @http_get(
+        "/version",
+        operation_id='getAPIVersion',
+    )
     def version(self):
         return {
             "version": "1.0.0",
@@ -17,11 +20,19 @@ class CoreController(ControllerBase):
             "api_docs": "/api/docs",
         }
 
-    @http_get("/health", response=MessageSchema)
+    @http_get(
+        "/health", 
+        response=MessageSchema,
+        operation_id='getAPIHealth',
+    )
     def health_check(self):
         return {"message": "Service is healthy"}
 
-    @http_get("/health/detailed", response=HealthSchema)
+    @http_get(
+        "/health/detailed", 
+        response=HealthSchema,
+        operation_id='getAPIDetailedHealth',
+    )
     async def detailed_health_check(self):
         results = await asyncio.gather(*(func() for func in HEALTH_CHECKS.values()))
         health_mixins = dict(zip(HEALTH_CHECKS.keys(), results))

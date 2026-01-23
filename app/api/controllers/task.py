@@ -41,6 +41,7 @@ class TaskControllerPublic(ModelControllerBase):
         allowed_routes=["find_one", "create", "delete"],
         delete_route_info={
             "permissions": [IsTaskOwner & IsTaskStateTerminal],
+            'operation_id': 'deleteTask',
         },
         create_route_info={
             "path": "/?workspace_uuid=uuid",
@@ -48,10 +49,18 @@ class TaskControllerPublic(ModelControllerBase):
             "custom_handler": lambda self, data, **kw: self.service.create(
                 data, **self.context.kwargs, **kw
             ),
+            'operation_id': 'createTask',
+        },
+        find_one_route_info={
+            'operation_id': 'getTask',
         },
     )
 
-    @http_get("/", response=List[model_config.retrieve_schema])
+    @http_get(
+        "/", 
+        response=List[model_config.retrieve_schema],
+        operation_id='listTasks',
+    )
     def list_tasks(self, filters: TaskFilterSchema = Query(...)):
         user_id = self.context.request.user.id
         queryset = self.model_config.model.objects.filter(
@@ -59,7 +68,11 @@ class TaskControllerPublic(ModelControllerBase):
         ).select_related("workspace")
         return filters.filter(queryset)
 
-    @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
+    @http_post(
+        "/{uuid}/{action}", 
+        response=model_config.retrieve_schema,
+        operation_id='callTaskAction',
+    )
     def task_action(
         self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]
     ):
@@ -82,6 +95,7 @@ class TaskControllerInternal(ModelControllerBase):
         allowed_routes=["find_one", "create", "delete"],
         delete_route_info={
             "permissions": [IsTaskStateTerminal],
+            'operation_id': 'deleteTaskInternal',
         },
         create_route_info={
             "path": "/?workspace_uuid=uuid",
@@ -89,16 +103,27 @@ class TaskControllerInternal(ModelControllerBase):
             "custom_handler": lambda self, data, **kw: self.service.create(
                 data, **self.context.kwargs, **kw
             ),
+            'operation_id': 'createTaskInternal',
+        },
+        find_one_route_info={
+            'operation_id': 'getTaskInternal',
         },
     )
 
-    @http_get("/", response=List[model_config.retrieve_schema])
+    @http_get(
+        "/", 
+        response=List[model_config.retrieve_schema],
+        operation_id='listTasksInternal',
+    )
     def list_tasks(self, filters: TaskFilterSchema = Query(...)):
         queryset = self.model_config.model.objects.all()
         return filters.filter(queryset)
 
     @http_post(
-        "/{uuid}/webhooks/odm", response=MessageSchema, auth=NodeODMServiceAuth()
+        "/{uuid}/webhooks/odm",
+        response=MessageSchema, 
+        auth=NodeODMServiceAuth(),
+        operation_id='callTaskOdmWebhook',
     )
     def nodeodm_webhook(
         self, request, uuid: UUID, signature: str, data: ODMTaskWebhookInternal
@@ -115,7 +140,11 @@ class TaskControllerInternal(ModelControllerBase):
                 pass
         return {"message": "ok"}
 
-    @http_post("/{uuid}/{action}", response=model_config.retrieve_schema)
+    @http_post(
+        "/{uuid}/{action}", 
+        response=model_config.retrieve_schema,
+        operation_id='callTaskActionInternal',
+    )
     def task_action(
         self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]
     ):
