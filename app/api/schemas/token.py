@@ -3,7 +3,7 @@ from typing import List
 
 
 class TokenRequestInternal(Schema):
-    user_id: int
+    user_id: str
     scopes: List[str] = []
 
 
