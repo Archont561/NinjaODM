@@ -30,15 +30,15 @@ class ImageControllerPublic(ModelControllerBase):
         retrieve_schema=ImageResponse,
         allowed_routes=["find_one", "delete"],
         find_one_route_info={
-            'operation_id': 'getImage',
+            "operation_id": "getImage",
         },
         delete_route_info={
-            'operation_id': 'deleteImage',
+            "operation_id": "deleteImage",
         },
     )
 
     @http_get(
-        "/", 
+        "/",
         response=List[model_config.retrieve_schema],
         operation_id="listImages",
     )
@@ -74,15 +74,15 @@ class ImageControllerInternal(ModelControllerBase):
         retrieve_schema=ImageResponse,
         allowed_routes=["find_one", "delete"],
         find_one_route_info={
-            'operation_id': 'getImageInternal',
+            "operation_id": "getImageInternal",
         },
         delete_route_info={
-            'operation_id': 'deleteImageInternal',
+            "operation_id": "deleteImageInternal",
         },
     )
 
     @http_get(
-        "/", 
+        "/",
         response=List[model_config.retrieve_schema],
         operation_id="listImagesInternal",
     )

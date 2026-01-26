@@ -42,16 +42,16 @@ class GCPControllerPublic(ModelControllerBase):
             "custom_handler": lambda self, data, **kw: self.service.create(
                 data, **self.context.kwargs, **kw
             ),
-            'operation_id': 'createGCP',
+            "operation_id": "createGCP",
         },
         find_one_route_info={
-            'operation_id': 'getGCP',
+            "operation_id": "getGCP",
         },
         patch_route_info={
-            'operation_id': 'updateGCP',
+            "operation_id": "updateGCP",
         },
         delete_route_info={
-            'operation_id': 'deleteGCP',
+            "operation_id": "deleteGCP",
         },
     )
 
@@ -60,18 +60,18 @@ class GCPControllerPublic(ModelControllerBase):
         return self.model_config.model.objects.filter(image__workspace__user_id=user_id)
 
     @http_get(
-        "/", 
+        "/",
         response=List[model_config.retrieve_schema],
-        operation_id='listGCPs',
+        operation_id="listGCPs",
     )
     def list_gcps(self, filters: GCPFilterSchema = Query(...)):
         return filters.filter(self.get_queryset())
 
     @http_get(
-        "/geojson", 
-        response=GCPFeatureCollection, 
+        "/geojson",
+        response=GCPFeatureCollection,
         tags=["gcp", "public", "geojson"],
-        operation_id='listGCPsAsGeojson',
+        operation_id="listGCPsAsGeojson",
     )
     def list_gcps_as_geojson(self, filters: GCPFilterSchema = Query(...)):
         return self.service.queryset_to_geojson(filters.filter(self.get_queryset()))
@@ -97,23 +97,23 @@ class GCPControllerInternal(ModelControllerBase):
             "custom_handler": lambda self, data, **kw: self.service.create(
                 data, **self.context.kwargs, **kw
             ),
-            'operation_id': 'createGCPInternal',
+            "operation_id": "createGCPInternal",
         },
         find_one_route_info={
-            'operation_id': 'getGCPInternal',
+            "operation_id": "getGCPInternal",
         },
         patch_route_info={
-            'operation_id': 'updateGCPInternal',
+            "operation_id": "updateGCPInternal",
         },
         delete_route_info={
-            'operation_id': 'deleteGCPInternal',
+            "operation_id": "deleteGCPInternal",
         },
     )
 
     @http_get(
-        "/", 
+        "/",
         response=List[model_config.retrieve_schema],
-        operation_id='listGCPsInternal',
+        operation_id="listGCPsInternal",
     )
     def list_gcps(self, filters: GCPFilterSchema = Query(...)):
         queryset = self.model_config.model.objects.all()

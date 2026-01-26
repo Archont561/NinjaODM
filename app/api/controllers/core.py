@@ -10,7 +10,7 @@ from app.api.schemas.core import MessageSchema, HealthSchema
 class CoreController(ControllerBase):
     @http_get(
         "/version",
-        operation_id='getAPIVersion',
+        operation_id="getAPIVersion",
     )
     def version(self):
         return {
@@ -21,17 +21,17 @@ class CoreController(ControllerBase):
         }
 
     @http_get(
-        "/health", 
+        "/health",
         response=MessageSchema,
-        operation_id='getAPIHealth',
+        operation_id="getAPIHealth",
     )
     def health_check(self):
         return {"message": "Service is healthy"}
 
     @http_get(
-        "/health/detailed", 
+        "/health/detailed",
         response=HealthSchema,
-        operation_id='getAPIDetailedHealth',
+        operation_id="getAPIDetailedHealth",
     )
     async def detailed_health_check(self):
         results = await asyncio.gather(*(func() for func in HEALTH_CHECKS.values()))

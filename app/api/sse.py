@@ -54,7 +54,7 @@ async def redis_event_stream(user_id: str):
     auth=ServiceUserJWTAuth(),
     response=ServerSideEvent,
     tags=["public", "sse"],
-    operation_id='listenToSSE',
+    operation_id="listenToSSE",
 )
 async def sse_endpoint(request):
     response = StreamingHttpResponse(

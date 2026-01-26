@@ -32,17 +32,17 @@ class ResultControllerPublic(ModelControllerBase):
         retrieve_schema=ResultResponse,
         allowed_routes=["find_one", "delete"],
         find_one_route_info={
-            'operation_id': 'getTaskResult',
+            "operation_id": "getTaskResult",
         },
         delete_route_info={
-            'operation_id': 'deleteTaskResult',
+            "operation_id": "deleteTaskResult",
         },
     )
 
     @http_get(
-        "/", 
+        "/",
         response=List[model_config.retrieve_schema],
-        operation_id='listTaskResults',
+        operation_id="listTaskResults",
     )
     def list_results(self, filters: ResultFilterSchema = Query(...)):
         user_id = self.context.request.user.id
@@ -53,7 +53,7 @@ class ResultControllerPublic(ModelControllerBase):
 
     @http_get(
         "/{uuid}/download",
-        operation_id='downloadTaskResult',
+        operation_id="downloadTaskResult",
     )
     def download_result_file(self, request, uuid: UUID):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
@@ -63,7 +63,7 @@ class ResultControllerPublic(ModelControllerBase):
 
     @http_get(
         "/{uuid}/share",
-        operation_id='shareTaskResult',
+        operation_id="shareTaskResult",
     )
     def get_share_api_key(self, request, uuid: UUID):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
@@ -73,7 +73,7 @@ class ResultControllerPublic(ModelControllerBase):
         "/{uuid}/shared",
         auth=ShareResultsApiKeyAuth(),
         permissions=[IsRefererResultOwner],
-        operation_id='downloadSharedTaskResult',
+        operation_id="downloadSharedTaskResult",
     )
     def download_shared_result_file(self, request, uuid: UUID, api_key: str):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
@@ -94,17 +94,17 @@ class ResultControllerInternal(ModelControllerBase):
         retrieve_schema=ResultResponse,
         allowed_routes=["find_one", "delete"],
         find_one_route_info={
-            'operation_id': 'getTaskResultInternal',
+            "operation_id": "getTaskResultInternal",
         },
         delete_route_info={
-            'operation_id': 'deleteTaskResultInternal',
+            "operation_id": "deleteTaskResultInternal",
         },
     )
 
     @http_get(
-        "/", 
+        "/",
         response=List[model_config.retrieve_schema],
-        operation_id='listTaskResultsInternal',
+        operation_id="listTaskResultsInternal",
     )
     def list_results(self, filters: ResultFilterSchema = Query(...)):
         return filters.filter(self.model_config.model.objects.all())
