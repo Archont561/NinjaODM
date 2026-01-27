@@ -17,7 +17,7 @@ from django_tus.signals import tus_upload_finished_signal
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.workspace import Workspace
-from app.api.permissions.workspace import IsWorkspaceOwner
+from app.api.permissions.workspace import IsWorkspaceOwner, CanDeleteWorkspace
 from app.api.schemas.workspace import (
     CreateWorkspaceInternal,
     CreateWorkspacePublic,
@@ -68,6 +68,7 @@ class WorkspaceControllerPublic(ModelControllerBase):
         },
         delete_route_info={
             "operation_id": "deleteWorkspace",
+            "permissions": [IsWorkspaceOwner & CanDeleteWorkspace],
         },
     )
 
@@ -194,6 +195,7 @@ class WorkspaceControllerInternal(ModelControllerBase):
         },
         delete_route_info={
             "operation_id": "deleteWorkspaceInternal",
+            "permissions": [CanDeleteWorkspace],
         },
     )
 
