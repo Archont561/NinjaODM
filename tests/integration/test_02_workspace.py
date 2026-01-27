@@ -9,6 +9,7 @@ from app.api.controllers.workspace import (
     WorkspaceControllerInternal,
     WorkspaceControllerPublic,
 )
+from app.api.constants.odm import ODMTaskStatus
 from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
 
 
@@ -93,13 +94,21 @@ class TestWorkspaceAPIInternal:
         assert ws.name == "Updated"
         assert ws.user_id == "user_333"
 
-    def test_delete_workspace(self, workspace_factory):
+    def test_delete_workspace(self, workspace_factory, odm_task_factory):
         ws = workspace_factory(user_id="user_1234", name="Other WS")
+        odm_task_factory(workspace=ws, status=ODMTaskStatus.CANCELLED)
         resp = self.client.delete(f"/{ws.uuid}")
         assert resp.status_code == 204
 
         with pytest.raises(Workspace.DoesNotExist):
             Workspace.objects.get(uuid=ws.uuid)
+
+    def test_delete_workspace_denied(self, workspace_factory, odm_task_factory):
+        ws = workspace_factory(user_id="user_1234", name="Other WS")
+        odm_task_factory(workspace=ws, status=ODMTaskStatus.QUEUED)
+        resp = self.client.delete(f"/{ws.uuid}")
+        assert resp.status_code == 403
+        assert Workspace.objects.get(uuid=ws.uuid)
 
 
 @pytest.mark.django_db
@@ -174,11 +183,18 @@ class TestWorkspaceAPIPublic:
         resp = self.client.patch(f"/{other_workspace.uuid}", json={"name": "Hack"})
         assert resp.status_code in (403, 404)
 
-    def test_delete_own_workspace(self, user_workspace):
+    def test_delete_own_workspace(self, user_workspace, odm_task_factory):
+        odm_task_factory(workspace=user_workspace, status=ODMTaskStatus.CANCELLED)
         resp = self.client.delete(f"/{user_workspace.uuid}")
         assert resp.status_code == 204
         with pytest.raises(Workspace.DoesNotExist):
             Workspace.objects.get(uuid=user_workspace.uuid)
+
+    def test_delete_own_workspace_denied(self, user_workspace, odm_task_factory):
+        odm_task_factory(workspace=user_workspace, status=ODMTaskStatus.QUEUED)
+        resp = self.client.delete(f"/{user_workspace.uuid}")
+        assert resp.status_code == 403
+        assert Workspace.objects.get(uuid=user_workspace.uuid)
 
     def test_delete_other_workspace_denied(self, other_workspace):
         resp = self.client.delete(f"/{other_workspace.uuid}")
