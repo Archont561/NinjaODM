@@ -26,7 +26,7 @@ class TestTokenObtainAuthorization:
         url = "/pair"
         response = self.client.post(
             url,
-            json={"user_id": 5001, "scopes": ["read:profile", "write:data"]},
+            json={"user_id": "user_5001", "scopes": ["read:profile", "write:data"]},
             content_type="application/json",
             headers={
                 "Authorization": self._make_hmac_auth_header(service, "POST", url)
@@ -45,7 +45,7 @@ class TestTokenObtainAuthorization:
         url = "/pair"
         response = self.client.post(
             url,
-            json={"user_id": 1, "scopes": []},
+            json={"user_id": "user_1", "scopes": []},
             content_type="application/json",
             headers={
                 "Authorization": self._make_hmac_auth_header(service, "POST", url)
@@ -56,7 +56,7 @@ class TestTokenObtainAuthorization:
 
     def test_no_auth_header_returns_401_or_403(self):
         response = self.client.post(
-            "/pair", json={"user_id": 1, "scopes": []}, content_type="application/json"
+            "/pair", json={"user_id": "user_1", "scopes": []}, content_type="application/json"
         )
 
         assert response.status_code in (401, 403)
@@ -67,7 +67,7 @@ class TestTokenObtainAuthorization:
         service = authorized_service_factory()
         response = self.client.post(
             "/pair",
-            json={"user_id": 1, "scopes": []},
+            json={"user_id": "user_1", "scopes": []},
             content_type="application/json",
             header={
                 "Authorization": f"Bearer {service.api_key}:1234567890:bad-signature"
