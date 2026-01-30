@@ -52,7 +52,7 @@ class WorkspaceControllerPublic(ModelControllerBase):
         model=Workspace,
         create_schema=CreateWorkspacePublic,
         retrieve_schema=WorkspaceResponsePublic,
-        update_schema=UpdateWorkspacePublic,
+        patch_schema=UpdateWorkspacePublic,
         allowed_routes=["find_one", "patch", "delete", "create"],
         create_route_info={
             "custom_handler": lambda self, data, **kw: self.service.create(
@@ -182,7 +182,7 @@ class WorkspaceControllerInternal(ModelControllerBase):
         model=Workspace,
         create_schema=CreateWorkspaceInternal,
         retrieve_schema=WorkspaceResponseInternal,
-        update_schema=UpdateWorkspaceInternal,
+        patch_schema=UpdateWorkspaceInternal,
         allowed_routes=["create", "find_one", "patch", "delete"],
         create_route_info={
             "operation_id": "createWorkspaceInternal",
