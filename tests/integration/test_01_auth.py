@@ -56,7 +56,9 @@ class TestTokenObtainAuthorization:
 
     def test_no_auth_header_returns_401_or_403(self):
         response = self.client.post(
-            "/pair", json={"user_id": "user_1", "scopes": []}, content_type="application/json"
+            "/pair",
+            json={"user_id": "user_1", "scopes": []},
+            content_type="application/json",
         )
 
         assert response.status_code in (401, 403)
