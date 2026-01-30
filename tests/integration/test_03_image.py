@@ -43,8 +43,7 @@ class TestImageAPIInternal:
             ImageControllerInternal, auth=AuthStrategyEnum.service
         )
 
-    pytest.mark.freeze_time("2026-01-20 12:00:00")
-
+    @pytest.mark.freeze_time("2026-01-20 12:00:00")
     @pytest.mark.parametrize(
         "query_format, expected_count",
         [
@@ -52,9 +51,9 @@ class TestImageAPIInternal:
             ("name=Image 1", 1),
             ("is_thumbnail=True", 3),
             ("is_thumbnail=False", 3),
-            ("created_after={after}", 3),
+            ("created_after={after}", 4),
             ("created_before={before}", 5),
-            ("created_after={after}&created_before={before}", 2),
+            ("created_after={after}&created_before={before}", 3),
             ("name=Image&is_thumbnail=True", 3),
             ("workspace_uuid={ws1_uuid}", 2),
             ("workspace_uuid={ws2_uuid}", 2),
