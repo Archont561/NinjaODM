@@ -15,7 +15,7 @@ from app.api.auth.share import ShareResultsApiKeyAuth
 from app.api.constants.token import ShareToken
 from app.api.models.result import ODMTaskResult
 from app.api.permissions.result import IsResultOwner, IsRefererResultOwner
-from app.api.schemas.result import ResultResponse, ResultFilterSchema
+from app.api.schemas.result import ResultResponse, ResultFilterSchema, ResultShareKeyResponse
 from app.api.services.result import ResultModelService
 
 
@@ -64,6 +64,7 @@ class ResultControllerPublic(ModelControllerBase):
     @http_get(
         "/{uuid}/share",
         operation_id="shareTaskResult",
+        response=ResultShareKeyResponse,
     )
     def get_share_api_key(self, request, uuid: UUID):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)

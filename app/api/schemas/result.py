@@ -8,6 +8,10 @@ from app.api.models.result import ODMTaskResult
 from app.api.constants.odm import ODMTaskResultType
 
 
+class ResultShareKeyResponse(Schema):
+    share_api_key: str
+
+
 class ResultResponse(ModelSchema):
     workspace_uuid: UUID = Field(..., alias="workspace.uuid")
     result_type: ODMTaskResultType
