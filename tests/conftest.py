@@ -7,16 +7,15 @@ from PIL import Image as PILImage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from ninja_jwt.tokens import AccessToken
 
-from tests.factories import (
+from tests.utils import (
     WorkspaceFactory,
     ImageFactory,
     GroundControlPointFactory,
     ODMTaskFactory,
     ODMTaskResultFactory,
     AuthorizedServiceFactory,
+    NodeODMMockHTTPServer,
 )
-from tests.server_mocks import NodeODMMockHTTPServer
-
 
 def pytest_collection_modifyitems(session, config, items):
     # sort items by module filename and then by function name

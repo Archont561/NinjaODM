@@ -1,7 +1,7 @@
-import time
 import hmac
 import hashlib
 from enum import Enum
+from django.utils import timezone
 from ninja_extra.testing import TestClient, TestAsyncClient
 from ninja_jwt.tokens import AccessToken
 from .factories import AuthorizedServiceFactory
@@ -22,7 +22,7 @@ class ServiceAuth(AuthStrategy):
         path: str,
         timestamp: int | None = None,
     ):
-        timestamp = timestamp or int(time.time())
+        timestamp = timestamp or int(timezone.now().timestamp())
         message = f"{self.service.api_key}:{timestamp}:{method.upper()}:{path}".encode()
 
         signature = hmac.new(
