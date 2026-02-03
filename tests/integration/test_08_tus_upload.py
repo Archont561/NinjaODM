@@ -21,7 +21,7 @@ class TestWorkspaceTusUpload:
         return workspace_factory(user_id="user_999")
 
     def test_tus_full_upload_flow(
-        self, live_server, workspace, temp_image_file, valid_token
+        self, live_server, workspace, image_file_factory, valid_token
     ):
         init_url = (
             f"{live_server.url}/api/workspaces/{workspace.uuid}/upload-images-tus"
@@ -33,7 +33,7 @@ class TestWorkspaceTusUpload:
         tus_upload_finished_signal.connect(signal_mock)
 
         uploader = client.uploader(
-            file_stream=temp_image_file.file, chunk_size=1500, retries=1, retry_delay=0
+            file_stream=image_file_factory().file, chunk_size=1500, retries=1, retry_delay=0
         )
 
         while uploader.offset < uploader.get_file_size():

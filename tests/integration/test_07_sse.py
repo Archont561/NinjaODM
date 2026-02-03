@@ -10,7 +10,7 @@ from app.api.controllers.gcp import GCPControllerPublic
 from app.api.controllers.image import ImageControllerPublic
 from app.api.controllers.result import ResultControllerPublic
 from app.api.constants.odm import ODMTaskStatus
-from ..auth_clients import AuthenticatedTestClient, AuthStrategyEnum
+from tests.utils import AuthenticatedTestClient, AuthStrategyEnum
 
 
 WORKSPACE_ACTIONS = {
@@ -32,9 +32,7 @@ TASK_ACTIONS = {
 }
 
 GCP_ACTIONS = {
-    "create": lambda client, obj, payload, **kwargs: client.post(
-        f"/?image_uuid={kwargs.get('image_uuid')}", json=payload
-    ),
+    "create": lambda client, obj, payload, **kwargs: client.post("/", json=payload),
     "update": lambda client, obj, payload, **kwargs: client.patch(
         f"/{obj.uuid}", json=payload
     ),
@@ -150,7 +148,7 @@ class TestSSEAPIPublic:
         workspace_client,
         sse_listener,
         workspace_factory,
-        temp_image_file,
+        image_file_factory,
         action_key,
         payload,
         event_type,
@@ -171,7 +169,7 @@ class TestSSEAPIPublic:
             payload=payload,
             expected_status=expected_status,
             expected_event_key=event_type,
-            file_obj=temp_image_file if action_key == "upload_image" else None,
+            file_obj=image_file_factory() if action_key == "upload_image" else None,
         )
 
     @pytest.mark.parametrize(
@@ -248,7 +246,7 @@ class TestSSEAPIPublic:
         image = await sync_to_async(image_factory)(workspace=user_workspace)
 
         if action_key == "create":
-            kwargs["image_uuid"] = image.uuid
+            payload["image_uuid"] = image.uuid
         else:
             gcp = await sync_to_async(ground_control_point_factory)(image=image)
 
@@ -275,7 +273,7 @@ class TestSSEAPIPublic:
         sse_listener,
         workspace_factory,
         image_factory,
-        temp_image_file,
+        image_file_factory,
         action_key,
         payload,
         event_type,
@@ -283,7 +281,7 @@ class TestSSEAPIPublic:
     ):
         user_workspace = await sync_to_async(workspace_factory)(user_id="user_999")
         image = await sync_to_async(image_factory)(
-            workspace=user_workspace, image_file=temp_image_file
+            workspace=user_workspace, image_file=image_file_factory()
         )
 
         await self._run_lifecycle_test(
@@ -308,7 +306,7 @@ class TestSSEAPIPublic:
         sse_listener,
         workspace_factory,
         odm_task_result_factory,
-        temp_image_file,
+        image_file_factory,
         action_key,
         payload,
         event_type,
@@ -316,7 +314,7 @@ class TestSSEAPIPublic:
     ):
         user_workspace = await sync_to_async(workspace_factory)(user_id="user_999")
         task_result = await sync_to_async(odm_task_result_factory)(
-            workspace=user_workspace, file=temp_image_file
+            workspace=user_workspace, file=image_file_factory()
         )
 
         await self._run_lifecycle_test(

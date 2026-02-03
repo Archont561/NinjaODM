@@ -18,32 +18,10 @@ from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, ODMTaskResu
 
 
 @pytest.fixture
-def temp_image_file_factory():
-    """Factory that creates a fresh temporary image file each time."""
-    import io
-    from PIL import Image as PILImage
-    from django.core.files.uploadedfile import SimpleUploadedFile
-
-    def _create(name="test.jpg"):
-        image = PILImage.new("RGB", (300, 300), color="red")
-        buffer = io.BytesIO()
-        image.save(buffer, format="JPEG")
-        buffer.seek(0)
-
-        return SimpleUploadedFile(
-            name=name,
-            content=buffer.getvalue(),
-            content_type="image/jpeg",
-        )
-
-    return _create
-
-
-@pytest.fixture
-def workspace_with_images(workspace_factory, image_factory, temp_image_file_factory):
+def workspace_with_images(workspace_factory, image_factory, image_file_factory):
     workspace = workspace_factory()
     for i in range(3):
-        image_file = temp_image_file_factory(name=f"test_{i}.jpg")
+        image_file = image_file_factory(name=f"test_{i}.jpg")
         image_factory(workspace=workspace, image_file=image_file)
     image_factory(workspace=workspace, image_file=image_file, is_thumbnail=True)
     return workspace
