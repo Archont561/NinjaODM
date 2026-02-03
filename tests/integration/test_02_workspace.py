@@ -17,21 +17,22 @@ from tests.utils import AuthStrategyEnum, AuthenticatedTestClient, APITestSuite
 # MOCK FIXTURES (Background Tasks)
 # =========================================================================
 
+
 @pytest.fixture
 def mock_task_on_workspace_images_uploaded():
     with patch("app.api.services.workspace.on_workspace_images_uploaded") as mock:
         yield mock
 
+
 # =========================================================================
 # CLIENT FIXTURES
 # =========================================================================
 
+
 @pytest.fixture
 def public_client():
     """JWT authenticated client for public API."""
-    return AuthenticatedTestClient(
-        WorkspaceControllerPublic, auth=AuthStrategyEnum.jwt
-    )
+    return AuthenticatedTestClient(WorkspaceControllerPublic, auth=AuthStrategyEnum.jwt)
 
 
 @pytest.fixture
@@ -74,6 +75,7 @@ def jwt_internal_client():
 # DATA FACTORY FIXTURES
 # =========================================================================
 
+
 @pytest.fixture
 def user_workspace_factory(workspace_factory):
     """Factory for user_999 workspaces."""
@@ -89,40 +91,48 @@ def other_workspace_factory(workspace_factory):
 @pytest.fixture
 def deletable_user_workspace_factory(workspace_factory, odm_task_factory):
     """User workspace with cancelled task."""
+
     def factory(**kw):
         ws = workspace_factory(user_id="user_999", name="Deletable WS", **kw)
         odm_task_factory(workspace=ws, status=ODMTaskStatus.CANCELLED)
         return ws
+
     return factory
 
 
 @pytest.fixture
 def non_deletable_user_workspace_factory(workspace_factory, odm_task_factory):
     """User workspace with running task."""
+
     def factory(**kw):
         ws = workspace_factory(user_id="user_999", name="Non-Deletable WS", **kw)
         odm_task_factory(workspace=ws, status=ODMTaskStatus.QUEUED)
         return ws
+
     return factory
 
 
 @pytest.fixture
 def deletable_other_workspace_factory(workspace_factory, odm_task_factory):
     """Other user workspace with cancelled task."""
+
     def factory(**kw):
         ws = workspace_factory(user_id="user_1234", name="Other Deletable WS", **kw)
         odm_task_factory(workspace=ws, status=ODMTaskStatus.CANCELLED)
         return ws
+
     return factory
 
 
 @pytest.fixture
 def non_deletable_other_workspace_factory(workspace_factory, odm_task_factory):
     """Other user workspace with running task."""
+
     def factory(**kw):
         ws = workspace_factory(user_id="user_1234", name="Other Non-Deletable WS", **kw)
         odm_task_factory(workspace=ws, status=ODMTaskStatus.QUEUED)
         return ws
+
     return factory
 
 
@@ -130,20 +140,22 @@ def non_deletable_other_workspace_factory(workspace_factory, odm_task_factory):
 # Workspace List
 # -------------------------
 
+
 @pytest.fixture
 def workspace_list_factory(workspace_factory):
     """Factory for workspace list (filtering tests)."""
+
     def factory():
         Workspace.objects.all().delete()
         now = timezone.now()
-        
+
         def create(name, user_id, days_ago):
             return workspace_factory(
                 name=name,
                 user_id=user_id,
                 created_at=now - timedelta(days=days_ago),
             )
-        
+
         return [
             create("ProjectA", "user_999", 10),
             create("ProjectB", "user_999", 5),
@@ -153,6 +165,7 @@ def workspace_list_factory(workspace_factory):
             create("OtherProject", "user_3", 6),
             create("OtherUser2", "user_3", 2),
         ]
+
     return factory
 
 
@@ -160,13 +173,14 @@ def workspace_list_factory(workspace_factory):
 # QUERY FIXTURES
 # =========================================================================
 
+
 @pytest.fixture
 def internal_list_queries():
     """Queries for internal API (sees all 7 workspaces)."""
     now = timezone.now()
     after = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
     before = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-    
+
     return [
         {"params": {}, "expected_count": 7},
         {"params": {"name": "ProjectA"}, "expected_count": 1},
@@ -188,7 +202,7 @@ def public_list_queries():
     now = timezone.now()
     after = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
     before = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-    
+
     return [
         {"params": {}, "expected_count": 4},
         {"params": {"name": "ProjectA"}, "expected_count": 1},
@@ -198,13 +212,17 @@ def public_list_queries():
         {"params": {"created_before": before}, "expected_count": 3},
         {"params": {"name": "Project", "created_after": after}, "expected_count": 3},
         {"params": {"name": "ProjectC", "created_after": after}, "expected_count": 1},
-        {"params": {"user_id": "1"}, "expected_count": 4},  # Ignored by controller filtering
+        {
+            "params": {"user_id": "1"},
+            "expected_count": 4,
+        },  # Ignored by controller filtering
     ]
 
 
 # =========================================================================
 # ASSERTION FIXTURES
 # =========================================================================
+
 
 @pytest.fixture
 def upload_image_files(image_file_factory):
@@ -215,29 +233,32 @@ def upload_image_files(image_file_factory):
 @pytest.fixture
 def assert_image_uploaded(mock_task_on_workspace_images_uploaded):
     """Assertion for image upload."""
+
     def assertion(obj, resp):
         assert resp.status_code == 200
         data = resp.json()
         assert data["uuid"] is not None
         assert data["workspace_uuid"] == str(obj.uuid)
-        
+
         uploaded_image = Image.objects.get(uuid=data["uuid"])
-        
+
         # Check that the signal triggered the background task
         # Note: Depending on how the signal is connected in tests, this might vary.
         # But if the fixture is active, the patch should be in place.
         if mock_task_on_workspace_images_uploaded.delay.called:
-             # Arguments might be a list of UUIDs
-             args, _ = mock_task_on_workspace_images_uploaded.delay.call_args
-             assert args[0][0] == uploaded_image.uuid
-        
+            # Arguments might be a list of UUIDs
+            args, _ = mock_task_on_workspace_images_uploaded.delay.call_args
+            assert args[0][0] == uploaded_image.uuid
+
         return True
+
     return assertion
 
 
 # =========================================================================
 # TEST SUITE
 # =========================================================================
+
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
@@ -247,14 +268,13 @@ class TestWorkspaceAPI(APITestSuite):
     """
     Workspace API tests.
     """
-    
+
     tests = {
         # ===== DEFAULTS =====
         "model": Workspace,
         "endpoint": "/",
         "factory": "user_workspace_factory",
         "client": "public_client",
-        
         # ===== CRUD =====
         "cruds": {
             # ----- CREATE -----
@@ -265,7 +285,10 @@ class TestWorkspaceAPI(APITestSuite):
                     {
                         "name": "internal_service",
                         "client": "internal_client",
-                        "payload": lambda s: {"name": "Service WS", "user_id": "user_1234"},
+                        "payload": lambda s: {
+                            "name": "Service WS",
+                            "user_id": "user_1234",
+                        },
                         "assert": lambda s, obj, data: (
                             obj.name == data["name"] and obj.user_id == data["user_id"]
                         ),
@@ -304,7 +327,6 @@ class TestWorkspaceAPI(APITestSuite):
                     },
                 ],
             },
-            
             # ----- GET -----
             "get": {
                 "scenarios": [
@@ -312,18 +334,21 @@ class TestWorkspaceAPI(APITestSuite):
                     {
                         "name": "service_own",
                         "client": "service_public_client",
-                        "assert": lambda s, obj, resp: resp.json()["uuid"] == str(obj.uuid),
+                        "assert": lambda s, obj, resp: resp.json()["uuid"]
+                        == str(obj.uuid),
                     },
                     {
                         "name": "service_other",
                         "client": "service_public_client",
                         "factory": "other_workspace_factory",
-                        "assert": lambda s, obj, resp: resp.json()["uuid"] == str(obj.uuid),
+                        "assert": lambda s, obj, resp: resp.json()["uuid"]
+                        == str(obj.uuid),
                     },
                     # JWT - can get own
                     {
                         "name": "jwt_own",
-                        "assert": lambda s, obj, resp: resp.json()["uuid"] == str(obj.uuid),
+                        "assert": lambda s, obj, resp: resp.json()["uuid"]
+                        == str(obj.uuid),
                     },
                     # JWT - cannot get other's
                     {
@@ -341,7 +366,6 @@ class TestWorkspaceAPI(APITestSuite):
                     },
                 ],
             },
-            
             # ----- UPDATE -----
             "update": {
                 "method": "patch",
@@ -382,7 +406,6 @@ class TestWorkspaceAPI(APITestSuite):
                     },
                 ],
             },
-            
             # ----- DELETE -----
             "delete": {
                 "scenarios": [
@@ -430,7 +453,6 @@ class TestWorkspaceAPI(APITestSuite):
                 ],
             },
         },
-        
         # ===== ACTIONS =====
         "actions": {
             "upload_image": {
@@ -460,7 +482,6 @@ class TestWorkspaceAPI(APITestSuite):
                 ],
             },
         },
-        
         # ===== LIST =====
         "list": {
             "url": "/",

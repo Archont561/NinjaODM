@@ -17,6 +17,7 @@ from tests.utils import (
     NodeODMMockHTTPServer,
 )
 
+
 def pytest_collection_modifyitems(session, config, items):
     # sort items by module filename and then by function name
     items.sort(key=lambda item: (item.module.__name__, item.name))
@@ -63,13 +64,14 @@ def image_file_factory():
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG")
     image_content = buffer.getvalue()
-    
+
     def factory(name="test.jpg"):
         return SimpleUploadedFile(
             name=name,
-            content=image_content, # Uses the cached bytes
+            content=image_content,  # Uses the cached bytes
             content_type="image/jpeg",
         )
+
     return factory
 
 

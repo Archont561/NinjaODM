@@ -33,7 +33,10 @@ class TestWorkspaceTusUpload:
         tus_upload_finished_signal.connect(signal_mock)
 
         uploader = client.uploader(
-            file_stream=image_file_factory().file, chunk_size=1500, retries=1, retry_delay=0
+            file_stream=image_file_factory().file,
+            chunk_size=1500,
+            retries=1,
+            retry_delay=0,
         )
 
         while uploader.offset < uploader.get_file_size():

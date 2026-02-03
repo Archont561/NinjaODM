@@ -18,20 +18,17 @@ from tests.utils import APITestSuite, AuthStrategyEnum, AuthenticatedTestClient
 # Clients
 # -------------------------
 
+
 @pytest.fixture
 def gcp_public_client():
     """JWT authenticated client for public GCP API."""
-    return AuthenticatedTestClient(
-        GCPControllerPublic, auth=AuthStrategyEnum.jwt
-    )
+    return AuthenticatedTestClient(GCPControllerPublic, auth=AuthStrategyEnum.jwt)
 
 
 @pytest.fixture
 def gcp_internal_client():
     """Service authenticated client for internal GCP API."""
-    return AuthenticatedTestClient(
-        GCPControllerInternal, auth=AuthStrategyEnum.service
-    )
+    return AuthenticatedTestClient(GCPControllerInternal, auth=AuthStrategyEnum.service)
 
 
 @pytest.fixture
@@ -49,14 +46,13 @@ def gcp_anon_internal_client():
 @pytest.fixture
 def gcp_jwt_internal_client():
     """JWT client for internal GCP API (should be denied)."""
-    return AuthenticatedTestClient(
-        GCPControllerInternal, auth=AuthStrategyEnum.jwt
-    )
+    return AuthenticatedTestClient(GCPControllerInternal, auth=AuthStrategyEnum.jwt)
 
 
 # -------------------------
 # Workspace/Image Fixtures
 # -------------------------
+
 
 @pytest.fixture
 def user_gcp_workspace(workspace_factory):
@@ -86,29 +82,36 @@ def other_gcp_image(image_factory, other_gcp_workspace):
 # GCP Factories
 # -------------------------
 
+
 @pytest.fixture
 def user_gcp_factory(ground_control_point_factory, user_gcp_image):
     """Factory for GCPs in user_999's workspace."""
+
     def factory(**kwargs):
         return ground_control_point_factory(image=user_gcp_image, **kwargs)
+
     return factory
 
 
 @pytest.fixture
 def other_gcp_factory(ground_control_point_factory, other_gcp_image):
     """Factory for GCPs in other user's workspace."""
+
     def factory(**kwargs):
         return ground_control_point_factory(image=other_gcp_image, **kwargs)
+
     return factory
 
 
 @pytest.fixture
 def any_gcp_factory(ground_control_point_factory, image_factory, workspace_factory):
     """Factory for GCPs in any workspace."""
+
     def factory(**kwargs):
         ws = workspace_factory()
         img = image_factory(workspace=ws)
         return ground_control_point_factory(image=img, **kwargs)
+
     return factory
 
 
@@ -116,13 +119,15 @@ def any_gcp_factory(ground_control_point_factory, image_factory, workspace_facto
 # GCP List Factory
 # -------------------------
 
+
 @pytest.fixture
 def gcp_list_factory(workspace_factory, image_factory, ground_control_point_factory):
     """Factory for GCP list (filtering tests)."""
+
     def factory():
         GroundControlPoint.objects.all().delete()
         Workspace.objects.all().delete()
-        
+
         now = timezone.now()
         user_ws = workspace_factory(user_id="user_999")
         other_ws1 = workspace_factory(user_id="user_1")
@@ -156,6 +161,7 @@ def gcp_list_factory(workspace_factory, image_factory, ground_control_point_fact
             "gcps": gcps,
             "user_image": gcps[0].image,
         }
+
     yield factory
     GroundControlPoint.objects.all().delete()
 
@@ -163,6 +169,7 @@ def gcp_list_factory(workspace_factory, image_factory, ground_control_point_fact
 # -------------------------
 # List Queries
 # -------------------------
+
 
 @pytest.fixture
 def internal_gcp_list_queries(gcp_list_factory):
@@ -175,12 +182,15 @@ def internal_gcp_list_queries(gcp_list_factory):
     ws2_uuid = str(data["other_ws1"].uuid)
     ws3_uuid = str(data["other_ws2"].uuid)
     image_a_uuid = str(data["gcps"][0].image.uuid)
-    
+
     return [
         {"params": {}, "expected_count": 10},
         {"params": {"label": "GCP_A"}, "expected_count": 1},
         {"params": {"label": "GCP"}, "expected_count": 10},
-        {"params": {"created_after": after, "created_before": before}, "expected_count": 4},
+        {
+            "params": {"created_after": after, "created_before": before},
+            "expected_count": 4,
+        },
         {"params": {"created_after": after}, "expected_count": 6},
         {"params": {"created_before": before}, "expected_count": 8},
         {"params": {"workspace_uuid": ws1_uuid}, "expected_count": 5},
@@ -201,7 +211,7 @@ def public_gcp_list_queries(gcp_list_factory):
     ws_own_uuid = str(data["user_ws"].uuid)
     ws_other_uuid = str(data["other_ws1"].uuid)
     image_own_uuid = str(data["gcps"][0].image.uuid)
-    
+
     return [
         {"params": {}, "expected_count": 5},
         {"params": {"label": "GCP_C"}, "expected_count": 1},
@@ -209,7 +219,10 @@ def public_gcp_list_queries(gcp_list_factory):
         {"params": {"label": "GCP_INVALID"}, "expected_count": 0},
         {"params": {"created_after": after}, "expected_count": 4},
         {"params": {"created_before": before}, "expected_count": 3},
-        {"params": {"created_after": after, "created_before": before}, "expected_count": 2},
+        {
+            "params": {"created_after": after, "created_before": before},
+            "expected_count": 2,
+        },
         {"params": {"workspace_uuid": ws_own_uuid}, "expected_count": 5},
         {"params": {"workspace_uuid": ws_other_uuid}, "expected_count": 0},
         {"params": {"image_uuid": image_own_uuid}, "expected_count": 1},
@@ -219,6 +232,7 @@ def public_gcp_list_queries(gcp_list_factory):
 # -------------------------
 # Create Fixtures
 # -------------------------
+
 
 @pytest.fixture
 def user_image_for_create(image_factory, user_gcp_workspace):
@@ -248,6 +262,7 @@ def payload_create_service(any_image_for_create):
         "image_point": [500.0, 300.0],
         "label": "GCP-SERVICE-001",
     }
+
 
 @pytest.fixture
 def payload_create_own(user_image_for_create):
@@ -310,51 +325,60 @@ def payload_update_coords():
 # Assertions
 # -------------------------
 
+
 @pytest.fixture
 def assert_gcp_created():
     """Assertion for successful GCP creation."""
+
     def assertion(obj, payload):
         assert obj.label == payload["label"]
         assert list(obj.point) == payload["gcp_point"]
         assert [obj.imgx, obj.imgy] == payload["image_point"]
         return True
+
     return assertion
 
 
 @pytest.fixture
 def assert_gcp_updated():
     """Assertion for successful GCP update."""
+
     def assertion(obj, payload):
         for key, value in payload.items():
             if key == "gcp_point":
                 assert list(obj.point) == value
             elif key == "image_point":
-                 assert [obj.imgx, obj.imgy] == value
+                assert [obj.imgx, obj.imgy] == value
             else:
                 assert getattr(obj, key) == value
         return True
+
     return assertion
 
 
 @pytest.fixture
 def assert_gcp_deleted():
     """Assertion for successful GCP deletion."""
+
     def assertion(obj, resp):
         assert resp.status_code == 204
         assert not GroundControlPoint.objects.filter(pk=obj.pk).exists()
         return True
+
     return assertion
 
 
 @pytest.fixture
 def assert_geojson_response():
     """Assertion for GeoJSON response."""
+
     def assertion(obj, resp):
         assert resp.status_code == 200
         data = resp.json()
         assert data["type"] == "FeatureCollection"
         assert "features" in data
         return True
+
     return assertion
 
 
@@ -362,13 +386,14 @@ def assert_geojson_response():
 # TEST SUITE
 # =========================================================================
 
+
 @pytest.mark.django_db
 @pytest.mark.usefixtures("mock_redis")
 @pytest.mark.freeze_time("2026-01-20 12:00:00")
 class TestGCPAPI(APITestSuite):
     """
     GCP API tests.
-    
+
     Covers:
     - Internal API (service auth)
     - Public API (JWT auth)
@@ -377,14 +402,13 @@ class TestGCPAPI(APITestSuite):
     - List filtering
     - GeoJSON export
     """
-    
+
     tests = {
         # ===== DEFAULTS =====
         "model": GroundControlPoint,
         "endpoint": "/",
         "factory": "user_gcp_factory",
         "client": "gcp_public_client",
-        
         # ===== CRUD =====
         "cruds": {
             # ----- CREATE -----
@@ -424,7 +448,6 @@ class TestGCPAPI(APITestSuite):
                     },
                 ],
             },
-            
             # ----- GET -----
             "get": {
                 "scenarios": [
@@ -445,10 +468,9 @@ class TestGCPAPI(APITestSuite):
                     },
                 ],
             },
-            
             # ----- UPDATE -----
             "update": {
-                "method": "patch", # Controller specifies PATCH route
+                "method": "patch",  # Controller specifies PATCH route
                 "assertion": "assert_gcp_updated",
                 "scenarios": [
                     {
@@ -464,7 +486,6 @@ class TestGCPAPI(APITestSuite):
                     },
                 ],
             },
-            
             # ----- DELETE -----
             "delete": {
                 "assertion": "assert_gcp_deleted",
@@ -481,7 +502,6 @@ class TestGCPAPI(APITestSuite):
                 ],
             },
         },
-        
         # ===== ACTIONS =====
         "actions": {
             "geojson": {
@@ -502,7 +522,6 @@ class TestGCPAPI(APITestSuite):
                 ],
             },
         },
-        
         # ===== LIST =====
         "list": {
             "url": "/",

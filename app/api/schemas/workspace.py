@@ -33,7 +33,9 @@ class WorkspaceResponseInternal(ModelSchema):
 class WorkspaceFilterSchema(FilterSchema):
     name: Annotated[Optional[str], FilterLookup("name__icontains")] = None
     created_after: Annotated[Optional[datetime], FilterLookup("created_at__gte")] = None
-    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = None
+    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = (
+        None
+    )
 
 
 class WorkspaceFilterSchemaInternal(WorkspaceFilterSchema):

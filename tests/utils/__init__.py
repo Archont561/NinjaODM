@@ -1,7 +1,7 @@
 from .auth_clients import (
-    AuthStrategyEnum, 
+    AuthStrategyEnum,
     AuthenticatedTestAsyncClient,
-    AuthenticatedTestClient
+    AuthenticatedTestClient,
 )
 from .factories import (
     AuthorizedServiceFactory,

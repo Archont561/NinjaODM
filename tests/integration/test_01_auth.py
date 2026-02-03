@@ -12,6 +12,7 @@ from tests.utils import APITestSuite
 # FIXTURES
 # =========================================================================
 
+
 @pytest.fixture
 def token_client():
     """Unauthenticated client for Token API."""
@@ -34,20 +35,21 @@ def make_hmac_header(service, method: str, path: str, invalid: bool = False) -> 
     """Generate HMAC auth header."""
     ts = str(int(timezone.now().timestamp()))
     message = f"{service.api_key}:{ts}:{method}:{path}".encode()
-    
+
     if invalid:
         signature = "bad-signature"
     else:
         signature = hmac.new(
             service.api_secret.encode(), message, hashlib.sha256
         ).hexdigest()
-    
+
     return {"Authorization": f"Bearer {service.api_key}:{ts}:{signature}"}
 
 
 # -------------------------
 # Header Factories
 # -------------------------
+
 
 @pytest.fixture
 def active_service_auth_headers(active_service):
@@ -71,11 +73,14 @@ def invalid_signature_headers(active_service):
 # Dummy Factory (for actions that don't need objects)
 # -------------------------
 
+
 @pytest.fixture
 def no_object_factory():
     """Dummy factory that returns None-like object."""
+
     class DummyObject:
         uuid = None
+
     return lambda: DummyObject()
 
 
@@ -83,9 +88,11 @@ def no_object_factory():
 # Assertions
 # -------------------------
 
+
 @pytest.fixture
 def assert_token_pair():
     """Assert valid token pair response."""
+
     def assertion(obj, resp):
         assert resp.status_code == 200
         data = resp.json()
@@ -94,6 +101,7 @@ def assert_token_pair():
         assert data["refresh"]
         assert data["access"]
         return True
+
     return assertion
 
 
@@ -101,26 +109,26 @@ def assert_token_pair():
 # TEST SUITE
 # =========================================================================
 
+
 @pytest.mark.django_db
 @pytest.mark.freeze_time("2026-01-20 12:00:00")
 class TestTokenAPI(APITestSuite):
     """
     Token API tests.
-    
+
     Covers:
     - Token pair generation with valid service auth
     - Inactive service denied
     - Missing auth denied
     - Invalid signature denied
     """
-    
+
     tests = {
         # ===== DEFAULTS =====
         "model": None,
         "endpoint": "/",
         "factory": "no_object_factory",
         "client": "token_client",
-        
         # ===== ACTIONS =====
         "actions": {
             "obtain_pair": {

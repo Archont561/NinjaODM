@@ -16,7 +16,11 @@ from app.api.constants.token import ShareToken
 from app.api.models.result import ODMTaskResult
 from app.api.permissions.result import IsResultOwner, DidReferrerGrantAccess
 from app.api.permissions.core import IsAuthorizedService
-from app.api.schemas.result import ResultResponse, ResultFilterSchema, ResultShareKeyResponse
+from app.api.schemas.result import (
+    ResultResponse,
+    ResultFilterSchema,
+    ResultShareKeyResponse,
+)
 from app.api.services.result import ResultModelService
 
 

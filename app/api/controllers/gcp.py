@@ -1,4 +1,3 @@
-from uuid import UUID
 from typing import List
 from ninja import Query, Body
 from ninja_extra import (
@@ -8,7 +7,6 @@ from ninja_extra import (
     http_get,
     http_post,
 )
-from ninja_extra.exceptions import NotFound, PermissionDenied
 
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
@@ -52,7 +50,7 @@ class GCPControllerPublic(ModelControllerBase):
             "operation_id": "deleteGCP",
         },
     )
-    
+
     @http_post(
         "/",
         response={201: model_config.retrieve_schema},
@@ -62,13 +60,13 @@ class GCPControllerPublic(ModelControllerBase):
     def create_gcp(self, data: model_config.create_schema = Body(...)):
         image = self.get_object_or_exception(Image, uuid=data.image_uuid)
         self.check_object_permissions(image)
-        return 201, self.service.create(data, image=image);
+        return 201, self.service.create(data, image=image)
 
     def _get_queryset(self):
         user_id = self.context.request.user.id
-        return self.model_config.model.objects \
-            .filter(image__workspace__user_id=user_id) \
-            .select_related("image", "image__workspace")
+        return self.model_config.model.objects.filter(
+            image__workspace__user_id=user_id
+        ).select_related("image", "image__workspace")
 
     @http_get(
         "/",
@@ -107,7 +105,7 @@ class GCPControllerInternal(ModelControllerBase):
         operation_id="listGCPsInternal",
     )
     def list_gcps(self, filters: GCPFilterSchema = Query(...)):
-        queryset = self.model_config.model.objects.all() \
-            .select_related("image", "image__workspace")
+        queryset = self.model_config.model.objects.all().select_related(
+            "image", "image__workspace"
+        )
         return filters.filter(queryset)
-    

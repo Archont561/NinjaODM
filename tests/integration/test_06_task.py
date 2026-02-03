@@ -15,29 +15,38 @@ from tests.utils import APITestSuite, AuthStrategyEnum, AuthenticatedTestClient
 # CLIENT FIXTURES
 # =========================================================================
 
+
 @pytest.fixture
 def task_public_client():
     return AuthenticatedTestClient(TaskControllerPublic, auth=AuthStrategyEnum.jwt)
 
+
 @pytest.fixture
 def task_internal_client():
-    return AuthenticatedTestClient(TaskControllerInternal, auth=AuthStrategyEnum.service)
+    return AuthenticatedTestClient(
+        TaskControllerInternal, auth=AuthStrategyEnum.service
+    )
+
 
 @pytest.fixture
 def task_anon_public_client():
     return TestClient(TaskControllerPublic)
 
+
 @pytest.fixture
 def task_anon_internal_client():
     return TestClient(TaskControllerInternal)
+
 
 @pytest.fixture
 def task_jwt_internal_client():
     return AuthenticatedTestClient(TaskControllerInternal, auth=AuthStrategyEnum.jwt)
 
+
 # =========================================================================
 # DATA FACTORY FIXTURES
 # =========================================================================
+
 
 @pytest.fixture
 def user_task_workspace(workspace_factory, image_factory):
@@ -45,64 +54,86 @@ def user_task_workspace(workspace_factory, image_factory):
     image_factory(workspace=ws)
     return ws
 
+
 @pytest.fixture
 def user_task_workspace_no_images(workspace_factory):
     ws = workspace_factory(user_id="user_999", name="User WS (no images)")
     return ws
 
+
 @pytest.fixture
 def other_task_workspace(workspace_factory):
     return workspace_factory(user_id="user_1234", name="Other WS")
+
 
 @pytest.fixture
 def user_task_factory(odm_task_factory, user_task_workspace):
     def factory(**kwargs):
         return odm_task_factory(workspace=user_task_workspace, **kwargs)
+
     return factory
+
 
 @pytest.fixture
 def other_task_factory(odm_task_factory, other_task_workspace):
     def factory(**kwargs):
         return odm_task_factory(workspace=other_task_workspace, **kwargs)
+
     return factory
+
 
 @pytest.fixture
 def user_terminal_task_factory(odm_task_factory, user_task_workspace):
     def factory(**kwargs):
         kwargs.setdefault("status", ODMTaskStatus.COMPLETED)
         return odm_task_factory(workspace=user_task_workspace, **kwargs)
+
     return factory
+
 
 @pytest.fixture
 def user_non_terminal_task_factory(odm_task_factory, user_task_workspace):
     def factory(**kwargs):
         kwargs.setdefault("status", ODMTaskStatus.RUNNING)
         return odm_task_factory(workspace=user_task_workspace, **kwargs)
+
     return factory
+
 
 @pytest.fixture
 def webhook_task_meshing_factory(odm_task_factory, workspace_factory):
     def factory(**kwargs):
         ws = workspace_factory()
-        return odm_task_factory(workspace=ws, step=ODMProcessingStage.ODM_MESHING, **kwargs)
+        return odm_task_factory(
+            workspace=ws, step=ODMProcessingStage.ODM_MESHING, **kwargs
+        )
+
     return factory
+
 
 @pytest.fixture
 def webhook_task_postprocess_factory(odm_task_factory, workspace_factory):
     def factory(**kwargs):
         ws = workspace_factory()
-        return odm_task_factory(workspace=ws, step=ODMProcessingStage.ODM_POSTPROCESS, **kwargs)
+        return odm_task_factory(
+            workspace=ws, step=ODMProcessingStage.ODM_POSTPROCESS, **kwargs
+        )
+
     return factory
+
 
 @pytest.fixture
 def any_task_factory(odm_task_factory, workspace_factory):
     def factory(**kwargs):
         return odm_task_factory(workspace=workspace_factory(), **kwargs)
+
     return factory
+
 
 # =========================================================================
 # WEBHOOK DATA FIXTURES
 # =========================================================================
+
 
 @pytest.fixture
 def nodeodm_webhook_payload():
@@ -117,17 +148,21 @@ def nodeodm_webhook_payload():
         "progress": 100,
     }
 
+
 @pytest.fixture
 def valid_nodeodm_signature():
     return NodeODMServiceAuth.generate_hmac_signature(NodeODMServiceAuth.HMAC_MESSAGE)
+
 
 @pytest.fixture
 def invalid_nodeodm_signature():
     return NodeODMServiceAuth.generate_hmac_signature("INVALID_HMAC_MESSAGE")
 
+
 # =========================================================================
 # ASSERTION FIXTURES
 # =========================================================================
+
 
 @pytest.fixture
 def assert_task_created(mock_task_on_task_create):
@@ -136,7 +171,9 @@ def assert_task_created(mock_task_on_task_create):
         # FIX: Check .delay()
         mock_task_on_task_create.delay.assert_called_with(obj.uuid)
         return True
+
     return assertion
+
 
 @pytest.fixture
 def assert_task_paused(mock_task_on_task_pause):
@@ -146,7 +183,9 @@ def assert_task_paused(mock_task_on_task_pause):
         assert obj.odm_status == ODMTaskStatus.PAUSING
         mock_task_on_task_pause.delay.assert_called_with(obj.uuid)
         return True
+
     return assertion
+
 
 @pytest.fixture
 def assert_task_resumed(mock_task_on_task_resume):
@@ -156,7 +195,9 @@ def assert_task_resumed(mock_task_on_task_resume):
         assert obj.odm_status == ODMTaskStatus.RESUMING
         mock_task_on_task_resume.delay.assert_called_with(obj.uuid)
         return True
+
     return assertion
+
 
 @pytest.fixture
 def assert_task_cancelled(mock_task_on_task_cancel):
@@ -166,16 +207,20 @@ def assert_task_cancelled(mock_task_on_task_cancel):
         assert obj.odm_status == ODMTaskStatus.CANCELLING
         mock_task_on_task_cancel.delay.assert_called_with(obj.uuid)
         return True
+
     return assertion
+
 
 @pytest.fixture
 def assert_webhook_processed(mock_task_on_task_nodeodm_webhook):
     def assertion(obj, resp):
         assert resp.status_code == 200
         if mock_task_on_task_nodeodm_webhook.called:
-             mock_task_on_task_nodeodm_webhook.delay.assert_called()
+            mock_task_on_task_nodeodm_webhook.delay.assert_called()
         return True
+
     return assertion
+
 
 @pytest.fixture
 def assert_task_finished(mock_task_on_task_finish):
@@ -183,7 +228,9 @@ def assert_task_finished(mock_task_on_task_finish):
         assert resp.status_code == 200
         mock_task_on_task_finish.delay.assert_called_with(obj.uuid)
         return True
+
     return assertion
+
 
 @pytest.fixture
 def assert_task_failed(mock_task_on_task_failure):
@@ -191,15 +238,19 @@ def assert_task_failed(mock_task_on_task_failure):
         assert resp.status_code == 200
         mock_task_on_task_failure.delay.assert_called_with(obj.uuid)
         return True
+
     return assertion
+
 
 # =========================================================================
 # LIST FILTERING FIXTURES
 # =========================================================================
 
+
 @pytest.fixture
 def task_list_factory(workspace_factory, odm_task_factory):
     """Factory for task list (filtering tests)."""
+
     def factory():
         # Clear existing data
         ODMTask.objects.all().delete()
@@ -221,12 +272,18 @@ def task_list_factory(workspace_factory, odm_task_factory):
         tasks = [
             create_task(user_ws, ODMTaskStatus.QUEUED, ODMProcessingStage.DATASET, 0),
             create_task(user_ws, ODMTaskStatus.RUNNING, ODMProcessingStage.OPENSFM, 1),
-            create_task(user_ws, ODMTaskStatus.COMPLETED, ODMProcessingStage.MVS_TEXTURING, 5),
+            create_task(
+                user_ws, ODMTaskStatus.COMPLETED, ODMProcessingStage.MVS_TEXTURING, 5
+            ),
             create_task(user_ws, ODMTaskStatus.FAILED, ODMProcessingStage.OPENMVS, 10),
             create_task(other_ws1, ODMTaskStatus.PAUSED, ODMProcessingStage.MERGE, 2),
-            create_task(other_ws1, ODMTaskStatus.CANCELLED, ODMProcessingStage.OPENSFM, 7),
+            create_task(
+                other_ws1, ODMTaskStatus.CANCELLED, ODMProcessingStage.OPENSFM, 7
+            ),
             create_task(other_ws2, ODMTaskStatus.RUNNING, ODMProcessingStage.MERGE, 3),
-            create_task(other_ws2, ODMTaskStatus.PAUSING, ODMProcessingStage.ODM_ORTHOPHOTO, 14),
+            create_task(
+                other_ws2, ODMTaskStatus.PAUSING, ODMProcessingStage.ODM_ORTHOPHOTO, 14
+            ),
         ]
 
         return {
@@ -238,6 +295,7 @@ def task_list_factory(workspace_factory, odm_task_factory):
 
     yield factory
     ODMTask.objects.all().delete()
+
 
 @pytest.fixture
 def public_task_list_queries(task_list_factory):
@@ -260,13 +318,26 @@ def public_task_list_queries(task_list_factory):
         {"params": {"step": ODMProcessingStage.OPENMVS}, "expected_count": 1},
         {"params": {"created_after": after}, "expected_count": 3},
         {"params": {"created_before": before}, "expected_count": 2},
-        {"params": {"created_after": after, "created_before": before}, "expected_count": 1},
-        {"params": {"status": ODMTaskStatus.RUNNING, "created_after": after}, "expected_count": 1},
-        {"params": {"step": ODMProcessingStage.OPENSFM, "created_after": after}, "expected_count": 1},
-        {"params": {"status": ODMTaskStatus.FAILED, "created_after": after}, "expected_count": 0},
+        {
+            "params": {"created_after": after, "created_before": before},
+            "expected_count": 1,
+        },
+        {
+            "params": {"status": ODMTaskStatus.RUNNING, "created_after": after},
+            "expected_count": 1,
+        },
+        {
+            "params": {"step": ODMProcessingStage.OPENSFM, "created_after": after},
+            "expected_count": 1,
+        },
+        {
+            "params": {"status": ODMTaskStatus.FAILED, "created_after": after},
+            "expected_count": 0,
+        },
         {"params": {"workspace_uuid": ws_own_uuid}, "expected_count": 4},
         {"params": {"workspace_uuid": ws_other_uuid}, "expected_count": 0},
     ]
+
 
 @pytest.fixture
 def internal_task_list_queries(task_list_factory):
@@ -290,20 +361,36 @@ def internal_task_list_queries(task_list_factory):
         {"params": {"step": ODMProcessingStage.ODM_POSTPROCESS}, "expected_count": 0},
         {"params": {"created_after": after}, "expected_count": 5},
         {"params": {"created_before": before}, "expected_count": 6},
-        {"params": {"created_after": after, "created_before": before}, "expected_count": 3},
-        {"params": {"status": ODMTaskStatus.RUNNING, "created_after": after}, "expected_count": 2},
-        {"params": {"step": ODMProcessingStage.OPENSFM, "created_after": after}, "expected_count": 1},
-        {"params": {"step": ODMProcessingStage.DATASET, "created_before": before}, "expected_count": 0},
+        {
+            "params": {"created_after": after, "created_before": before},
+            "expected_count": 3,
+        },
+        {
+            "params": {"status": ODMTaskStatus.RUNNING, "created_after": after},
+            "expected_count": 2,
+        },
+        {
+            "params": {"step": ODMProcessingStage.OPENSFM, "created_after": after},
+            "expected_count": 1,
+        },
+        {
+            "params": {"step": ODMProcessingStage.DATASET, "created_before": before},
+            "expected_count": 0,
+        },
         {"params": {"workspace_uuid": ws1_uuid}, "expected_count": 4},
         {"params": {"workspace_uuid": ws2_uuid}, "expected_count": 2},
         {"params": {"workspace_uuid": ws3_uuid}, "expected_count": 2},
-        {"params": {"workspace_uuid": ws1_uuid, "status": ODMTaskStatus.RUNNING}, "expected_count": 1},
+        {
+            "params": {"workspace_uuid": ws1_uuid, "status": ODMTaskStatus.RUNNING},
+            "expected_count": 1,
+        },
     ]
 
 
 # =========================================================================
 # TEST SUITE
 # =========================================================================
+
 
 @pytest.mark.django_db
 @pytest.mark.freeze_time("2026-01-20 12:00:00")
@@ -321,14 +408,13 @@ class TestTaskAPI(APITestSuite):
     """
     Task API tests.
     """
-    
+
     tests = {
         # ===== DEFAULTS =====
         "model": ODMTask,
         "endpoint": "/",
         "factory": "user_task_factory",
         "client": "task_public_client",
-        
         # ===== CRUD =====
         "cruds": {
             # ----- CREATE -----
@@ -340,14 +426,16 @@ class TestTaskAPI(APITestSuite):
                         "payload": lambda s: {
                             "workspace_uuid": s.fixture("user_task_workspace").uuid,
                             "name": "User Task",
-                            "quality": "low"
+                            "quality": "low",
                         },
                         "assert": "assert_task_created",
                     },
                     {
                         "name": "jwt_workspace_without_images_denied",
                         "payload": lambda s: {
-                            "workspace_uuid": s.fixture("user_task_workspace_no_images").uuid,
+                            "workspace_uuid": s.fixture(
+                                "user_task_workspace_no_images"
+                            ).uuid,
                             "name": "Task without images",
                             "quality": "low",
                         },
@@ -359,7 +447,7 @@ class TestTaskAPI(APITestSuite):
                         "payload": lambda s: {
                             "workspace_uuid": s.fixture("other_task_workspace").uuid,
                             "name": "Forbidden Task",
-                             "quality": "low"
+                            "quality": "low",
                         },
                         "expected_status": [403, 404],
                         "access_denied": True,
@@ -370,20 +458,20 @@ class TestTaskAPI(APITestSuite):
                         "payload": lambda s: {
                             "workspace_uuid": s.fixture("user_task_workspace").uuid,
                             "name": "Anon Task",
-                             "quality": "low"
+                            "quality": "low",
                         },
                         "expected_status": 401,
                         "access_denied": True,
                     },
                 ],
             },
-            
             # ----- GET -----
             "get": {
                 "scenarios": [
                     {
                         "name": "jwt_own",
-                        "assert": lambda s, obj, resp: resp.json()["uuid"] == str(obj.uuid),
+                        "assert": lambda s, obj, resp: resp.json()["uuid"]
+                        == str(obj.uuid),
                     },
                     {
                         "name": "jwt_other_denied",
@@ -393,7 +481,6 @@ class TestTaskAPI(APITestSuite):
                     },
                 ],
             },
-            
             # ----- DELETE -----
             "delete": {
                 "scenarios": [
@@ -410,7 +497,6 @@ class TestTaskAPI(APITestSuite):
                 ],
             },
         },
-        
         # ===== ACTIONS =====
         "actions": {
             "pause": {
@@ -418,7 +504,12 @@ class TestTaskAPI(APITestSuite):
                 "method": "post",
                 "scenarios": [
                     {"name": "jwt_own", "assert": "assert_task_paused"},
-                    {"name": "jwt_other_denied", "factory": "other_task_factory", "expected_status": [403, 404], "access_denied": True},
+                    {
+                        "name": "jwt_other_denied",
+                        "factory": "other_task_factory",
+                        "expected_status": [403, 404],
+                        "access_denied": True,
+                    },
                 ],
             },
             "resume": {
@@ -435,10 +526,10 @@ class TestTaskAPI(APITestSuite):
                     {"name": "jwt_own", "assert": "assert_task_cancelled"},
                 ],
             },
-            
             # ----- NodeODM Webhook -----
             "webhook_postprocess_completed": {
-                "url": lambda s, obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('valid_nodeodm_signature')}",
+                "url": lambda s,
+                obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('valid_nodeodm_signature')}",
                 "method": "post",
                 "payload": lambda s: {
                     **s.fixture("nodeodm_webhook_payload"),
@@ -453,9 +544,9 @@ class TestTaskAPI(APITestSuite):
                     },
                 ],
             },
-            
             "webhook_postprocess_failed": {
-                "url": lambda s, obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('valid_nodeodm_signature')}",
+                "url": lambda s,
+                obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('valid_nodeodm_signature')}",
                 "method": "post",
                 "payload": lambda s: {
                     **s.fixture("nodeodm_webhook_payload"),
@@ -470,9 +561,9 @@ class TestTaskAPI(APITestSuite):
                     },
                 ],
             },
-            
-             "webhook_invalid_signature": {
-                "url": lambda s, obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('invalid_nodeodm_signature')}",
+            "webhook_invalid_signature": {
+                "url": lambda s,
+                obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('invalid_nodeodm_signature')}",
                 "method": "post",
                 "payload": lambda s: s.fixture("nodeodm_webhook_payload"),
                 "scenarios": [
@@ -486,7 +577,6 @@ class TestTaskAPI(APITestSuite):
                 ],
             },
         },
-        
         # ===== LIST =====
         "list": {
             "url": "/",
