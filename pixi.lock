@@ -224,6 +224,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-django-4.11.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-freezegun-0.4.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-httpserver-1.1.3-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-order-1.3.0-pyh29332c3_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-subtests-0.15.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/python-3.12.12-hd63d673_1_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dateutil-2.9.0.post0-pyhe01879c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dotenv-1.1.1-pyhe01879c_0.conda
@@ -446,6 +448,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-django-4.11.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-freezegun-0.4.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-httpserver-1.1.3-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-order-1.3.0-pyh29332c3_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-subtests-0.15.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/python-3.12.12-h0159041_1_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dateutil-2.9.0.post0-pyhe01879c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dotenv-1.1.1-pyhe01879c_0.conda
@@ -1017,6 +1021,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-django-4.11.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-freezegun-0.4.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-httpserver-1.1.3-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-order-1.3.0-pyh29332c3_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-subtests-0.15.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/python-3.12.12-hd63d673_1_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dateutil-2.9.0.post0-pyhe01879c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dotenv-1.1.1-pyhe01879c_0.conda
@@ -1228,6 +1234,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-django-4.11.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-freezegun-0.4.2-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-httpserver-1.1.3-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-order-1.3.0-pyh29332c3_2.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-subtests-0.15.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/python-3.12.12-h0159041_1_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dateutil-2.9.0.post0-pyhe01879c_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dotenv-1.1.1-pyhe01879c_0.conda
@@ -5903,6 +5911,32 @@ packages:
   - pkg:pypi/pytest-httpserver?source=hash-mapping
   size: 43501
   timestamp: 1744369953387
+- conda: https://conda.anaconda.org/conda-forge/noarch/pytest-order-1.3.0-pyh29332c3_2.conda
+  sha256: d30aed1972a363df32ae7fb41b2b622eb40444f0377446ac47b0c3c639173eb4
+  md5: e9e7d96ef6e90a50a4a484b305a9b0d9
+  depends:
+  - python >=3.9
+  - pytest >=5.0
+  - python
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/pytest-order?source=hash-mapping
+  size: 21116
+  timestamp: 1735596789189
+- conda: https://conda.anaconda.org/conda-forge/noarch/pytest-subtests-0.15.0-pyhd8ed1ab_0.conda
+  sha256: 4b33fd52898ebf599f8831057929b7f4e4aa6e447c9fda3b0ae98432ef4c43c7
+  md5: 209a7acb89a191596b84d1dad176c74f
+  depends:
+  - attrs >=19.2.0
+  - pytest >=7.4
+  - python >=3.10
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/pytest-subtests?source=hash-mapping
+  size: 18986
+  timestamp: 1760997350402
 - conda: https://conda.anaconda.org/conda-forge/linux-64/python-3.12.12-hd63d673_1_cpython.conda
   build_number: 1
   sha256: 39898d24769a848c057ab861052e50bdc266310a7509efa3514b840e85a2ae98
