@@ -11,6 +11,7 @@ from .factories import (
     ImageFactory,
     GroundControlPointFactory,
 )
+from .crud import APITestSuite
 from .server_mocks import NodeODMMockHTTPServer
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "ImageFactory",
     "GroundControlPointFactory",
     "NodeODMMockHTTPServer",
+    "APITestSuite",
 ]
