@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import List, Literal
-from ninja import Query
+from ninja import Query, Body
 from ninja_extra import (
     api_controller,
     ModelControllerBase,
@@ -13,10 +13,13 @@ from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.auth.nodeodm import NodeODMServiceAuth
 from app.api.models.task import ODMTask
+from app.api.models.workspace import Workspace
 from app.api.permissions.task import IsTaskOwner, IsTaskStateTerminal, CanCreateTask
+from app.api.permissions.core import IsAuthorizedService
+from app.api.permissions.workspace import IsWorkspaceOwner
 from app.api.schemas.task import (
     CreateTask,
-    UpdateTaskInternal,
+    UpdateTask,
     ODMTaskWebhookInternal,
     TaskResponse,
     TaskFilterSchema,
@@ -27,8 +30,8 @@ from app.api.services.task import TaskModelService
 
 @api_controller(
     "/tasks",
-    auth=[ServiceUserJWTAuth()],
-    permissions=[IsTaskOwner],
+    auth=[ServiceUserJWTAuth(), ServiceHMACAuth()],
+    permissions=[IsTaskOwner | IsAuthorizedService],
     tags=["task", "public"],
 )
 class TaskControllerPublic(ModelControllerBase):
@@ -37,24 +40,27 @@ class TaskControllerPublic(ModelControllerBase):
         model=ODMTask,
         create_schema=CreateTask,
         retrieve_schema=TaskResponse,
-        update_schema=UpdateTaskInternal,
-        allowed_routes=["find_one", "create", "delete"],
+        update_schema=UpdateTask,
+        allowed_routes=["find_one", "delete"],
         delete_route_info={
-            "permissions": [IsTaskOwner & IsTaskStateTerminal],
+            "permissions": [(IsTaskOwner | IsAuthorizedService) & IsTaskStateTerminal],
             "operation_id": "deleteTask",
-        },
-        create_route_info={
-            "path": "/?workspace_uuid=uuid",
-            "permissions": [CanCreateTask],
-            "custom_handler": lambda self, data, **kw: self.service.create(
-                data, **self.context.kwargs, **kw
-            ),
-            "operation_id": "createTask",
         },
         find_one_route_info={
             "operation_id": "getTask",
         },
     )
+
+    @http_post(
+        "/",
+        response={201: model_config.retrieve_schema},
+        operation_id="createTask",
+        permissions=[(IsWorkspaceOwner | IsAuthorizedService) & CanCreateTask],
+    )
+    def create_task(self, data: model_config.create_schema = Body(...)):
+        ws = self.get_object_or_exception(Workspace, uuid=data.workspace_uuid)
+        self.check_object_permissions(ws)
+        return 201, self.service.create(data, workspace=ws)
 
     @http_get(
         "/",
@@ -89,25 +95,9 @@ class TaskControllerInternal(ModelControllerBase):
     service_type = TaskModelService
     model_config = ModelConfig(
         model=ODMTask,
-        create_schema=CreateTask,
-        update_schema=UpdateTaskInternal,
         retrieve_schema=TaskResponse,
-        allowed_routes=["find_one", "create", "delete"],
-        delete_route_info={
-            "permissions": [IsTaskStateTerminal],
-            "operation_id": "deleteTaskInternal",
-        },
-        create_route_info={
-            "path": "/?workspace_uuid=uuid",
-            "permissions": [CanCreateTask],
-            "custom_handler": lambda self, data, **kw: self.service.create(
-                data, **self.context.kwargs, **kw
-            ),
-            "operation_id": "createTaskInternal",
-        },
-        find_one_route_info={
-            "operation_id": "getTaskInternal",
-        },
+        update_schema=UpdateTask,
+        allowed_routes=[],
     )
 
     @http_get(
@@ -139,14 +129,3 @@ class TaskControllerInternal(ModelControllerBase):
             case _:  # QUEUED, CANCELED, RUNNING (server already handles that)
                 pass
         return {"message": "ok"}
-
-    @http_post(
-        "/{uuid}/{action}",
-        response=model_config.retrieve_schema,
-        operation_id="callTaskActionInternal",
-    )
-    def task_action(
-        self, request, uuid: UUID, action: Literal["pause", "resume", "cancel"]
-    ):
-        task = self.get_object_or_exception(ODMTask, uuid=uuid)
-        return self.service.action(action, task, self.model_config.update_schema())

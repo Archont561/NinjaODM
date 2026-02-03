@@ -17,6 +17,7 @@ from app.api.tasks.task import (
 class TaskModelService(ModelService):
     def create(self, schema, **kwargs):
         data = schema.model_dump()
+        data.pop("workspace_uuid")
         workspace = kwargs.get("workspace")
         quality = data.pop("quality")
 

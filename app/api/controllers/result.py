@@ -14,15 +14,16 @@ from app.api.auth.user import ServiceUserJWTAuth
 from app.api.auth.share import ShareResultsApiKeyAuth
 from app.api.constants.token import ShareToken
 from app.api.models.result import ODMTaskResult
-from app.api.permissions.result import IsResultOwner, IsRefererResultOwner
+from app.api.permissions.result import IsResultOwner, DidReferrerGrantAccess
+from app.api.permissions.core import IsAuthorizedService
 from app.api.schemas.result import ResultResponse, ResultFilterSchema, ResultShareKeyResponse
 from app.api.services.result import ResultModelService
 
 
 @api_controller(
     "/results",
-    auth=[ServiceUserJWTAuth()],
-    permissions=[IsResultOwner],
+    auth=[ServiceUserJWTAuth(), ServiceHMACAuth()],
+    permissions=[IsResultOwner | IsAuthorizedService],
     tags=["result", "public"],
 )
 class ResultControllerPublic(ModelControllerBase):
@@ -72,8 +73,8 @@ class ResultControllerPublic(ModelControllerBase):
 
     @http_get(
         "/{uuid}/shared",
-        auth=ShareResultsApiKeyAuth(),
-        permissions=[IsRefererResultOwner],
+        auth=[ShareResultsApiKeyAuth(), ServiceHMACAuth()],
+        permissions=[DidReferrerGrantAccess | IsAuthorizedService],
         operation_id="downloadSharedTaskResult",
     )
     def download_shared_result_file(self, request, uuid: UUID, api_key: str):
@@ -93,13 +94,7 @@ class ResultControllerInternal(ModelControllerBase):
     model_config = ModelConfig(
         model=ODMTaskResult,
         retrieve_schema=ResultResponse,
-        allowed_routes=["find_one", "delete"],
-        find_one_route_info={
-            "operation_id": "getTaskResultInternal",
-        },
-        delete_route_info={
-            "operation_id": "deleteTaskResultInternal",
-        },
+        allowed_routes=[],
     )
 
     @http_get(
@@ -108,4 +103,5 @@ class ResultControllerInternal(ModelControllerBase):
         operation_id="listTaskResultsInternal",
     )
     def list_results(self, filters: ResultFilterSchema = Query(...)):
-        return filters.filter(self.model_config.model.objects.all())
+        queryset = self.model_config.model.objects.all().select_related("workspace")
+        return filters.filter(queryset)

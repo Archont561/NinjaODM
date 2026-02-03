@@ -1,16 +1,22 @@
+from uuid import UUID
 from typing import List
-from ninja import Query
+from ninja import Query, Body
 from ninja_extra import (
     ModelControllerBase,
     ModelConfig,
     api_controller,
     http_get,
+    http_post,
 )
+from ninja_extra.exceptions import NotFound, PermissionDenied
 
 from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.gcp import GroundControlPoint
-from app.api.permissions.gcp import IsGCPOwner, CanCreateGCP
+from app.api.models.image import Image
+from app.api.permissions.gcp import IsGCPOwner
+from app.api.permissions.core import IsAuthorizedService
+from app.api.permissions.image import IsImageOwner
 from app.api.schemas.gcp import (
     GCPCreate,
     GCPUpdate,
@@ -23,8 +29,8 @@ from app.api.services.gcp import GCPModelService
 
 @api_controller(
     "/gcps",
-    auth=[ServiceUserJWTAuth()],
-    permissions=[IsGCPOwner],
+    auth=[ServiceUserJWTAuth(), ServiceHMACAuth()],
+    permissions=[IsGCPOwner | IsAuthorizedService],
     tags=["gcp", "public"],
 )
 class GCPControllerPublic(ModelControllerBase):
@@ -35,15 +41,7 @@ class GCPControllerPublic(ModelControllerBase):
         patch_schema=GCPUpdate,
         update_schema=GCPUpdate,
         retrieve_schema=GCPResponse,
-        allowed_routes=["find_one", "patch", "delete", "create"],
-        create_route_info={
-            "path": "/?image_uuid=uuid",
-            "permissions": [CanCreateGCP],
-            "custom_handler": lambda self, data, **kw: self.service.create(
-                data, **self.context.kwargs, **kw
-            ),
-            "operation_id": "createGCP",
-        },
+        allowed_routes=["find_one", "patch", "delete"],
         find_one_route_info={
             "operation_id": "getGCP",
         },
@@ -54,10 +52,23 @@ class GCPControllerPublic(ModelControllerBase):
             "operation_id": "deleteGCP",
         },
     )
+    
+    @http_post(
+        "/",
+        response={201: model_config.retrieve_schema},
+        operation_id="createGCP",
+        permissions=[IsImageOwner | IsAuthorizedService],
+    )
+    def create_gcp(self, data: model_config.create_schema = Body(...)):
+        image = self.get_object_or_exception(Image, uuid=data.image_uuid)
+        self.check_object_permissions(image)
+        return 201, self.service.create(data, image=image);
 
-    def get_queryset(self):
+    def _get_queryset(self):
         user_id = self.context.request.user.id
-        return self.model_config.model.objects.filter(image__workspace__user_id=user_id)
+        return self.model_config.model.objects \
+            .filter(image__workspace__user_id=user_id) \
+            .select_related("image", "image__workspace")
 
     @http_get(
         "/",
@@ -65,7 +76,7 @@ class GCPControllerPublic(ModelControllerBase):
         operation_id="listGCPs",
     )
     def list_gcps(self, filters: GCPFilterSchema = Query(...)):
-        return filters.filter(self.get_queryset())
+        return filters.filter(self._get_queryset())
 
     @http_get(
         "/geojson",
@@ -74,7 +85,7 @@ class GCPControllerPublic(ModelControllerBase):
         operation_id="listGCPsAsGeojson",
     )
     def list_gcps_as_geojson(self, filters: GCPFilterSchema = Query(...)):
-        return self.service.queryset_to_geojson(filters.filter(self.get_queryset()))
+        return self.service.queryset_to_geojson(filters.filter(self._get_queryset()))
 
 
 @api_controller(
@@ -86,28 +97,8 @@ class GCPControllerInternal(ModelControllerBase):
     service_type = GCPModelService
     model_config = ModelConfig(
         model=GroundControlPoint,
-        create_schema=GCPCreate,
-        update_schema=GCPUpdate,
-        patch_schema=GCPUpdate,
         retrieve_schema=GCPResponse,
-        allowed_routes=["find_one", "patch", "delete", "create"],
-        create_route_info={
-            "path": "/?image_uuid=uuid",
-            "permissions": [CanCreateGCP],
-            "custom_handler": lambda self, data, **kw: self.service.create(
-                data, **self.context.kwargs, **kw
-            ),
-            "operation_id": "createGCPInternal",
-        },
-        find_one_route_info={
-            "operation_id": "getGCPInternal",
-        },
-        patch_route_info={
-            "operation_id": "updateGCPInternal",
-        },
-        delete_route_info={
-            "operation_id": "deleteGCPInternal",
-        },
+        allowed_routes=[],
     )
 
     @http_get(
@@ -116,5 +107,7 @@ class GCPControllerInternal(ModelControllerBase):
         operation_id="listGCPsInternal",
     )
     def list_gcps(self, filters: GCPFilterSchema = Query(...)):
-        queryset = self.model_config.model.objects.all()
+        queryset = self.model_config.model.objects.all() \
+            .select_related("image", "image__workspace")
         return filters.filter(queryset)
+    

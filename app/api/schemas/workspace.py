@@ -6,22 +6,22 @@ from datetime import datetime
 from app.api.models.workspace import Workspace
 
 
-class CreateWorkspaceInternal(Schema):
+class CreateWorkspace(Schema):
+    name: Optional[str] = None
+
+
+class CreateWorkspaceInternal(CreateWorkspace):
     user_id: str
-    name: Optional[str] = None
 
 
-class CreateWorkspacePublic(Schema):
-    name: Optional[str] = None
-
-
-class UpdateWorkspaceInternal(Schema):
-    user_id: Optional[str] = None
-    name: Optional[str] = None
-
-
-class UpdateWorkspacePublic(Schema):
+class UpdateWorkspace(Schema):
     name: str
+
+
+class WorkspaceResponse(ModelSchema):
+    class Meta:
+        model = Workspace
+        fields = ["uuid", "name", "created_at"]
 
 
 class WorkspaceResponseInternal(ModelSchema):
@@ -30,21 +30,13 @@ class WorkspaceResponseInternal(ModelSchema):
         fields = ["user_id", "uuid", "name", "created_at"]
 
 
-class WorkspaceResponsePublic(ModelSchema):
-    class Meta:
-        model = Workspace
-        fields = ["uuid", "name", "created_at"]
-
-
-class WorkspaceFilterSchemaPublic(FilterSchema):
+class WorkspaceFilterSchema(FilterSchema):
     name: Annotated[Optional[str], FilterLookup("name__icontains")] = None
     created_after: Annotated[Optional[datetime], FilterLookup("created_at__gte")] = None
-    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = (
-        None
-    )
+    created_before: Annotated[Optional[datetime], FilterLookup("created_at__lte")] = None
 
 
-class WorkspaceFilterSchemaInternal(WorkspaceFilterSchemaPublic):
+class WorkspaceFilterSchemaInternal(WorkspaceFilterSchema):
     user_id: Annotated[Optional[str], FilterLookup("user_id__icontains")] = None
 
 

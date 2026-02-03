@@ -15,12 +15,13 @@ from app.api.models.image import Image
 from app.api.permissions.image import IsImageOwner
 from app.api.schemas.image import ImageResponse, ImageFilterSchema
 from app.api.services.image import ImageModelService
+from app.api.permissions.core import IsAuthorizedService
 
 
 @api_controller(
     "/images",
-    auth=[ServiceUserJWTAuth()],
-    permissions=[IsImageOwner],
+    auth=[ServiceUserJWTAuth(), ServiceHMACAuth()],
+    permissions=[IsImageOwner | IsAuthorizedService],
     tags=["image", "public"],
 )
 class ImageControllerPublic(ModelControllerBase):
@@ -72,13 +73,7 @@ class ImageControllerInternal(ModelControllerBase):
     model_config = ModelConfig(
         model=Image,
         retrieve_schema=ImageResponse,
-        allowed_routes=["find_one", "delete"],
-        find_one_route_info={
-            "operation_id": "getImageInternal",
-        },
-        delete_route_info={
-            "operation_id": "deleteImageInternal",
-        },
+        allowed_routes=[],
     )
 
     @http_get(
@@ -87,4 +82,5 @@ class ImageControllerInternal(ModelControllerBase):
         operation_id="listImagesInternal",
     )
     def list_images(self, filters: ImageFilterSchema = Query(...)):
-        return filters.filter(self.model_config.model.objects.all())
+        queryset = self.model_config.model.objects.all().select_related("workspace")
+        return filters.filter(queryset)

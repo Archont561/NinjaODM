@@ -14,11 +14,12 @@ from app.api.constants.odm import (
 
 
 class CreateTask(Schema):
+    workspace_uuid: str
     name: str
     quality: ODMQualityOption = ODMQualityOption.ULTRA_LOW
 
 
-class UpdateTaskInternal(Schema):
+class UpdateTask(Schema):
     status: Optional[ODMTaskStatus] = None
     step: Optional[ODMProcessingStage] = None
 

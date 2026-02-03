@@ -18,14 +18,14 @@ from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.workspace import Workspace
 from app.api.permissions.workspace import IsWorkspaceOwner, CanDeleteWorkspace
+from app.api.permissions.core import IsAuthorizedService
 from app.api.schemas.workspace import (
     CreateWorkspaceInternal,
-    CreateWorkspacePublic,
-    UpdateWorkspaceInternal,
-    UpdateWorkspacePublic,
+    CreateWorkspace,
+    UpdateWorkspace,
     WorkspaceResponseInternal,
-    WorkspaceResponsePublic,
-    WorkspaceFilterSchemaPublic,
+    WorkspaceResponse,
+    WorkspaceFilterSchema,
     WorkspaceFilterSchemaInternal,
 )
 from app.api.schemas.tus import TusBaseHeaders, TusPostHeaders, TusPatchHeaders
@@ -42,17 +42,17 @@ class WorkspaceTusUploadView(TusUpload):
 
 @api_controller(
     "/workspaces",
-    auth=[ServiceUserJWTAuth()],
-    permissions=[IsWorkspaceOwner],
+    auth=[ServiceUserJWTAuth(), ServiceHMACAuth()],
+    permissions=[IsWorkspaceOwner | IsAuthorizedService],
     tags=["workspace", "public"],
 )
 class WorkspaceControllerPublic(ModelControllerBase):
     service_type = WorkspaceModelService
     model_config = ModelConfig(
         model=Workspace,
-        create_schema=CreateWorkspacePublic,
-        retrieve_schema=WorkspaceResponsePublic,
-        patch_schema=UpdateWorkspacePublic,
+        create_schema=CreateWorkspace,
+        retrieve_schema=WorkspaceResponse,
+        patch_schema=UpdateWorkspace,
         allowed_routes=["find_one", "patch", "delete", "create"],
         create_route_info={
             "custom_handler": lambda self, data, **kw: self.service.create(
@@ -68,7 +68,9 @@ class WorkspaceControllerPublic(ModelControllerBase):
         },
         delete_route_info={
             "operation_id": "deleteWorkspace",
-            "permissions": [IsWorkspaceOwner & CanDeleteWorkspace],
+            "permissions": [
+                (IsWorkspaceOwner | IsAuthorizedService) & CanDeleteWorkspace,
+            ],
         },
     )
 
@@ -77,7 +79,7 @@ class WorkspaceControllerPublic(ModelControllerBase):
         response=List[model_config.retrieve_schema],
         operation_id="listWorkspaces",
     )
-    def list_workspaces(self, filters: WorkspaceFilterSchemaPublic = Query(...)):
+    def list_workspaces(self, filters: WorkspaceFilterSchema = Query(...)):
         user_id = self.context.request.user.id
         queryset = self.model_config.model.objects.filter(user_id=user_id)
         return filters.filter(queryset)
@@ -182,20 +184,9 @@ class WorkspaceControllerInternal(ModelControllerBase):
         model=Workspace,
         create_schema=CreateWorkspaceInternal,
         retrieve_schema=WorkspaceResponseInternal,
-        patch_schema=UpdateWorkspaceInternal,
-        allowed_routes=["create", "find_one", "patch", "delete"],
+        allowed_routes=["create"],
         create_route_info={
             "operation_id": "createWorkspaceInternal",
-        },
-        find_one_route_info={
-            "operation_id": "getWorkspaceInternal",
-        },
-        patch_route_info={
-            "operation_id": "updateWorkspaceInternal",
-        },
-        delete_route_info={
-            "operation_id": "deleteWorkspaceInternal",
-            "permissions": [CanDeleteWorkspace],
         },
     )
 

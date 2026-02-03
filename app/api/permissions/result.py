@@ -1,20 +1,13 @@
-from ninja_extra import permissions
-
 from app.api.models.result import ODMTaskResult
+from .core import IsServiceUser, IsReferrer
 
 
-class IsResultOwner(permissions.BasePermission):
-    def has_permission(self, request, controller):
-        return True
-
+class IsResultOwner(IsServiceUser):
     def has_object_permission(self, request, controller, obj: ODMTaskResult):
         return obj.workspace.user_id == request.user.id
 
 
-class IsRefererResultOwner(permissions.BasePermission):
-    def has_permission(self, request, controller):
-        return request.referer.id is not None
-
+class DidReferrerGrantAccess(IsReferrer):
     def has_object_permission(self, request, controller, obj: ODMTaskResult):
         return (
             obj.workspace.user_id == request.referrer.id

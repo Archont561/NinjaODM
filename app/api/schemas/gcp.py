@@ -20,6 +20,7 @@ def convert_point_field(field, **kwargs) -> Tuple[type, FieldInfo]:
 
 
 class GCPCreate(Schema):
+    image_uuid: str
     gcp_point: Tuple[float, float, float]  # (lng, lat, alt)
     image_point: Tuple[float, float]  # (imgx, imgy)
     label: str
