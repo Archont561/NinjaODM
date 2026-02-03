@@ -14,9 +14,9 @@ from app.api.constants.odm import (
 
 
 class CreateTask(Schema):
-    workspace_uuid: str
-    name: str
-    quality: ODMQualityOption = ODMQualityOption.ULTRA_LOW
+    workspace_uuid: UUID
+    name: Optional[str] = None
+    quality: Optional[ODMQualityOption] = ODMQualityOption.ULTRA_LOW
 
 
 class UpdateTask(Schema):
