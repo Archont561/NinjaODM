@@ -24,5 +24,5 @@ class ShareResultsApiKeyAuth(APIKeyQuery):
 
         service_user = ServiceUser(user_id=user_id, scopes=[])
         setattr(service_user, "result_uuid", UUID(result_uuid))
-        setattr(request, "referer", service_user)
+        setattr(request, "referrer", service_user)
         return True
