@@ -55,20 +55,22 @@ def test_settings(tmp_path_factory, settings):
 
 
 @pytest.fixture
-def temp_image_file():
+def image_file_factory():
     """
-    Creates a real temporary image file usable by Pillow.
+    Returns a FUNCTION that creates a fresh SimpleUploadedFile.
     """
     image = PILImage.new("RGB", (300, 300), color="red")
     buffer = io.BytesIO()
     image.save(buffer, format="JPEG")
-    buffer.seek(0)
-
-    return SimpleUploadedFile(
-        name="test.jpg",
-        content=buffer.getvalue(),
-        content_type="image/jpeg",
-    )
+    image_content = buffer.getvalue()
+    
+    def factory(name="test.jpg"):
+        return SimpleUploadedFile(
+            name=name,
+            content=image_content, # Uses the cached bytes
+            content_type="image/jpeg",
+        )
+    return factory
 
 
 @pytest.fixture
