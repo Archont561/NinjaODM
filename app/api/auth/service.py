@@ -1,10 +1,10 @@
-import time
 import hmac
 import hashlib
 from typing import Optional, Tuple
 
 from ninja.security import HttpBearer
 from django.http import HttpRequest
+from django.utils import timezone
 
 from app.api.models.service import AuthorizedService
 
@@ -57,7 +57,8 @@ class ServiceHMACAuth(HttpBearer):
             return None
 
     def _is_timestamp_valid(self, timestamp: int, window: int = 300) -> bool:
-        return abs(int(time.time()) - timestamp) <= window
+        now = int(timezone.now().timestamp())
+        return abs(now - timestamp) <= window
 
     def _get_service(self, api_key: str) -> Optional[AuthorizedService]:
         try:
