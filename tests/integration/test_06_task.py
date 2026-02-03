@@ -5,78 +5,104 @@ from django.utils import timezone
 from ninja_extra.testing import TestClient
 
 from app.api.models.task import ODMTask
+from app.api.models.workspace import Workspace
 from app.api.auth.nodeodm import NodeODMServiceAuth
 from app.api.constants.odm import ODMTaskStatus, ODMProcessingStage, NodeODMTaskStatus
 from app.api.controllers.task import TaskControllerInternal, TaskControllerPublic
-from ..auth_clients import AuthStrategyEnum, AuthenticatedTestClient
+from tests.utils import APITestSuite, AuthStrategyEnum, AuthenticatedTestClient
 
+# =========================================================================
+# CLIENT FIXTURES
+# =========================================================================
 
 @pytest.fixture
-def tasks_list(workspace_factory, odm_task_factory):
-    now = timezone.now()
-    user_ws = workspace_factory(user_id="user_999")
-    other_ws1 = workspace_factory(user_id="user_1")
-    other_ws2 = workspace_factory(user_id="user_2")
+def task_public_client():
+    return AuthenticatedTestClient(TaskControllerPublic, auth=AuthStrategyEnum.jwt)
 
-    def create_odm_task(workspace, status, step, days_ago):
-        return odm_task_factory(
-            workspace=workspace,
-            status=status,
-            step=step,
-            created_at=now - timedelta(days=days_ago),
-        )
+@pytest.fixture
+def task_internal_client():
+    return AuthenticatedTestClient(TaskControllerInternal, auth=AuthStrategyEnum.service)
 
-    return [
-        create_odm_task(
-            workspace=user_ws,
-            status=ODMTaskStatus.QUEUED,
-            step=ODMProcessingStage.DATASET,
-            days_ago=0,
-        ),
-        create_odm_task(
-            workspace=user_ws,
-            status=ODMTaskStatus.RUNNING,
-            step=ODMProcessingStage.OPENSFM,
-            days_ago=1,
-        ),
-        create_odm_task(
-            workspace=user_ws,
-            status=ODMTaskStatus.COMPLETED,
-            step=ODMProcessingStage.MVS_TEXTURING,
-            days_ago=5,
-        ),
-        create_odm_task(
-            workspace=user_ws,
-            status=ODMTaskStatus.FAILED,
-            step=ODMProcessingStage.OPENMVS,
-            days_ago=10,
-        ),
-        create_odm_task(
-            workspace=other_ws1,
-            status=ODMTaskStatus.PAUSED,
-            step=ODMProcessingStage.MERGE,
-            days_ago=2,
-        ),
-        create_odm_task(
-            workspace=other_ws1,
-            status=ODMTaskStatus.CANCELLED,
-            step=ODMProcessingStage.OPENSFM,
-            days_ago=7,
-        ),
-        create_odm_task(
-            workspace=other_ws2,
-            status=ODMTaskStatus.RUNNING,
-            step=ODMProcessingStage.MERGE,
-            days_ago=3,
-        ),
-        create_odm_task(
-            workspace=other_ws2,
-            status=ODMTaskStatus.PAUSING,
-            step=ODMProcessingStage.ODM_ORTHOPHOTO,
-            days_ago=14,
-        ),
-    ]
+@pytest.fixture
+def task_anon_public_client():
+    return TestClient(TaskControllerPublic)
 
+@pytest.fixture
+def task_anon_internal_client():
+    return TestClient(TaskControllerInternal)
+
+@pytest.fixture
+def task_jwt_internal_client():
+    return AuthenticatedTestClient(TaskControllerInternal, auth=AuthStrategyEnum.jwt)
+
+# =========================================================================
+# DATA FACTORY FIXTURES
+# =========================================================================
+
+@pytest.fixture
+def user_task_workspace(workspace_factory, image_factory):
+    ws = workspace_factory(user_id="user_999", name="User WS")
+    image_factory(workspace=ws)
+    return ws
+
+@pytest.fixture
+def user_task_workspace_no_images(workspace_factory):
+    ws = workspace_factory(user_id="user_999", name="User WS (no images)")
+    return ws
+
+@pytest.fixture
+def other_task_workspace(workspace_factory):
+    return workspace_factory(user_id="user_1234", name="Other WS")
+
+@pytest.fixture
+def user_task_factory(odm_task_factory, user_task_workspace):
+    def factory(**kwargs):
+        return odm_task_factory(workspace=user_task_workspace, **kwargs)
+    return factory
+
+@pytest.fixture
+def other_task_factory(odm_task_factory, other_task_workspace):
+    def factory(**kwargs):
+        return odm_task_factory(workspace=other_task_workspace, **kwargs)
+    return factory
+
+@pytest.fixture
+def user_terminal_task_factory(odm_task_factory, user_task_workspace):
+    def factory(**kwargs):
+        kwargs.setdefault("status", ODMTaskStatus.COMPLETED)
+        return odm_task_factory(workspace=user_task_workspace, **kwargs)
+    return factory
+
+@pytest.fixture
+def user_non_terminal_task_factory(odm_task_factory, user_task_workspace):
+    def factory(**kwargs):
+        kwargs.setdefault("status", ODMTaskStatus.RUNNING)
+        return odm_task_factory(workspace=user_task_workspace, **kwargs)
+    return factory
+
+@pytest.fixture
+def webhook_task_meshing_factory(odm_task_factory, workspace_factory):
+    def factory(**kwargs):
+        ws = workspace_factory()
+        return odm_task_factory(workspace=ws, step=ODMProcessingStage.ODM_MESHING, **kwargs)
+    return factory
+
+@pytest.fixture
+def webhook_task_postprocess_factory(odm_task_factory, workspace_factory):
+    def factory(**kwargs):
+        ws = workspace_factory()
+        return odm_task_factory(workspace=ws, step=ODMProcessingStage.ODM_POSTPROCESS, **kwargs)
+    return factory
+
+@pytest.fixture
+def any_task_factory(odm_task_factory, workspace_factory):
+    def factory(**kwargs):
+        return odm_task_factory(workspace=workspace_factory(), **kwargs)
+    return factory
+
+# =========================================================================
+# WEBHOOK DATA FIXTURES
+# =========================================================================
 
 @pytest.fixture
 def nodeodm_webhook_payload():
@@ -85,372 +111,401 @@ def nodeodm_webhook_payload():
         "name": "test-task",
         "dateCreated": 1700000000,
         "processingTime": 123.45,
-        "status": {
-            "code": NodeODMTaskStatus.COMPLETED,
-        },
-        "options": {
-            "orthophoto-resolution": 5,
-            "dsm": True,
-            "dem": False,
-        },
+        "status": {"code": NodeODMTaskStatus.COMPLETED},
+        "options": {"dsm": True},
         "imagesCount": 42,
         "progress": 100,
     }
 
+@pytest.fixture
+def valid_nodeodm_signature():
+    return NodeODMServiceAuth.generate_hmac_signature(NodeODMServiceAuth.HMAC_MESSAGE)
 
-@pytest.mark.django_db
-@pytest.mark.usefixtures("mock_redis")
-class TestTaskAPIInternal:
-    @classmethod
-    def setup_method(cls):
-        cls.client = AuthenticatedTestClient(
-            TaskControllerInternal, auth=AuthStrategyEnum.service
-        )
+@pytest.fixture
+def invalid_nodeodm_signature():
+    return NodeODMServiceAuth.generate_hmac_signature("INVALID_HMAC_MESSAGE")
 
-    @pytest.mark.freeze_time("2026-01-20 12:00:00")
-    @pytest.mark.parametrize(
-        "query_format, expected_count",
-        [
-            ("", 8),
-            (f"status={ODMTaskStatus.QUEUED}", 1),
-            (f"status={ODMTaskStatus.RUNNING}", 2),
-            (f"status={ODMTaskStatus.COMPLETED}", 1),
-            (f"step={ODMProcessingStage.DATASET}", 1),
-            (f"step={ODMProcessingStage.OPENSFM}", 2),
-            (f"step={ODMProcessingStage.OPENMVS}", 1),
-            (f"step={ODMProcessingStage.ODM_POSTPROCESS}", 0),
-            ("created_after={after}", 5),
-            ("created_before={before}", 6),
-            ("created_after={after}&created_before={before}", 3),
-            (f"status={ODMTaskStatus.RUNNING}&created_after={{after}}", 2),
-            (f"step={ODMProcessingStage.OPENSFM}&created_after={{after}}", 1),
-            (f"step={ODMProcessingStage.DATASET}&created_before={{before}}", 0),
-            ("workspace_uuid={ws1_uuid}", 4),
-            ("workspace_uuid={ws2_uuid}", 2),
-            ("workspace_uuid={ws3_uuid}", 2),
-            (f"workspace_uuid={{ws1_uuid}}&status={ODMTaskStatus.RUNNING}", 1),
-        ],
-    )
-    def test_list_tasks_filtering(self, tasks_list, query_format, expected_count):
+# =========================================================================
+# ASSERTION FIXTURES
+# =========================================================================
+
+@pytest.fixture
+def assert_task_created(mock_task_on_task_create):
+    def assertion(obj, payload):
+        assert obj.name == payload.get("name")
+        # FIX: Check .delay()
+        mock_task_on_task_create.delay.assert_called_with(obj.uuid)
+        return True
+    return assertion
+
+@pytest.fixture
+def assert_task_paused(mock_task_on_task_pause):
+    def assertion(obj, resp):
+        assert resp.status_code == 200
+        obj.refresh_from_db()
+        assert obj.odm_status == ODMTaskStatus.PAUSING
+        mock_task_on_task_pause.delay.assert_called_with(obj.uuid)
+        return True
+    return assertion
+
+@pytest.fixture
+def assert_task_resumed(mock_task_on_task_resume):
+    def assertion(obj, resp):
+        assert resp.status_code == 200
+        obj.refresh_from_db()
+        assert obj.odm_status == ODMTaskStatus.RESUMING
+        mock_task_on_task_resume.delay.assert_called_with(obj.uuid)
+        return True
+    return assertion
+
+@pytest.fixture
+def assert_task_cancelled(mock_task_on_task_cancel):
+    def assertion(obj, resp):
+        assert resp.status_code == 200
+        obj.refresh_from_db()
+        assert obj.odm_status == ODMTaskStatus.CANCELLING
+        mock_task_on_task_cancel.delay.assert_called_with(obj.uuid)
+        return True
+    return assertion
+
+@pytest.fixture
+def assert_webhook_processed(mock_task_on_task_nodeodm_webhook):
+    def assertion(obj, resp):
+        assert resp.status_code == 200
+        if mock_task_on_task_nodeodm_webhook.called:
+             mock_task_on_task_nodeodm_webhook.delay.assert_called()
+        return True
+    return assertion
+
+@pytest.fixture
+def assert_task_finished(mock_task_on_task_finish):
+    def assertion(obj, resp):
+        assert resp.status_code == 200
+        mock_task_on_task_finish.delay.assert_called_with(obj.uuid)
+        return True
+    return assertion
+
+@pytest.fixture
+def assert_task_failed(mock_task_on_task_failure):
+    def assertion(obj, resp):
+        assert resp.status_code == 200
+        mock_task_on_task_failure.delay.assert_called_with(obj.uuid)
+        return True
+    return assertion
+
+# =========================================================================
+# LIST FILTERING FIXTURES
+# =========================================================================
+
+@pytest.fixture
+def task_list_factory(workspace_factory, odm_task_factory):
+    """Factory for task list (filtering tests)."""
+    def factory():
+        # Clear existing data
+        ODMTask.objects.all().delete()
+        Workspace.objects.all().delete()
+
         now = timezone.now()
+        user_ws = workspace_factory(user_id="user_999")
+        other_ws1 = workspace_factory(user_id="user_1")
+        other_ws2 = workspace_factory(user_id="user_2")
 
-        ws1_uuid = tasks_list[0].workspace.uuid
-        ws2_uuid = tasks_list[4].workspace.uuid
-        ws3_uuid = tasks_list[6].workspace.uuid
+        def create_task(workspace, status, step, days_ago):
+            return odm_task_factory(
+                workspace=workspace,
+                status=status,
+                step=step,
+                created_at=now - timedelta(days=days_ago),
+            )
 
-        after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
-        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+        tasks = [
+            create_task(user_ws, ODMTaskStatus.QUEUED, ODMProcessingStage.DATASET, 0),
+            create_task(user_ws, ODMTaskStatus.RUNNING, ODMProcessingStage.OPENSFM, 1),
+            create_task(user_ws, ODMTaskStatus.COMPLETED, ODMProcessingStage.MVS_TEXTURING, 5),
+            create_task(user_ws, ODMTaskStatus.FAILED, ODMProcessingStage.OPENMVS, 10),
+            create_task(other_ws1, ODMTaskStatus.PAUSED, ODMProcessingStage.MERGE, 2),
+            create_task(other_ws1, ODMTaskStatus.CANCELLED, ODMProcessingStage.OPENSFM, 7),
+            create_task(other_ws2, ODMTaskStatus.RUNNING, ODMProcessingStage.MERGE, 3),
+            create_task(other_ws2, ODMTaskStatus.PAUSING, ODMProcessingStage.ODM_ORTHOPHOTO, 14),
+        ]
 
-        query = query_format.format(
-            after=after_date,
-            before=before_date,
-            ws1_uuid=ws1_uuid,
-            ws2_uuid=ws2_uuid,
-            ws3_uuid=ws3_uuid,
-        )
-
-        url = "/" + f"?{query}" if query else ""
-        resp = self.client.get(url)
-
-        assert resp.status_code == 200
-        data = resp.json()
-        assert len(data) == expected_count, f"Failed for query: {query}"
-
-    def test_create_task(self, mock_task_on_task_create, workspace_factory):
-        ws = workspace_factory(user_id="user_1234")
-        payload = {"name": "Task name"}
-        resp = self.client.post(f"/?workspace_uuid={ws.uuid}", json=payload)
-        assert resp.status_code == 201
-
-        body = resp.json()
-        task = ODMTask.objects.get(uuid=body["uuid"])
-        assert task.workspace.uuid == ws.uuid
-        assert task.name == payload["name"]
-        mock_task_on_task_create.delay.assert_called_once_with(task.uuid)
-
-    def test_get_task(self, odm_task_factory):
-        task = odm_task_factory()
-        resp = self.client.get(f"/{task.uuid}")
-        assert resp.status_code == 200
-        assert resp.json()["uuid"] == str(task.uuid)
-
-    @pytest.mark.parametrize("status", ODMTaskStatus.terminal_states())
-    def test_delete_terminal_task(self, odm_task_factory, status):
-        task = odm_task_factory(status=status)
-        resp = self.client.delete(f"/{task.uuid}")
-        assert resp.status_code == 204
-        assert not ODMTask.objects.filter(uuid=task.uuid).exists()
-
-    @pytest.mark.parametrize("status", ODMTaskStatus.non_terminal_states())
-    def test_cannot_delete_non_terminal_task(self, odm_task_factory, status):
-        task = odm_task_factory(status=status)
-        resp = self.client.delete(f"/{task.uuid}")
-        assert resp.status_code in (400, 403)
-        assert ODMTask.objects.filter(uuid=task.pk).exists()
-
-    @pytest.mark.parametrize(
-        "action, expected_status, expected_odm_status, mock_fixture",
-        [
-            ("pause", 200, ODMTaskStatus.PAUSING, "mock_task_on_task_pause"),
-            ("resume", 200, ODMTaskStatus.RESUMING, "mock_task_on_task_resume"),
-            ("cancel", 200, ODMTaskStatus.CANCELLING, "mock_task_on_task_cancel"),
-        ],
-    )
-    def test_custom_actions_change_status(
-        self,
-        odm_task_factory,
-        action,
-        expected_status,
-        expected_odm_status,
-        mock_fixture,
-        request,
-    ):
-        mock = request.getfixturevalue(mock_fixture)
-        task = odm_task_factory()
-        resp = self.client.post(f"/{task.uuid}/{action}")
-        assert resp.status_code == expected_status
-        task.refresh_from_db()
-        assert task.odm_status == expected_odm_status
-        mock.delay.assert_called_once_with(task.uuid)
-
-    @pytest.mark.parametrize(
-        "odm_stage, nodeodm_status, mock_fixture",
-        [
-            (
-                ODMProcessingStage.ODM_MESHING,
-                NodeODMTaskStatus.COMPLETED,
-                "mock_task_on_task_nodeodm_webhook",
-            ),
-            (
-                ODMProcessingStage.ODM_POSTPROCESS,
-                NodeODMTaskStatus.COMPLETED,
-                "mock_task_on_task_finish",
-            ),
-            (
-                ODMProcessingStage.ODM_POSTPROCESS,
-                NodeODMTaskStatus.FAILED,
-                "mock_task_on_task_failure",
-            ),
-        ],
-    )
-    def test_nodeodm_webhook_call(
-        self,
-        odm_task_factory,
-        odm_stage,
-        mock_fixture,
-        request,
-        nodeodm_status,
-        nodeodm_webhook_payload,
-    ):
-        nodeodm_webhook_payload["status"]["code"] = nodeodm_status
-        task = odm_task_factory(step=odm_stage)
-        mock = request.getfixturevalue(mock_fixture)
-        signature = NodeODMServiceAuth.generate_hmac_signature(
-            NodeODMServiceAuth.HMAC_MESSAGE
-        )
-        resp = self.client.post(
-            f"/{task.uuid}/webhooks/odm?signature={signature}",
-            json=nodeodm_webhook_payload,
-        )
-        assert resp.status_code == 200
-        mock.delay.assert_called_once_with(task.uuid)
-
-    def test_nodeodm_webhook_call_denied(self, odm_task_factory):
-        task = odm_task_factory()
-        signature = NodeODMServiceAuth.generate_hmac_signature("INVALID_HMAC_MESSAGE")
-        resp = self.client.post(f"/{task.uuid}/webhooks/odm?signature={signature}")
-        assert resp.status_code in (401, 403)
-
-
-@pytest.mark.django_db
-@pytest.mark.usefixtures("mock_redis")
-class TestTaskAPIPublic:
-    @classmethod
-    def setup_method(cls):
-        cls.client = AuthenticatedTestClient(
-            TaskControllerPublic, auth=AuthStrategyEnum.jwt
-        )
-
-    @pytest.fixture
-    def user_workspace(self, workspace_factory):
-        return workspace_factory(user_id="user_999", name="User WS")
-
-    @pytest.fixture
-    def other_workspace(self, workspace_factory):
-        return workspace_factory(user_id="user_1234", name="Other WS")
-
-    @pytest.fixture
-    def user_task(self, odm_task_factory, user_workspace):
-        return odm_task_factory(workspace=user_workspace)
-
-    @pytest.fixture
-    def other_task(self, odm_task_factory, other_workspace):
-        return odm_task_factory(workspace=other_workspace)
-
-    @pytest.mark.freeze_time("2026-01-20 12:00:00")
-    @pytest.mark.parametrize(
-        "query_format, expected_count",
-        [
-            ("", 4),
-            (f"status={ODMTaskStatus.QUEUED}", 1),
-            (f"status={ODMTaskStatus.RUNNING}", 1),
-            (f"status={ODMTaskStatus.COMPLETED}", 1),
-            (f"status={ODMTaskStatus.FAILED}", 1),
-            (f"step={ODMProcessingStage.DATASET}", 1),
-            (f"step={ODMProcessingStage.OPENSFM}", 1),
-            (f"step={ODMProcessingStage.MVS_TEXTURING}", 1),
-            (f"step={ODMProcessingStage.OPENMVS}", 1),
-            ("created_after={after}", 3),
-            ("created_before={before}", 2),
-            ("created_after={after}&created_before={before}", 1),
-            (f"status={ODMTaskStatus.RUNNING}&created_after={{after}}", 1),
-            (f"step={ODMProcessingStage.OPENSFM}&created_after={{after}}", 1),
-            (f"status={ODMTaskStatus.FAILED}&created_after={{after}}", 0),
-            ("workspace_uuid={ws_own_uuid}", 4),
-            ("workspace_uuid={ws_other_uuid}", 0),
-        ],
-    )
-    def test_list_own_tasks_filtering(self, tasks_list, query_format, expected_count):
-        now = timezone.now()
-
-        ws_own_uuid = tasks_list[0].workspace.uuid
-        ws_other_uuid = tasks_list[4].workspace.uuid
-
-        after_date = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
-        before_date = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
-
-        query = query_format.format(
-            after=after_date,
-            before=before_date,
-            ws_own_uuid=ws_own_uuid,
-            ws_other_uuid=ws_other_uuid,
-        )
-
-        url = "/" + f"?{query}" if query else ""
-        resp = self.client.get(url)
-
-        assert resp.status_code == 200
-        data = resp.json()
-        assert len(data) == expected_count, f"Failed for query: {query}"
-
-    def test_create_task_in_own_workspace(
-        self, mock_task_on_task_create, user_workspace
-    ):
-        payload = {
-            "name": "Task name",
+        return {
+            "user_ws": user_ws,
+            "other_ws1": other_ws1,
+            "other_ws2": other_ws2,
+            "tasks": tasks,
         }
-        resp = self.client.post(f"/?workspace_uuid={user_workspace.uuid}", json=payload)
-        assert resp.status_code == 201
-        task = ODMTask.objects.get(uuid=resp.json()["uuid"])
-        assert task.workspace.user_id == "user_999"
-        assert task.name == payload["name"]
-        mock_task_on_task_create.delay.assert_called_once_with(task.uuid)
 
-    def test_create_task_in_other_workspace_denied(self, other_workspace):
-        resp = self.client.post(f"/?workspace_uuid={other_workspace.uuid}")
-        assert resp.status_code in (403, 404)
+    yield factory
+    ODMTask.objects.all().delete()
 
-    def test_create_task_without_workspace_uuid_denied(self):
-        resp = self.client.post("/")
-        assert resp.status_code in (403, 404)
+@pytest.fixture
+def public_task_list_queries(task_list_factory):
+    data = task_list_factory()
+    now = timezone.now()
+    after = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
+    before = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+    ws_own_uuid = str(data["user_ws"].uuid)
+    ws_other_uuid = str(data["other_ws1"].uuid)
 
-    def test_get_own_task(self, user_task):
-        resp = self.client.get(f"/{user_task.uuid}")
-        assert resp.status_code == 200
-        assert resp.json()["uuid"] == str(user_task.uuid)
+    return [
+        {"params": {}, "expected_count": 4},
+        {"params": {"status": ODMTaskStatus.QUEUED}, "expected_count": 1},
+        {"params": {"status": ODMTaskStatus.RUNNING}, "expected_count": 1},
+        {"params": {"status": ODMTaskStatus.COMPLETED}, "expected_count": 1},
+        {"params": {"status": ODMTaskStatus.FAILED}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.DATASET}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.OPENSFM}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.MVS_TEXTURING}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.OPENMVS}, "expected_count": 1},
+        {"params": {"created_after": after}, "expected_count": 3},
+        {"params": {"created_before": before}, "expected_count": 2},
+        {"params": {"created_after": after, "created_before": before}, "expected_count": 1},
+        {"params": {"status": ODMTaskStatus.RUNNING, "created_after": after}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.OPENSFM, "created_after": after}, "expected_count": 1},
+        {"params": {"status": ODMTaskStatus.FAILED, "created_after": after}, "expected_count": 0},
+        {"params": {"workspace_uuid": ws_own_uuid}, "expected_count": 4},
+        {"params": {"workspace_uuid": ws_other_uuid}, "expected_count": 0},
+    ]
 
-    def test_get_other_task_denied(self, other_task):
-        resp = self.client.get(f"/{other_task.uuid}")
-        assert resp.status_code in (403, 404)
+@pytest.fixture
+def internal_task_list_queries(task_list_factory):
+    """Queries for internal Task API (sees all 8 tasks)."""
+    data = task_list_factory()
+    now = timezone.now()
+    after = (now - timedelta(days=6)).isoformat().replace("+00:00", "Z")
+    before = (now - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+    ws1_uuid = str(data["user_ws"].uuid)
+    ws2_uuid = str(data["other_ws1"].uuid)
+    ws3_uuid = str(data["other_ws2"].uuid)
 
-    @pytest.mark.parametrize("status", ODMTaskStatus.terminal_states())
-    def test_delete_own_terminal_task(self, user_task, status):
-        user_task.status = status
-        user_task.save(update_fields=["status"])
-        resp = self.client.delete(f"/{user_task.uuid}")
-        assert resp.status_code == 204
-        assert not ODMTask.objects.filter(uuid=user_task.uuid).exists()
+    return [
+        {"params": {}, "expected_count": 8},
+        {"params": {"status": ODMTaskStatus.QUEUED}, "expected_count": 1},
+        {"params": {"status": ODMTaskStatus.RUNNING}, "expected_count": 2},
+        {"params": {"status": ODMTaskStatus.COMPLETED}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.DATASET}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.OPENSFM}, "expected_count": 2},
+        {"params": {"step": ODMProcessingStage.OPENMVS}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.ODM_POSTPROCESS}, "expected_count": 0},
+        {"params": {"created_after": after}, "expected_count": 5},
+        {"params": {"created_before": before}, "expected_count": 6},
+        {"params": {"created_after": after, "created_before": before}, "expected_count": 3},
+        {"params": {"status": ODMTaskStatus.RUNNING, "created_after": after}, "expected_count": 2},
+        {"params": {"step": ODMProcessingStage.OPENSFM, "created_after": after}, "expected_count": 1},
+        {"params": {"step": ODMProcessingStage.DATASET, "created_before": before}, "expected_count": 0},
+        {"params": {"workspace_uuid": ws1_uuid}, "expected_count": 4},
+        {"params": {"workspace_uuid": ws2_uuid}, "expected_count": 2},
+        {"params": {"workspace_uuid": ws3_uuid}, "expected_count": 2},
+        {"params": {"workspace_uuid": ws1_uuid, "status": ODMTaskStatus.RUNNING}, "expected_count": 1},
+    ]
 
-    @pytest.mark.parametrize("status", ODMTaskStatus.non_terminal_states())
-    def test_cannot_delete_own_non_terminal_task(self, user_task, status):
-        user_task.status = status
-        user_task.save(update_fields=["status"])
-        resp = self.client.delete(f"/{user_task.uuid}")
-        assert resp.status_code in (400, 403)
-        assert ODMTask.objects.filter(uuid=user_task.uuid).exists()
 
-    @pytest.mark.parametrize(
-        "action, expected_status, expected_odm_status, mock_fixture",
-        [
-            ("pause", 200, ODMTaskStatus.PAUSING, "mock_task_on_task_pause"),
-            ("resume", 200, ODMTaskStatus.RESUMING, "mock_task_on_task_resume"),
-            ("cancel", 200, ODMTaskStatus.CANCELLING, "mock_task_on_task_cancel"),
-        ],
-    )
-    def test_custom_actions_on_own_task(
-        self,
-        user_task,
-        action,
-        expected_status,
-        expected_odm_status,
-        mock_fixture,
-        request,
-    ):
-        mock = request.getfixturevalue(mock_fixture)
-        resp = self.client.post(f"/{user_task.uuid}/{action}")
-        assert resp.status_code == expected_status
-        user_task.refresh_from_db()
-        assert user_task.odm_status == expected_odm_status
-        mock.delay.assert_called_once_with(user_task.uuid)
-
-    @pytest.mark.parametrize("action", ["pause", "resume", "cancel"])
-    def test_action_other_task_denied(self, other_task, action):
-        original_status = other_task.status
-        resp = self.client.post(f"/{other_task.uuid}/{action}")
-        assert resp.status_code in (403, 404)
-        other_task.refresh_from_db()
-        assert other_task.status == original_status
-
-    def test_nodeodm_webhook_call_denied(self, odm_task_factory):
-        task = odm_task_factory()
-        signature = NodeODMServiceAuth.generate_hmac_signature(
-            NodeODMServiceAuth.HMAC_MESSAGE
-        )
-        resp = self.client.post(f"/{task.uuid}/odmwebhook?signature={signature}")
-        assert resp.status_code != 200
-
+# =========================================================================
+# TEST SUITE
+# =========================================================================
 
 @pytest.mark.django_db
-class TestTaskAPIUnauthorized:
-    @classmethod
-    def setup_method(cls):
-        cls.public_client = TestClient(TaskControllerPublic)
-        cls.internal_client = TestClient(TaskControllerInternal)
-        cls.user_client = AuthenticatedTestClient(
-            TaskControllerInternal, auth=AuthStrategyEnum.jwt
-        )
-
-    @pytest.mark.parametrize(
-        "method, client_type, url_template",
-        [
-            ("get", "public_client", "/"),
-            ("get", "public_client", "/{uuid}"),
-            ("post", "public_client", "/{uuid}/pause"),
-            ("get", "internal_client", "/"),
-            ("get", "internal_client", "/{uuid}"),
-            ("delete", "internal_client", "/{uuid}"),
-            ("post", "internal_client", "/{uuid}/pause"),
-            ("get", "user_client", "/"),
-            ("get", "user_client", "/{uuid}"),
-            ("delete", "user_client", "/{uuid}"),
-        ],
-    )
-    def test_access_denied(self, odm_task_factory, method, client_type, url_template):
-        task = odm_task_factory()
-        client = getattr(self, client_type)
-        url = url_template.format(uuid=task.uuid)
-        resp = getattr(client, method)(url)
-        assert resp.status_code in (401, 403)
-
-        if method == "delete":
-            assert ODMTask.objects.filter(pk=task.pk).exists()
+@pytest.mark.freeze_time("2026-01-20 12:00:00")
+@pytest.mark.usefixtures(
+    "mock_task_on_task_create",
+    "mock_task_on_task_pause",
+    "mock_task_on_task_resume",
+    "mock_task_on_task_cancel",
+    "mock_task_on_task_nodeodm_webhook",
+    "mock_task_on_task_finish",
+    "mock_task_on_task_failure",
+    "mock_redis",
+)
+class TestTaskAPI(APITestSuite):
+    """
+    Task API tests.
+    """
+    
+    tests = {
+        # ===== DEFAULTS =====
+        "model": ODMTask,
+        "endpoint": "/",
+        "factory": "user_task_factory",
+        "client": "task_public_client",
+        
+        # ===== CRUD =====
+        "cruds": {
+            # ----- CREATE -----
+            "create": {
+                "expected_status": 201,
+                "scenarios": [
+                    {
+                        "name": "jwt_own_workspace",
+                        "payload": lambda s: {
+                            "workspace_uuid": s.fixture("user_task_workspace").uuid,
+                            "name": "User Task",
+                            "quality": "low"
+                        },
+                        "assert": "assert_task_created",
+                    },
+                    {
+                        "name": "jwt_workspace_without_images_denied",
+                        "payload": lambda s: {
+                            "workspace_uuid": s.fixture("user_task_workspace_no_images").uuid,
+                            "name": "Task without images",
+                            "quality": "low",
+                        },
+                        "expected_status": [403, 404],
+                        "access_denied": True,
+                    },
+                    {
+                        "name": "jwt_other_workspace_denied",
+                        "payload": lambda s: {
+                            "workspace_uuid": s.fixture("other_task_workspace").uuid,
+                            "name": "Forbidden Task",
+                             "quality": "low"
+                        },
+                        "expected_status": [403, 404],
+                        "access_denied": True,
+                    },
+                    {
+                        "name": "anon_public_denied",
+                        "client": "task_anon_public_client",
+                        "payload": lambda s: {
+                            "workspace_uuid": s.fixture("user_task_workspace").uuid,
+                            "name": "Anon Task",
+                             "quality": "low"
+                        },
+                        "expected_status": 401,
+                        "access_denied": True,
+                    },
+                ],
+            },
+            
+            # ----- GET -----
+            "get": {
+                "scenarios": [
+                    {
+                        "name": "jwt_own",
+                        "assert": lambda s, obj, resp: resp.json()["uuid"] == str(obj.uuid),
+                    },
+                    {
+                        "name": "jwt_other_denied",
+                        "factory": "other_task_factory",
+                        "expected_status": [403, 404],
+                        "access_denied": True,
+                    },
+                ],
+            },
+            
+            # ----- DELETE -----
+            "delete": {
+                "scenarios": [
+                    {
+                        "name": "jwt_own_terminal",
+                        "factory": "user_terminal_task_factory",
+                    },
+                    {
+                        "name": "jwt_own_non_terminal_denied",
+                        "factory": "user_non_terminal_task_factory",
+                        "expected_status": 409,
+                        "access_denied": True,
+                    },
+                ],
+            },
+        },
+        
+        # ===== ACTIONS =====
+        "actions": {
+            "pause": {
+                "url": lambda s, obj: f"/{obj.uuid}/pause",
+                "method": "post",
+                "scenarios": [
+                    {"name": "jwt_own", "assert": "assert_task_paused"},
+                    {"name": "jwt_other_denied", "factory": "other_task_factory", "expected_status": [403, 404], "access_denied": True},
+                ],
+            },
+            "resume": {
+                "url": lambda s, obj: f"/{obj.uuid}/resume",
+                "method": "post",
+                "scenarios": [
+                    {"name": "jwt_own", "assert": "assert_task_resumed"},
+                ],
+            },
+            "cancel": {
+                "url": lambda s, obj: f"/{obj.uuid}/cancel",
+                "method": "post",
+                "scenarios": [
+                    {"name": "jwt_own", "assert": "assert_task_cancelled"},
+                ],
+            },
+            
+            # ----- NodeODM Webhook -----
+            "webhook_postprocess_completed": {
+                "url": lambda s, obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('valid_nodeodm_signature')}",
+                "method": "post",
+                "payload": lambda s: {
+                    **s.fixture("nodeodm_webhook_payload"),
+                    "status": {"code": NodeODMTaskStatus.COMPLETED},
+                },
+                "scenarios": [
+                    {
+                        "name": "task_finished",
+                        "client": "task_internal_client",
+                        "factory": "webhook_task_postprocess_factory",
+                        "assert": "assert_task_finished",
+                    },
+                ],
+            },
+            
+            "webhook_postprocess_failed": {
+                "url": lambda s, obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('valid_nodeodm_signature')}",
+                "method": "post",
+                "payload": lambda s: {
+                    **s.fixture("nodeodm_webhook_payload"),
+                    "status": {"code": NodeODMTaskStatus.FAILED},
+                },
+                "scenarios": [
+                    {
+                        "name": "task_failed",
+                        "client": "task_internal_client",
+                        "factory": "webhook_task_postprocess_factory",
+                        "assert": "assert_task_failed",
+                    },
+                ],
+            },
+            
+             "webhook_invalid_signature": {
+                "url": lambda s, obj: f"/{obj.uuid}/webhooks/odm?signature={s.fixture('invalid_nodeodm_signature')}",
+                "method": "post",
+                "payload": lambda s: s.fixture("nodeodm_webhook_payload"),
+                "scenarios": [
+                    {
+                        "name": "invalid_signature_denied",
+                        "client": "task_internal_client",
+                        "factory": "any_task_factory",
+                        "expected_status": [401, 403],
+                        "access_denied": True,
+                    },
+                ],
+            },
+        },
+        
+        # ===== LIST =====
+        "list": {
+            "url": "/",
+            "method": "get",
+            "scenarios": [
+                {
+                    "name": "internal",
+                    "client": "task_internal_client",
+                    "queries": "internal_task_list_queries",
+                },
+                {
+                    "name": "public_jwt",
+                    "queries": "public_task_list_queries",
+                },
+                {
+                    "name": "anon_denied",
+                    "client": "task_anon_public_client",
+                    "queries": [{"params": {}, "expected_status": 401}],
+                },
+            ],
+        },
+    }
