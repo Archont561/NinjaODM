@@ -52,6 +52,7 @@ class TaskResponse(ModelSchema):
             "created_at",
             "step",
             "status",
+            "name",
         ]
 
 
