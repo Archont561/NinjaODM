@@ -12,7 +12,8 @@ from app.api.tasks.workspace import (
 
 class WorkspaceModelService(ModelService):
     def create(self, schema, **kwargs):
-        instance = super().create(schema, **kwargs)
+        data = {k: v for k, v in schema.model_dump().items() if v is not None}
+        instance = self.model._default_manager.create(**data)
         emit_event(
             instance.user_id,
             "workspace:created",

@@ -92,6 +92,15 @@ def user_gcp_factory(ground_control_point_factory, user_gcp_image):
 
     return factory
 
+@pytest.fixture
+def user_bulk_gcp_factory(ground_control_point_factory, user_gcp_image):
+    """Factory for bulk GCPs in user_999's workspace."""
+
+    def factory(**kwargs):
+        return ground_control_point_factory.build_batch(image=user_gcp_image, **kwargs)
+
+    return factory
+
 
 @pytest.fixture
 def other_gcp_factory(ground_control_point_factory, other_gcp_image):
@@ -274,6 +283,15 @@ def payload_create_own(user_image_for_create):
         "label": "GCP-USER-001",
     }
 
+@pytest.fixture
+def payload_bulk_create_own(payload_create_own):
+    """Valid bulk payload for user (own image)."""
+    return [
+        {**payload_create_own, "label": "GCP-USER-001"},
+        {**payload_create_own, "label": "GCP-USER-002"},
+        {**payload_create_own, "label": "GCP-USER-003"},
+    ]
+
 
 @pytest.fixture
 def payload_create_other(other_image_for_create):
@@ -320,6 +338,37 @@ def payload_update_coords():
         "image_point": [100.0, 150.0],
     }
 
+@pytest.fixture
+def gcp_bulk_update_objects(gcp_factory, user_bulk_gcp_factory):
+    """Existing GCPs for bulk update."""
+    return user_bulk_gcp_factory()
+
+@pytest.fixture
+def payload_bulk_update_own(gcp_bulk_update_objects):
+    """Bulk update payload."""
+    return [
+        {
+            "uuid": str(obj.uuid),
+            "label": f"UPDATED-{i}",
+            "gcp_point": [10.0 + i, 20.0 + i, 30.0 + i],
+            "image_point": [100 + i, 200 + i],
+        }
+        for i, obj in enumerate(gcp_bulk_update_objects)
+    ]
+
+
+@pytest.fixture
+def gcp_bulk_delete_objects(gcp_factory, user_bulk_gcp_factory):
+    """Existing GCPs for bulk update."""
+    return user_bulk_gcp_factory()
+
+@pytest.fixture
+def payload_bulk_delete_own(gcp_bulk_delete_objects):
+    """Bulk delete payload."""
+    return {
+        "uuids": [str(obj.uuid) for obj in gcp_bulk_delete_objects]
+    }
+
 
 # -------------------------
 # Assertions
@@ -334,6 +383,19 @@ def assert_gcp_created():
         assert obj.label == payload["label"]
         assert list(obj.point) == payload["gcp_point"]
         assert [obj.imgx, obj.imgy] == payload["image_point"]
+        return True
+
+    return assertion
+
+
+@pytest.fixture
+def assert_gcp_bulk_created(assert_gcp_created):
+    """Assertion for successful GCP creation."""
+
+    def assertion(objs, payload):
+        payload_by_uuid = {p["uuid"]: p for p in payload}
+        for obj in objs:
+            assert_gcp_created(obj, payload_by_uuid[str(obj.uuid)])
         return True
 
     return assertion
@@ -357,12 +419,37 @@ def assert_gcp_updated():
 
 
 @pytest.fixture
+def assert_gcp_bulk_updated(assert_gcp_updated):
+    """Assertion for successful bulk GCP update."""
+
+    def assertion(objs, payload):
+        payload_by_uuid = {p["uuid"]: p for p in payload}
+        for obj in objs:
+            assert_gcp_updated(obj, payload_by_uuid[str(obj.uuid)])
+        return True
+
+    return assertion
+
+
+@pytest.fixture
 def assert_gcp_deleted():
     """Assertion for successful GCP deletion."""
 
     def assertion(obj, resp):
         assert resp.status_code == 204
         assert not GroundControlPoint.objects.filter(pk=obj.pk).exists()
+        return True
+
+    return assertion
+
+
+@pytest.fixture
+def assert_gcp_bulk_deleted():
+    """Assertion for successful bulk GCP deletion."""
+
+    def assertion(objs, payload):
+        for uid in payload["uuids"]:
+            assert not GroundControlPoint.objects.filter(uuid=uid).exists()
         return True
 
     return assertion
@@ -448,6 +535,17 @@ class TestGCPAPI(APITestSuite):
                     },
                 ],
             },
+            "bulk_create": {
+                "url": "/bulk",
+                "assertion": "assert_gcp_bulk_created",
+                "payload": "payload_bulk_create_own",
+                "scenarios": [
+                    {
+                        "name": "jwt_own_image_bulk_create",
+                        "expected_status": 201,
+                    },
+                ],
+            },
             # ----- GET -----
             "get": {
                 "scenarios": [
@@ -486,6 +584,17 @@ class TestGCPAPI(APITestSuite):
                     },
                 ],
             },
+            "bulk_update": {
+                "url": "/bulk",
+                "assertion": "assert_gcp_bulk_updated",
+                "payload": "payload_bulk_update_own",
+                "factory": lambda s: s.fixture("gcp_bulk_update_objects"),
+                "scenarios": [
+                    {
+                        "name": "jwt_own_image_bulk_update",
+                    },
+                ],
+            },
             # ----- DELETE -----
             "delete": {
                 "assertion": "assert_gcp_deleted",
@@ -498,6 +607,18 @@ class TestGCPAPI(APITestSuite):
                         "factory": "other_gcp_factory",
                         "expected_status": [403, 404],
                         "access_denied": True,
+                    },
+                ],
+            },
+            "bulk_delete": {
+                "url": "/bulk",
+                "assertion": "assert_gcp_bulk_deleted",
+                "payload": "payload_bulk_delete_own",
+                "factory": lambda s: s.fixture("gcp_bulk_delete_objects"),
+                "scenarios": [
+                    {
+                        "name": "jwt_own_image_bulk_delete",
+                        "expected_status": 204,
                     },
                 ],
             },

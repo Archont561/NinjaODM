@@ -1,6 +1,7 @@
 from ninja_extra import NinjaExtraAPI
 
 from app.api.controllers.core import CoreController
+from app.api.controllers.demo import DemoController
 from app.api.controllers.token import TokenControllerInternal
 from app.api.controllers.workspace import (
     WorkspaceControllerInternal,
@@ -18,6 +19,7 @@ def create_api() -> NinjaExtraAPI:
     api.add_router("", sse_router)
     api.register_controllers(
         CoreController,
+        DemoController,
         TokenControllerInternal,
         WorkspaceControllerInternal,
         WorkspaceControllerPublic,

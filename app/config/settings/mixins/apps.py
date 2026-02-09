@@ -21,7 +21,7 @@ class AppsSettingsMixin(BaseSettingsMixin):
             ]
             + [
                 # Third party
-                "corsheaders",
+                # "corsheaders",
                 "ninja_extra",
                 "ninja_jwt",
                 "ninja_jwt.token_blacklist",

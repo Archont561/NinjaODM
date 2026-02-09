@@ -25,6 +25,10 @@ class ImageFilterSchema(FilterSchema):
     workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None
 
 
+class ImageFilterSchemaInternal(ImageFilterSchema):
+    user_id: Annotated[Optional[str], FilterLookup("workspace__user_id__icontains")] = None
+
+
 class ImageBaseSSEData(Schema):
     uuid: UUID
     name: str

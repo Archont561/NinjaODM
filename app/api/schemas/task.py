@@ -65,6 +65,9 @@ class TaskFilterSchema(FilterSchema):
     )
     workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None
 
+class TaskFilterSchemaInternal(TaskFilterSchema):
+    user_id: Annotated[Optional[str], FilterLookup("workspace__user_id__icontains")] = None
+
 
 class TaskBaseSSEData(Schema):
     uuid: UUID

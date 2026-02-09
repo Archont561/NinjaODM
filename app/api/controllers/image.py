@@ -13,7 +13,7 @@ from app.api.auth.service import ServiceHMACAuth
 from app.api.auth.user import ServiceUserJWTAuth
 from app.api.models.image import Image
 from app.api.permissions.image import IsImageOwner
-from app.api.schemas.image import ImageResponse, ImageFilterSchema
+from app.api.schemas.image import ImageResponse, ImageFilterSchema, ImageFilterSchemaInternal
 from app.api.services.image import ImageModelService
 from app.api.permissions.core import IsAuthorizedService
 
@@ -81,6 +81,6 @@ class ImageControllerInternal(ModelControllerBase):
         response=List[model_config.retrieve_schema],
         operation_id="listImagesInternal",
     )
-    def list_images(self, filters: ImageFilterSchema = Query(...)):
+    def list_images(self, filters: ImageFilterSchemaInternal = Query(...)):
         queryset = self.model_config.model.objects.all().select_related("workspace")
         return filters.filter(queryset)

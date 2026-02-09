@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Optional, Tuple, Annotated
+from typing import Optional, Tuple, Annotated, List
 from datetime import datetime
 from geojson_pydantic import Feature, Point, FeatureCollection
 from pydantic import BaseModel, Field
@@ -25,12 +25,17 @@ class GCPCreate(Schema):
     image_point: Tuple[float, float]  # (imgx, imgy)
     label: str
 
-
 class GCPUpdate(Schema):
     gcp_point: Optional[Tuple[float, float, float]] = None
     image_point: Optional[Tuple[float, float]] = None
     label: Optional[str] = None
 
+class GCPUpdateForBulk(GCPUpdate):
+    uuid: UUID
+
+GCPBulkCreate = List[GCPCreate]
+GCPBulkUpdate = List[GCPUpdateForBulk]
+GCPBulkDelete = List[UUID]
 
 class GCPResponse(ModelSchema):
     image_uuid: UUID = Field(..., alias="image.uuid")
@@ -74,6 +79,9 @@ class GCPFilterSchema(FilterSchema):
     workspace_uuid: Annotated[
         Optional[UUID], FilterLookup("image__workspace__uuid")
     ] = None
+
+class GCPFilterSchemaInternal(GCPFilterSchema):
+    user_id: Annotated[Optional[str], FilterLookup("image__workspace__user_id__icontains")] = None
 
 
 class GCPBaseSSEData(Schema):

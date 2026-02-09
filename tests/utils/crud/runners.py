@@ -119,13 +119,14 @@ class CRUDRunner(BaseRunner[CRUDScenario, CRUDConfig]):
 
     # --- Shared Helpers ---
 
+    # add bulk option
     def _resolve_and_request(
         self,
         s: CRUDScenario,
         config: CRUDConfig | None,
-        obj: Any = None,
+        obj: Any | List[Any] | None = None,
         default_method: str = "get",
-        default_status: List[int] | None = None,  # <--- Added parameter
+        default_status: List[int] | None = None,
         denied_codes: List[int] | None = None,
     ) -> tuple[Any, dict, bool]:
         """
@@ -137,25 +138,22 @@ class CRUDRunner(BaseRunner[CRUDScenario, CRUDConfig]):
         method = self.resolve_method(s, config, default_method)
         kwargs = self.resolve_http_kwargs(s, config)
 
-        # Resolve expected status with the provided defaults
-        if default_status is None:
-            default_status = [200]
+        default_status = default_status or [200]
         expected_status = self.r.resolve_status(s.expected_status, default_status)
+        denied_codes = denied_codes or [401, 403, 404]
 
-        if denied_codes is None:
-            denied_codes = [401, 403, 404]
-
-        # Make request
         resp = getattr(client, method)(url, **kwargs)
 
-        # Check access
-        is_denied = self.r.check_denied(s, obj) if obj else self.r.check_denied(s)
+        is_denied = (
+            self.r.check_denied(s, obj)
+            if obj is not None
+            else self.r.check_denied(s)
+        )
 
         if is_denied:
             self.r.check_status(resp, expected_status, denied_codes)
             return resp, kwargs, True
 
-        # Check success status (pass all potential success codes to allow flexibility)
         self.r.check_status(resp, expected_status, [200, 201, 204])
         return resp, kwargs, False
 
@@ -191,6 +189,28 @@ class CRUDRunner(BaseRunner[CRUDScenario, CRUDConfig]):
         obj = self.r.get_object(s.model, obj_id)
         self._finalize_assertion(s, sid, obj, kwargs.get("json", {}))
 
+    def _do_bulk_create(
+        self, s: CRUDScenario, i: int, config: CRUDConfig | None = None
+    ) -> None:
+        sid = self.sid(s, i, "bulk_create")
+
+        resp, kwargs, denied = self._resolve_and_request(
+            s,
+            config,
+            default_method="post",
+            default_status=[200, 201],
+            denied_codes=[401, 403, 404, 422],
+        )
+        if denied:
+            return
+
+        data = resp.json()
+        ids = [item.get("uuid") or item.get("id") for item in data]
+        assert all(ids), f"[{sid}] Missing uuid/id in response: {data}"
+
+        objs = self.r.get_objects(s.model, ids)
+        self._finalize_assertion(s, sid, objs, kwargs.get("json", {}))
+
     def _do_get(
         self, s: CRUDScenario, i: int, config: CRUDConfig | None = None
     ) -> None:
@@ -220,6 +240,27 @@ class CRUDRunner(BaseRunner[CRUDScenario, CRUDConfig]):
         obj.refresh_from_db()
         self._finalize_assertion(s, sid, obj, kwargs.get("json", {}))
 
+    def _do_bulk_update(
+        self, s: CRUDScenario, i: int, config: CRUDConfig | None = None
+    ) -> None:
+        sid = self.sid(s, i, "bulk_update")
+        objs = self.r.call_fixture(s.factory)
+
+        resp, kwargs, denied = self._resolve_and_request(
+            s,
+            config,
+            obj=objs,
+            default_method="patch",
+            default_status=[200],
+        )
+        if denied:
+            return
+
+        for obj in objs:
+            obj.refresh_from_db()
+
+        self._finalize_assertion(s, sid, objs, kwargs.get("json", {}))
+
     def _do_delete(
         self, s: CRUDScenario, i: int, config: CRUDConfig | None = None
     ) -> None:
@@ -239,6 +280,35 @@ class CRUDRunner(BaseRunner[CRUDScenario, CRUDConfig]):
 
         assert not self.r.check_exists(s.model, obj_uuid), f"[{sid}] Object not deleted"
         self._finalize_assertion(s, sid, obj, resp)
+
+    def _do_bulk_delete(
+        self, s: CRUDScenario, i: int, config: CRUDConfig | None = None
+    ) -> None:
+        sid = self.sid(s, i, "bulk_delete")
+        objs = self.r.call_fixture(s.factory)
+        uuids = [obj.uuid for obj in objs]
+
+        resp, _, denied = self._resolve_and_request(
+            s,
+            config,
+            obj=objs,
+            default_method="delete",
+            default_status=[200, 204],
+        )
+
+        if denied:
+            for uid in uuids:
+                assert self.r.check_exists(s.model, uid), (
+                    f"[{sid}] Object deleted but access denied"
+                )
+            return
+
+        for uid in uuids:
+            assert not self.r.check_exists(s.model, uid), (
+                f"[{sid}] Object not deleted"
+            )
+
+        self._finalize_assertion(s, sid, objs, resp)
 
 
 class ActionRunner(BaseRunner[ActionScenario, ActionConfig]):

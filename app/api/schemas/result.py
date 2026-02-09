@@ -31,6 +31,9 @@ class ResultFilterSchema(FilterSchema):
     )
     workspace_uuid: Annotated[Optional[UUID], FilterLookup("workspace__uuid")] = None
 
+class ResultFilterSchemaInternal(ResultFilterSchema):
+    user_id: Annotated[Optional[str], FilterLookup("workspace__user_id__icontains")] = None
+
 
 class ResultBaseSSEData(Schema):
     uuid: UUID

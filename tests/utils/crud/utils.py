@@ -246,3 +246,17 @@ class ResolverMixin:
             DoesNotExist: If object not found
         """
         return model.objects.get(uuid=uuid)
+
+    
+    def get_objects(self, model: Any, uuids: Any) -> Any:
+        """
+        Get queryset from database.
+
+        Args:
+            model: Django model class
+            uuids: List of UUID
+
+        Returns:
+            Model queryset
+        """
+        return model.objects.filter(uuid__in=uuids)

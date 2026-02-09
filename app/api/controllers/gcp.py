@@ -6,6 +6,8 @@ from ninja_extra import (
     api_controller,
     http_get,
     http_post,
+    http_patch,
+    http_delete,
 )
 
 from app.api.auth.service import ServiceHMACAuth
@@ -18,9 +20,13 @@ from app.api.permissions.image import IsImageOwner
 from app.api.schemas.gcp import (
     GCPCreate,
     GCPUpdate,
+    GCPBulkCreate,
+    GCPBulkUpdate,
+    GCPBulkDelete,
     GCPResponse,
     GCPFeatureCollection,
     GCPFilterSchema,
+    GCPFilterSchemaInternal,
 )
 from app.api.services.gcp import GCPModelService
 
@@ -85,6 +91,49 @@ class GCPControllerPublic(ModelControllerBase):
     def list_gcps_as_geojson(self, filters: GCPFilterSchema = Query(...)):
         return self.service.queryset_to_geojson(filters.filter(self._get_queryset()))
 
+    @http_post(
+        "/bulk",
+        response={201: List[model_config.retrieve_schema]},
+        operation_id="bulkCreateGCPs",
+        permissions=[IsImageOwner | IsAuthorizedService],
+    )
+    def bulk_create_gcps(self, payload: GCPBulkCreate = Body(...)):
+        uuids = { item.image_uuid for item in payload }
+
+        for uuid in uuids:
+            image = self.get_object_or_exception(Image, uuid=uuid)
+            self.check_object_permissions(image)
+
+        created = self.service.bulk_create(payload)
+        return 201, created
+
+    @http_patch(
+        "/bulk",
+        response=List[model_config.retrieve_schema],
+        operation_id="bulkUpdateGCPs",
+    )
+    def bulk_update_gcps(self, payload: GCPBulkUpdate):
+        uuids = [item.uuid for item in payload]
+
+        for uuid in uuids:
+            gcp = self.get_object_or_exception(self.model, uuid=uuid)
+            self.check_object_permissions(gcp)
+
+        return self.service.bulk_update(payload)
+    
+    @http_delete(
+        "/bulk",
+        response={204: None},
+        operation_id="bulkDeleteGCPs",
+    )
+    def bulk_delete_gcps(self, uuids: GCPBulkDelete = Body(...)):
+        for uuid in uuids:
+            gcp = self.get_object_or_exception(self.model, uuid=uuid)
+            self.check_object_permissions(gcp)
+
+        self.service.bulk_delete(uuids)
+        return 204, None
+
 
 @api_controller(
     "/internal/gcps",
@@ -104,7 +153,7 @@ class GCPControllerInternal(ModelControllerBase):
         response=List[model_config.retrieve_schema],
         operation_id="listGCPsInternal",
     )
-    def list_gcps(self, filters: GCPFilterSchema = Query(...)):
+    def list_gcps(self, filters: GCPFilterSchemaInternal = Query(...)):
         queryset = self.model_config.model.objects.all().select_related(
             "image", "image__workspace"
         )

@@ -10,7 +10,7 @@ from ninja_extra import (
 )
 
 from app.api.auth.service import ServiceHMACAuth
-from app.api.auth.user import ServiceUserJWTAuth
+from app.api.auth.user import ServiceUserJWTAuth, ServiceUserJWTAuthDownload
 from app.api.auth.share import ShareResultsApiKeyAuth
 from app.api.constants.token import ShareToken
 from app.api.models.result import ODMTaskResult
@@ -19,6 +19,7 @@ from app.api.permissions.core import IsAuthorizedService
 from app.api.schemas.result import (
     ResultResponse,
     ResultFilterSchema,
+    ResultFilterSchemaInternal,
     ResultShareKeyResponse,
 )
 from app.api.services.result import ResultModelService
@@ -58,9 +59,10 @@ class ResultControllerPublic(ModelControllerBase):
 
     @http_get(
         "/{uuid}/download",
+        auth=[ServiceUserJWTAuthDownload()],
         operation_id="downloadTaskResult",
     )
-    def download_result_file(self, request, uuid: UUID):
+    def download_result_file(self, request, uuid: UUID, jwt: str):
         result = self.get_object_or_exception(self.model_config.model, uuid=uuid)
         return FileResponse(
             result.file.open("rb"), as_attachment=True, filename=result.file.name
@@ -106,6 +108,6 @@ class ResultControllerInternal(ModelControllerBase):
         response=List[model_config.retrieve_schema],
         operation_id="listTaskResultsInternal",
     )
-    def list_results(self, filters: ResultFilterSchema = Query(...)):
+    def list_results(self, filters: ResultFilterSchemaInternal = Query(...)):
         queryset = self.model_config.model.objects.all().select_related("workspace")
         return filters.filter(queryset)

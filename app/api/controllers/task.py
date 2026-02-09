@@ -23,6 +23,7 @@ from app.api.schemas.task import (
     ODMTaskWebhookInternal,
     TaskResponse,
     TaskFilterSchema,
+    TaskFilterSchemaInternal,
 )
 from app.api.schemas.core import MessageSchema
 from app.api.services.task import TaskModelService
@@ -105,7 +106,7 @@ class TaskControllerInternal(ModelControllerBase):
         response=List[model_config.retrieve_schema],
         operation_id="listTasksInternal",
     )
-    def list_tasks(self, filters: TaskFilterSchema = Query(...)):
+    def list_tasks(self, filters: TaskFilterSchemaInternal = Query(...)):
         queryset = self.model_config.model.objects.all()
         return filters.filter(queryset)
 

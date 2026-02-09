@@ -103,27 +103,42 @@ class APITestSuite(ResolverMixin):
     def test_create(self):
         """Test create scenarios."""
         self._run_crud_op("create")
-
+        
     @pytest.mark.order(2)
+    def test_bulk_create(self):
+        """Test bulk create scenarios."""
+        self._run_crud_op("bulk_create")
+
+    @pytest.mark.order(3)
     def test_get(self):
         """Test get scenarios."""
         self._run_crud_op("get")
 
-    @pytest.mark.order(3)
+    @pytest.mark.order(4)
     def test_update(self):
         """Test update scenarios."""
         self._run_crud_op("update")
 
-    @pytest.mark.order(4)
+    @pytest.mark.order(5)
+    def test_bulk_update(self):
+        """Test bulk update scenarios."""
+        self._run_crud_op("bulk_update")
+
+    @pytest.mark.order(6)
     def test_delete(self):
         """Test delete scenarios."""
+        self._run_crud_op("delete")
+
+    @pytest.mark.order(7)
+    def test_bulk_delete(self):
+        """Test bulk delete scenarios."""
         self._run_crud_op("delete")
 
     # -------------------------
     # Action Tests
     # -------------------------
 
-    @pytest.mark.order(5)
+    @pytest.mark.order(8)
     def test_actions(self):
         """Test all action scenarios."""
         if not self.config.actions:
@@ -139,7 +154,7 @@ class APITestSuite(ResolverMixin):
     # List Tests
     # -------------------------
 
-    @pytest.mark.order(6)
+    @pytest.mark.order(9)
     def test_list(self):
         """Test list scenarios."""
         result = self.config.list_items()
